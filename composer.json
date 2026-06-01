@@ -1,0 +1,37 @@
+{
+    "name": "vitamin2/juicebox",
+    "autoload": {
+        "psr-4": {
+            "Vitamin2\\Juicebox\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vitamin2\\Juicebox\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "statamic/cms": "^6.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": true
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Juicebox",
+            "description": "Juicebox addon"
+        },
+        "laravel": {
+            "providers": [
+                "Vitamin2\\Juicebox\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
