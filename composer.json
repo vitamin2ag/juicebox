@@ -3,6 +3,12 @@
     "description": "This is the core Statamic addon used by VITAMIN 2.",
     "license": "MIT",
     "type": "statamic-addon",
+    "authors": [
+        {
+            "name": "VITAMIN 2",
+            "homepage": "https://vitamin2.ch"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Vitamin2\\Juicebox\\": "src"
@@ -28,7 +34,7 @@
     },
     "extra": {
         "statamic": {
-            "name": "Juicebox",
+            "name": "Juicebox \uD83E\uDDC3",
             "description": "This is the core Statamic addon used by VITAMIN 2."
         },
         "laravel": {
