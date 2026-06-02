@@ -1,5 +1,8 @@
 {
     "name": "vitamin2/juicebox",
+    "description": "This is the core Statamic addon used by VITAMIN 2.",
+    "license": "MIT",
+    "type": "statamic-addon",
     "autoload": {
         "psr-4": {
             "Vitamin2\\Juicebox\\": "src"
