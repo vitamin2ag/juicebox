@@ -25,7 +25,7 @@
     },
     "extra": {
         "statamic": {
-            "name": "VITAMIN 2 - Juicebox",
+            "name": "Juicebox",
             "description": "This is the core Statamic addon used by VITAMIN 2."
         },
         "laravel": {

@@ -1,14 +1,7 @@
 # Juicebox
+This is the core Statamic addon used by VITAMIN 2.
 
-> Juicebox is a Statamic addon that does something pretty neat.
-
-## Features
-
-This addon does:
-
-- This
-- And this
-- And even this
+<img src="https://bitbucket.org/vitamin2/juicebox/raw/09ef05b19dd630cac64030d4cec54f8f3c070b86/assets/juicebox.webp" width="488" height="488" style="max-width: 100%;">
 
 ## How to Install
 
@@ -17,7 +10,3 @@ You can install this addon via Composer:
 ``` bash
 composer require vitamin2/juicebox
 ```
-
-## How to Use
-
-Here's where you can explain how to use this wonderful addon.
