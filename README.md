@@ -10,3 +10,43 @@ You can install this addon via Composer:
 ``` bash
 composer require vitamin2/juicebox
 ```
+
+## Features
+
+### Secure Headers Middleware
+
+`Vitamin2\Juicebox\Http\Middleware\SetSecureHeaders`
+
+Appends security-related HTTP response headers to every request. Registered automatically via the service provider.
+
+| Header | Default value | Purpose |
+|---|---|---|
+| `Strict-Transport-Security` | `max-age=31536000` | Force HTTPS for 1 year. Only set on secure (HTTPS) requests. |
+| `X-Frame-Options` | `SAMEORIGIN` | Prevent clickjacking by controlling iframe embedding. |
+| `X-Content-Type-Options` | `nosniff` | Stop browsers from MIME-sniffing responses away from the declared content type. |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limit referrer info sent with cross-origin requests. |
+
+**Configuration**
+
+Publish the config file:
+
+``` bash
+php artisan vendor:publish --tag=juicebox-config
+```
+
+Override any header value in `config/juicebox.php`:
+
+``` php
+'secure_headers' => [
+    'strict_transport_security' => 'max-age=63072000; includeSubDomains',
+    'referrer_policy' => 'no-referrer',
+],
+```
+
+Set any header to `false` to disable it entirely:
+
+``` php
+'secure_headers' => [
+    'x_frame_options' => false,
+],
+```
