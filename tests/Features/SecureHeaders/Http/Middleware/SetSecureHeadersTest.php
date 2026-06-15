@@ -1,11 +1,11 @@
 <?php
 
-namespace Vitamin2\Juicebox\Tests\Http\Middleware;
+namespace Vitamin2\Juicebox\Tests\Features\SecureHeaders\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use PHPUnit\Framework\Attributes\Test;
-use Vitamin2\Juicebox\Http\Middleware\SetSecureHeaders;
+use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 use Vitamin2\Juicebox\Tests\TestCase;
 
 class SetSecureHeadersTest extends TestCase

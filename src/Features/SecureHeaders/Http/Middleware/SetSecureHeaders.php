@@ -1,6 +1,6 @@
 <?php
 
-namespace Vitamin2\Juicebox\Http\Middleware;
+namespace Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ class SetSecureHeaders
 
     private function setStrictTransportSecurity(): static
     {
-        if (($value = config('juicebox.secure_headers.strict_transport_security', 'max-age=31536000')) === false) {
+        if (($value = config('juicebox.secure_headers.strict_transport_security', false)) === false) {
             return $this;
         }
 
@@ -47,7 +47,7 @@ class SetSecureHeaders
 
     private function setXFrameOptions(): static
     {
-        if (($value = config('juicebox.secure_headers.x_frame_options', 'SAMEORIGIN')) === false) {
+        if (($value = config('juicebox.secure_headers.x_frame_options', false)) === false) {
             return $this;
         }
 
@@ -58,7 +58,7 @@ class SetSecureHeaders
 
     private function setXContentTypeOptions(): static
     {
-        if (($value = config('juicebox.secure_headers.x_content_type_options', 'nosniff')) === false) {
+        if (($value = config('juicebox.secure_headers.x_content_type_options', false)) === false) {
             return $this;
         }
 
@@ -69,7 +69,7 @@ class SetSecureHeaders
 
     private function setReferrerPolicy(): static
     {
-        if (($value = config('juicebox.secure_headers.referrer_policy', 'strict-origin-when-cross-origin')) === false) {
+        if (($value = config('juicebox.secure_headers.referrer_policy', false)) === false) {
             return $this;
         }
 
