@@ -1,6 +1,6 @@
 <?php
 
-namespace Vitamin2\Juicebox\Tests\Features\SecureHeaders\Http\Middleware;
+namespace Vitamin2\Juicebox\Features\SecureHeaders\Tests\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
