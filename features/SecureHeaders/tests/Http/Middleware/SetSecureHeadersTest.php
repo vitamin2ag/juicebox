@@ -11,6 +11,33 @@ use Vitamin2\Juicebox\Tests\TestCase;
 class SetSecureHeadersTest extends TestCase
 {
     #[Test]
+    public function skips_all_headers_when_disabled(): void
+    {
+        $response = $this->runMiddleware($this->makeRequest(secure: true), ['enabled' => false]);
+
+        $this->assertNull($response->headers->get('Strict-Transport-Security'));
+        $this->assertNull($response->headers->get('X-Frame-Options'));
+        $this->assertNull($response->headers->get('X-Content-Type-Options'));
+        $this->assertNull($response->headers->get('Referrer-Policy'));
+    }
+
+    #[Test]
+    public function reads_enabled_state_from_env_variable(): void
+    {
+        putenv('JUICEBOX_SECURE_HEADERS_ENABLED=false');
+        config(['juicebox.secure_headers.enabled' => env('JUICEBOX_SECURE_HEADERS_ENABLED', true)]);
+
+        $response = $this->runMiddleware($this->makeRequest(secure: true));
+
+        $this->assertNull($response->headers->get('Strict-Transport-Security'));
+        $this->assertNull($response->headers->get('X-Frame-Options'));
+        $this->assertNull($response->headers->get('X-Content-Type-Options'));
+        $this->assertNull($response->headers->get('Referrer-Policy'));
+
+        putenv('JUICEBOX_SECURE_HEADERS_ENABLED');
+    }
+
+    #[Test]
     public function sets_x_frame_options_default(): void
     {
         $response = $this->runMiddleware($this->makeRequest());

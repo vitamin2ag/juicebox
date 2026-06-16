@@ -22,6 +22,10 @@ class SetSecureHeaders
         $this->request = $request;
         $this->response = $next($request);
 
+        if (! config('juicebox.secure_headers.enabled')) {
+            return $this->response;
+        }
+
         return $this
             ->setStrictTransportSecurity()
             ->setXFrameOptions()

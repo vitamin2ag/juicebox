@@ -4,6 +4,20 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Enable Secure Headers
+    |----------------------------------------------------------------------
+    |
+    | Master switch for all secure HTTP response headers. When disabled,
+    | no headers from this config will be sent.
+    |
+    | Accepted values: true, false
+    |
+    */
+
+    'enabled' => env('JUICEBOX_SECURE_HEADERS_ENABLED', true),
+
+    /*
+    |----------------------------------------------------------------------
     | Strict-Transport-Security
     |----------------------------------------------------------------------
     |
