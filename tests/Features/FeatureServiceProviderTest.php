@@ -8,7 +8,7 @@ use Vitamin2\Juicebox\Tests\Fixtures\WithConfigProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\WithoutConfigProvider;
 use Vitamin2\Juicebox\Tests\TestCase;
 
-class PackageServiceProviderTest extends TestCase
+class FeatureServiceProviderTest extends TestCase
 {
     #[Test]
     public function merges_config_under_juicebox_namespace_when_config_file_exists(): void
