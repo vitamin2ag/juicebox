@@ -22,18 +22,12 @@
     "require": {
         "php": "^8.5",
         "statamic/cms": "^6.0",
-        "edalzell/laravel-features": "dev-fix/loading-package-features as 0.5.1"
+        "edalzell/laravel-features": "dev-main as 0.5.1"
     },
     "require-dev": {
         "orchestra/testbench": "^10.8",
         "spatie/laravel-ray": "^1.43"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/edalzell/laravel-features-plugin"
-        }
-    ],
     "config": {
         "allow-plugins": {
             "pixelfear/composer-dist-plugin": true,

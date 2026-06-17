@@ -34,15 +34,18 @@ Publish the config file:
 php artisan vendor:publish --tag=statamic-juicebox-secure-headers-config
 ```
 
-Override any header value in `config/juicebox/secure_headers.php`:
+| Key | Default | Accepted values |
+|---|---|---|
+| `enabled` | `true` | `true`, `false` |
+| `strict_transport_security` | `'max-age=31536000'` | Valid HSTS directive string, `false` |
+| `x_frame_options` | `'SAMEORIGIN'` | `'DENY'`, `'SAMEORIGIN'`, `false` |
+| `x_content_type_options` | `'nosniff'` | `'nosniff'`, `false` |
+| `referrer_policy` | `'strict-origin-when-cross-origin'` | Any valid policy string, `false` |
 
-``` php
-'strict_transport_security' => 'max-age=63072000; includeSubDomains',
-'referrer_policy' => 'no-referrer',
-```
+Set any value to `false` to omit that header entirely.
 
-Set any header to `false` to disable it entirely:
+**Environment variables**
 
-``` php
-'x_frame_options' => false,
-```
+| Variable | Default | Description |
+|---|---|---|
+| `JUICEBOX_SECURE_HEADERS_ENABLED` | `true` | Master toggle — disables all headers when `false`. |
