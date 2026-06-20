@@ -7,10 +7,14 @@ use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 
 class ServiceProvider extends FeatureServiceProvider
 {
-    public function boot(): void
-    {
-        parent::boot();
+    protected $middlewareGroups = [
+        'web' => [
+            SetSecureHeaders::class,
+        ],
+    ];
 
-        $this->app['router']->pushMiddlewareToGroup('web', SetSecureHeaders::class);
+    public function bootFeature(): void
+    {
+        //
     }
 }

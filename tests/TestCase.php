@@ -2,10 +2,18 @@
 
 namespace Vitamin2\Juicebox\Tests;
 
-use Vitamin2\Juicebox\ServiceProvider;
 use Statamic\Testing\AddonTestCase;
+use Vitamin2\Juicebox\Features\SecureHeaders\ServiceProvider as SecureHeadersServiceProvider;
+use Vitamin2\Juicebox\ServiceProvider;
 
 abstract class TestCase extends AddonTestCase
 {
     protected string $addonServiceProvider = ServiceProvider::class;
+
+    protected function getPackageProviders($app): array
+    {
+        return array_merge(parent::getPackageProviders($app), [
+            SecureHeadersServiceProvider::class,
+        ]);
+    }
 }

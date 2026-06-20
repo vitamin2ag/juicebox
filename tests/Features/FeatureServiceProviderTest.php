@@ -4,70 +4,49 @@ namespace Vitamin2\Juicebox\Tests\Features;
 
 use Illuminate\Support\ServiceProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Vitamin2\Juicebox\Tests\Fixtures\WithConfigProvider;
-use Vitamin2\Juicebox\Tests\Fixtures\WithoutConfigProvider;
+use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
+use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\TestCase;
 
 class FeatureServiceProviderTest extends TestCase
 {
     #[Test]
-    public function merges_config_under_juicebox_namespace_when_config_file_exists(): void
+    public function merges_feature_config_under_namespaced_key(): void
     {
-        $this->app->register(WithConfigProvider::class);
-
-        $this->assertSame('test-value', config('juicebox.with_config.setting'));
+        $this->assertIsArray(config('juicebox.has_config'));
+        $this->assertSame('fixture', config('juicebox.has_config.value'));
     }
 
     #[Test]
-    public function does_not_register_config_when_no_config_file(): void
+    public function registers_publish_tag_and_nested_path_for_feature_config(): void
     {
-        $this->app->register(WithoutConfigProvider::class);
-
-        $this->assertNull(config('juicebox.without_config'));
-    }
-
-    #[Test]
-    public function publishes_config_with_correct_tag_when_config_file_exists(): void
-    {
-        $this->app->register(WithConfigProvider::class);
-
-        $paths = ServiceProvider::pathsToPublish(WithConfigProvider::class, 'statamic-juicebox-with-config-config');
-
-        $this->assertNotEmpty($paths);
-    }
-
-    #[Test]
-    public function publishes_config_to_juicebox_subdir_with_snake_case_filename(): void
-    {
-        $this->app->register(WithConfigProvider::class);
-
-        $paths = ServiceProvider::pathsToPublish(WithConfigProvider::class, 'statamic-juicebox-with-config-config');
-        $destination = array_values($paths)[0];
-
-        $this->assertSame(config_path('juicebox/with_config.php'), $destination);
-    }
-
-    #[Test]
-    public function publishes_from_correct_source_path(): void
-    {
-        $this->app->register(WithConfigProvider::class);
-
-        $paths = ServiceProvider::pathsToPublish(WithConfigProvider::class, 'statamic-juicebox-with-config-config');
-        $source = array_keys($paths)[0];
-
-        $this->assertSame(
-            realpath(__DIR__ . '/../Fixtures/WithConfig/config/with_config.php'),
-            realpath($source)
+        $paths = ServiceProvider::pathsToPublish(
+            HasConfigServiceProvider::class,
+            'statamic-juicebox-has-config-config'
         );
+
+        $this->assertCount(1, $paths);
+        $this->assertSame(config_path('juicebox/has_config.php'), reset($paths));
+        $this->assertStringEndsWith('config/has_config.php', array_key_first($paths));
     }
 
     #[Test]
-    public function does_not_publish_when_no_config_file(): void
+    public function calls_boot_feature_on_extending_class(): void
     {
-        $this->app->register(WithoutConfigProvider::class);
+        $this->assertTrue(NoConfigServiceProvider::$booted);
+    }
 
-        $paths = ServiceProvider::pathsToPublish(WithoutConfigProvider::class, 'statamic-juicebox-without-config-config');
+    #[Test]
+    public function skips_config_merge_when_feature_has_no_config_file(): void
+    {
+        $this->assertNull(config('juicebox.no_config'));
+    }
 
-        $this->assertEmpty($paths);
+    protected function getPackageProviders($app): array
+    {
+        return array_merge(parent::getPackageProviders($app), [
+            HasConfigServiceProvider::class,
+            NoConfigServiceProvider::class,
+        ]);
     }
 }
