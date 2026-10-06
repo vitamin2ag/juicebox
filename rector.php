@@ -1,6 +1,7 @@
 <?php
 
 use Rector\Config\RectorConfig;
+use Rector\PostRector\Rector\NameImportingPostRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 use Rector\ValueObject\PhpVersion;
@@ -26,4 +27,7 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_TESTING,
         LaravelSetList::LARAVEL_TYPE_DECLARATIONS,
     ])
-    ->withImportNames(importDocBlockNames: false);
+    ->withImportNames(importDocBlockNames: false)
+    ->withSkip([
+        NameImportingPostRector::class => [__DIR__.'/tests'],
+    ]);

@@ -1,52 +1,45 @@
 <?php
 
-namespace Vitamin2\Juicebox\Tests\Features;
+declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider;
-use PHPUnit\Framework\Attributes\Test;
+use Statamic\Addons\Manifest;
+use Statamic\Facades\Addon;
+use Vitamin2\Juicebox\Tests\Features\FeatureServiceProviderTestCase;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
-use Vitamin2\Juicebox\Tests\TestCase;
 
-class FeatureServiceProviderTest extends TestCase
-{
-    #[Test]
-    public function merges_feature_config_under_namespaced_key(): void
-    {
-        $this->assertIsArray(config('juicebox.has_config'));
-        $this->assertSame('fixture', config('juicebox.has_config.value'));
-    }
+uses(FeatureServiceProviderTestCase::class);
 
-    #[Test]
-    public function registers_publish_tag_and_nested_path_for_feature_config(): void
-    {
-        $paths = ServiceProvider::pathsToPublish(
-            HasConfigServiceProvider::class,
-            'statamic-juicebox-has-config-config',
-        );
+it('merges feature config under namespaced key', function (): void {
+    expect(config('juicebox.has_config'))->toBeArray()
+        ->and(config('juicebox.has_config.value'))->toBe('fixture');
+});
 
-        $this->assertCount(1, $paths);
-        $this->assertSame(config_path('juicebox/has_config.php'), reset($paths));
-        $this->assertStringEndsWith('config/has_config.php', array_key_first($paths));
-    }
+it('registers publish tag and nested path for feature config', function (): void {
+    $paths = ServiceProvider::pathsToPublish(
+        HasConfigServiceProvider::class,
+        'statamic-juicebox-has-config-config',
+    );
 
-    #[Test]
-    public function calls_boot_feature_on_extending_class(): void
-    {
-        $this->assertTrue(NoConfigServiceProvider::$booted);
-    }
+    expect($paths)->toHaveCount(1)
+        ->and(reset($paths))->toBe(config_path('juicebox/has_config.php'))
+        ->and(array_key_first($paths))->toEndWith('config/has_config.php');
+});
 
-    #[Test]
-    public function skips_config_merge_when_feature_has_no_config_file(): void
-    {
-        $this->assertNull(config('juicebox.no_config'));
-    }
+it('calls bootFeature on extending class', function (): void {
+    expect(NoConfigServiceProvider::$booted)->toBeTrue();
+});
 
-    protected function getPackageProviders($app): array
-    {
-        return array_merge(parent::getPackageProviders($app), [
-            HasConfigServiceProvider::class,
-            NoConfigServiceProvider::class,
-        ]);
-    }
-}
+it('skips config merge when feature has no config file', function (): void {
+    expect(config('juicebox.no_config'))->toBeNull();
+});
+
+it('throws when the addon cannot be resolved', function (): void {
+    Addon::shouldReceive('all')->andReturn(collect());
+    app()->instance(Manifest::class, Mockery::mock(Manifest::class)->shouldReceive('build')->getMock());
+
+    $provider = new NoConfigServiceProvider(app());
+
+    new ReflectionMethod($provider, 'getAddon')->invoke($provider);
+})->throws(RuntimeException::class, 'Unable to resolve the addon for '.NoConfigServiceProvider::class.'.');
