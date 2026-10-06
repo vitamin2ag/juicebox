@@ -4,6 +4,7 @@ namespace Vitamin2\Juicebox\Tests\Features\SecureHeaders\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 use Vitamin2\Juicebox\Tests\TestCase;
@@ -167,6 +168,36 @@ class SetSecureHeadersTest extends TestCase
         $this->assertNotNull($response->headers->get('X-Frame-Options'));
         $this->assertNotNull($response->headers->get('X-Content-Type-Options'));
         $this->assertNotNull($response->headers->get('Referrer-Policy'));
+    }
+
+    #[Test]
+    #[DataProvider('nonStringValues')]
+    public function skips_headers_with_non_string_config_values(mixed $value): void
+    {
+        $response = $this->runMiddleware($this->makeRequest(secure: true), [
+            'strict_transport_security' => $value,
+            'x_frame_options' => $value,
+            'x_content_type_options' => $value,
+            'referrer_policy' => $value,
+        ]);
+
+        $this->assertNull($response->headers->get('Strict-Transport-Security'));
+        $this->assertNull($response->headers->get('X-Frame-Options'));
+        $this->assertNull($response->headers->get('X-Content-Type-Options'));
+        $this->assertNull($response->headers->get('Referrer-Policy'));
+    }
+
+    /**
+     * @return array<string, array{mixed}>
+     */
+    public static function nonStringValues(): array
+    {
+        return [
+            'null' => [null],
+            'true' => [true],
+            'int' => [1],
+            'array' => [['DENY']],
+        ];
     }
 
     private function runMiddleware(Request $request, array $config = []): Response
