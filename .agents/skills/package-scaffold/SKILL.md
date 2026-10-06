@@ -16,8 +16,9 @@ Add features as self-contained modules under `src/Features/<Name>/`, wired throu
 3. Use Statamic's `AddonServiceProvider` properties (`$middlewareGroups`, `$commands`, ...) for registration. Override `bootFeature()` only when you need custom boot logic; the base class calls it from `bootAddon()`.
 4. If the feature has config, add `config/<snake_name>.php`. It is merged under `juicebox.<snake_name>` and published with the tag `statamic-juicebox-<kebab-name>-config`. `$config` is on by default; the file is skipped silently if it does not exist.
 5. Register the provider in `composer.json` under `extra.laravel.providers`, and add it to `getPackageProviders()` in `tests/TestCase.php`.
-6. Document user-facing behaviour in the README `Features` section, including the publish command and config keys.
-7. Cover it with tests (see the `package-testing` skill), then run `composer test`.
+6. For consumer-facing behaviour, add a Laravel Boost skill at `resources/boost/skills/juicebox-<feature>/SKILL.md` (front matter `name` equal to the folder name, plus `description`). Write it for apps that install the package, not for maintainers, and keep it in sync with the config; see `resources/boost/skills/juicebox-secure-headers/` and its drift test. This folder ships in the package, unlike `.agents/`.
+7. Document user-facing behaviour in the README `Features` section, including the publish command and config keys.
+8. Cover it with tests (see the `package-testing` skill), then run `composer test`.
 
 ## Conventions
 
