@@ -26,7 +26,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit)
 - Pest tests: `composer test:unit`
 - Type coverage: `composer test:types`
-- Code coverage: `composer test:coverage` (needs Xdebug)
+- Code coverage: `composer test:coverage` (needs Xdebug; under Herd see the `package-testing` skill for enabling it temporarily)
 - Static analysis: `composer analyse`
 - Formatting: `composer lint:check` (apply: `composer lint`)
 - Rector: `composer refactor:check` (apply: `composer refactor`)

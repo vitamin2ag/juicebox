@@ -25,12 +25,29 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 | `composer test:coverage` | `pest --parallel --coverage --min=100` (needs Xdebug; not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |
 
+## Running coverage under Herd
+
+`composer test:coverage` needs Xdebug, which Herd may have disabled in its CLI `php.ini`. If `php -m | grep -i xdebug` is empty, enable it for the run only. This single command restores the file afterwards, even if tests fail (keep it as one call; the subshell makes the `trap` fire at the end):
+
+```bash
+(
+  ini=$(php --ini | sed -n 's/^Additional .ini files parsed: *//p')
+  cp "$ini" "$ini.bak"
+  trap 'mv "$ini.bak" "$ini"' EXIT
+  sed -i '' -E 's/^[;#][[:space:]]*(zend_extension=.*xdebug.*)$/\1/' "$ini"
+  composer test:coverage
+)
+```
+
+Always quote `"$ini"` (the path contains a space). Never leave Xdebug enabled; afterwards `php -m | grep -i xdebug` must be empty again. No `herd restart` is needed; only the CLI PHP is affected.
+
 ## Test layout
 
 - Tests live in `tests/Features/<Name>/...` mirroring `src/Features/<Name>/...`, written Pest-style (`it()`, `expect()`, datasets). No test classes.
 - `tests/Pest.php` binds `Vitamin2\Juicebox\Tests\TestCase` to `Features/SecureHeaders`. **Pest throws `TestCaseAlreadyInUse` if a folder is bound twice**, so bind each new feature folder with its own `->in('Features/<Name>')` line instead of widening an existing one.
 - `tests/TestCase.php` registers the real feature providers. Add new ones there.
 - Tests for the generic `FeatureServiceProvider` use fixture providers from `tests/Fixtures/Features/` and the `FeatureServiceProviderTestCase` base class, so the fixtures stay out of the feature tests.
+- `tests/ArchTest.php` holds architecture rules (Pest `php` and `security` presets, `strict_types` on the whole namespace, features must not depend on test code). A new PHP file without `declare(strict_types=1);` fails it.
 - Set config per test with `config(['juicebox.<name>.<key>' => $value])`. To test env handling, `putenv(...)`, load the real `config/<name>.php` with `require`, and reset the env var in `afterEach`.
 - Use datasets for repeated cases instead of copy-pasted tests.
 
