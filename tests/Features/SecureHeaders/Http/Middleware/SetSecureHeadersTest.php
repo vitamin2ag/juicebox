@@ -130,7 +130,7 @@ class SetSecureHeadersTest extends TestCase
     {
         $response = $this->runMiddleware(
             $this->makeRequest(secure: true),
-            ['strict_transport_security' => 'max-age=63072000; includeSubDomains']
+            ['strict_transport_security' => 'max-age=63072000; includeSubDomains'],
         );
 
         $this->assertSame('max-age=63072000; includeSubDomains', $response->headers->get('Strict-Transport-Security'));
@@ -141,7 +141,7 @@ class SetSecureHeadersTest extends TestCase
     {
         $response = $this->runMiddleware(
             $this->makeRequest(secure: true),
-            ['strict_transport_security' => false]
+            ['strict_transport_security' => false],
         );
 
         $this->assertNull($response->headers->get('Strict-Transport-Security'));
@@ -178,7 +178,7 @@ class SetSecureHeadersTest extends TestCase
         $middleware = new SetSecureHeaders;
         $response = new Response;
 
-        return $middleware->handle($request, fn () => $response);
+        return $middleware->handle($request, fn (): Response => $response);
     }
 
     private function makeRequest(bool $secure = false): Request

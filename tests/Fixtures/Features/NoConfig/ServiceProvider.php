@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig;
 
 use Vitamin2\Juicebox\Features\FeatureServiceProvider;

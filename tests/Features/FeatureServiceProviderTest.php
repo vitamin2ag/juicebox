@@ -22,7 +22,7 @@ class FeatureServiceProviderTest extends TestCase
     {
         $paths = ServiceProvider::pathsToPublish(
             HasConfigServiceProvider::class,
-            'statamic-juicebox-has-config-config'
+            'statamic-juicebox-has-config-config',
         );
 
         $this->assertCount(1, $paths);
