@@ -36,7 +36,7 @@ class SetSecureHeaders
 
     private function setStrictTransportSecurity(): static
     {
-        if (($value = config('juicebox.secure_headers.strict_transport_security', false)) === false) {
+        if (($value = $this->configValue('strict_transport_security')) === null) {
             return $this;
         }
 
@@ -51,7 +51,7 @@ class SetSecureHeaders
 
     private function setXFrameOptions(): static
     {
-        if (($value = config('juicebox.secure_headers.x_frame_options', false)) === false) {
+        if (($value = $this->configValue('x_frame_options')) === null) {
             return $this;
         }
 
@@ -62,7 +62,7 @@ class SetSecureHeaders
 
     private function setXContentTypeOptions(): static
     {
-        if (($value = config('juicebox.secure_headers.x_content_type_options', false)) === false) {
+        if (($value = $this->configValue('x_content_type_options')) === null) {
             return $this;
         }
 
@@ -73,12 +73,19 @@ class SetSecureHeaders
 
     private function setReferrerPolicy(): static
     {
-        if (($value = config('juicebox.secure_headers.referrer_policy', false)) === false) {
+        if (($value = $this->configValue('referrer_policy')) === null) {
             return $this;
         }
 
         $this->response->headers->set('Referrer-Policy', $value);
 
         return $this;
+    }
+
+    private function configValue(string $key): ?string
+    {
+        $value = config("juicebox.secure_headers.{$key}", false);
+
+        return is_string($value) ? $value : null;
     }
 }

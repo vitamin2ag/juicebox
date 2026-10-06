@@ -2,6 +2,8 @@
 
 namespace Vitamin2\Juicebox\Features;
 
+use RuntimeException;
+use Statamic\Addons\Addon;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Support\Str;
 
@@ -24,13 +26,24 @@ abstract class FeatureServiceProvider extends AddonServiceProvider
             return $this;
         }
 
-        $this->mergeConfigFrom($origin, "{$addon}.{$filename}");
+        $this->mergeConfigFrom($origin, "$addon.$filename");
 
         $this->publishes([
-            $origin => config_path("{$addon}/{$filename}.php"),
-        ], "statamic-{$addon}-{$this->featureKebab()}-config");
+            $origin => config_path("$addon/$filename.php"),
+        ], "statamic-$addon-{$this->featureKebab()}-config");
 
         return $this;
+    }
+
+    protected function getAddon(): Addon
+    {
+        $addon = parent::getAddon();
+
+        if (! $addon instanceof Addon) {
+            throw new RuntimeException('Unable to resolve the addon for '.static::class.'.');
+        }
+
+        return $addon;
     }
 
     protected function featureConfigPath(): string
