@@ -63,3 +63,14 @@ composer refactor:check  # rector --dry-run
 ```
 
 `lint` and `refactor` (without `:check`) apply fixes instead of just checking.
+
+### Workbench
+
+A minimal Statamic 6 site (Orchestra Workbench) for trying the addon in a browser:
+
+``` bash
+composer serve   # builds the workbench and starts it on http://127.0.0.1:8000
+```
+
+The control panel is at `/cp`. A seeded super user is available for local use: `dev@vitamin2.digital` / `password` (`workbench/users/`).
+

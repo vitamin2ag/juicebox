@@ -10,3 +10,5 @@ phpunit.xml.dist export-ignore
 /AGENTS.md export-ignore
 /CLAUDE.md export-ignore
 /.claude export-ignore
+/testbench.yaml export-ignore
+/workbench export-ignore

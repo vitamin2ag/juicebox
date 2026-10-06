@@ -30,6 +30,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - Static analysis: `composer analyse`
 - Formatting: `composer lint:check` (apply: `composer lint`)
 - Rector: `composer refactor:check` (apply: `composer refactor`)
+- Workbench (Statamic 6 site for manual checks): `composer serve`; see the README
 
 ## Local Skills
 
