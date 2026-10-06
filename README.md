@@ -53,11 +53,13 @@ Set any value to `false` to omit that header entirely.
 ## Development
 
 ``` bash
-composer check           # analyse + lint:check + test — the full CI gate
+composer test            # full gate: analyse + lint:check + refactor:check + test:types + test:unit
+composer test:unit       # pest (parallel)
+composer test:types      # pest --type-coverage --min=100
+composer test:coverage   # pest --coverage --min=100 (needs Xdebug)
 composer analyse         # phpstan
 composer lint:check      # pint --test
 composer refactor:check  # rector --dry-run
-composer test            # phpunit
 ```
 
-`lint`, `refactor` (without `:check`) apply fixes instead of just checking.
+`lint` and `refactor` (without `:check`) apply fixes instead of just checking.
