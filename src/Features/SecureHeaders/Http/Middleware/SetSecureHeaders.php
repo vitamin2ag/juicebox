@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware;
 
 use Closure;
