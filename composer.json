@@ -26,12 +26,48 @@
     "require-dev": {
         "orchestra/testbench": "^10.8",
         "spatie/laravel-ray": "^1.43",
-        "laravel/pint": "^1.29"
+        "laravel/pint": "^1.29",
+        "larastan/larastan": "^3.0",
+        "phpstan/extension-installer": "^1.4",
+        "laravel/pao": "^1.1",
+        "rector/rector": "^2.5",
+        "driftingly/rector-laravel": "^2.5"
     },
     "config": {
         "allow-plugins": {
-            "pixelfear/composer-dist-plugin": true
+            "pixelfear/composer-dist-plugin": true,
+            "phpstan/extension-installer": true
         }
+    },
+    "scripts": {
+        "analyse": [
+            "vendor/bin/phpstan analyse"
+        ],
+        "lint": [
+            "vendor/bin/pint --parallel"
+        ],
+        "lint:check": [
+            "vendor/bin/pint --parallel --test"
+        ],
+        "refactor": [
+            "vendor/bin/rector process"
+        ],
+        "refactor:check": [
+            "vendor/bin/rector process --dry-run"
+        ],
+        "test": [
+            "vendor/bin/phpunit"
+        ],
+        "check": [
+            "@analyse",
+            "@lint:check",
+            "@refactor:check",
+            "@test"
+        ],
+        "fix": [
+            "@lint",
+            "@refactor"
+        ]
     },
     "extra": {
         "statamic": {

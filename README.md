@@ -49,3 +49,15 @@ Set any value to `false` to omit that header entirely.
 | Variable | Default | Description |
 |---|---|---|
 | `JUICEBOX_SECURE_HEADERS_ENABLED` | `true` | Master toggle — disables all headers when `false`. |
+
+## Development
+
+``` bash
+composer check           # analyse + lint:check + test — the full CI gate
+composer analyse         # phpstan
+composer lint:check      # pint --test
+composer refactor:check  # rector --dry-run
+composer test            # phpunit
+```
+
+`lint`, `refactor` (without `:check`) apply fixes instead of just checking.
