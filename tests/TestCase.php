@@ -21,7 +21,7 @@ abstract class TestCase extends AddonTestCase
      */
     protected function getPackageProviders($app): array
     {
-        return array_merge(parent::getPackageProviders($app), self::composerProviders());
+        return array_values(array_unique(array_merge(parent::getPackageProviders($app), self::composerProviders())));
     }
 
     /**
