@@ -20,10 +20,10 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 2. Put feature code next to the provider (`Http/Middleware/`, `Concerns/`, ...). Nothing outside `src/Features/<Name>/`.
 3. If configurable, add `config/<snake_name>.php`. Read env vars here and only here. `false` means "off"; never `null`.
 4. Add the provider to `composer.json` under `extra.laravel.providers` **(enforced)**. The test case reads this list, so no test wiring is needed.
-5. Write Pest tests in `tests/Features/<Name>/` (see the `package-testing` skill): happy path, `false` path, invalid input. `tests/Pest.php` binds everything under `tests/Features` automatically.
+5. Write Pest tests in `tests/Features/<Name>/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `tests/Features` automatically.
 6. Add the Boost skill `resources/boost/skills/juicebox-<kebab-name>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
 7. Document the feature in the README `Features` section, including the publish command **(enforced for features with config)** and config keys.
-8. Run `composer test`, and `composer test:coverage` (100% required).
+8. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (100% required each; both need a coverage driver).
 
 ## Conventions
 
@@ -133,6 +133,8 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vitamin2\Juicebox\Features\RemovePoweredBy\Http\Middleware\RemovePoweredHeader;
+
+mutates(RemovePoweredHeader::class);
 
 function runRemovePoweredBy(): Response
 {

@@ -23,9 +23,12 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 | `composer test:unit` | `pest --parallel` |
 | `composer test:types` | `pest --type-coverage --min=100` |
 | `composer test:coverage` | `pest --parallel --coverage --min=100` (needs a loaded driver; locally see "Running coverage" below; not part of `composer test`) |
+| `composer test:mutate` | `pest --mutate --parallel --min=100` (needs a loaded driver like coverage; not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |
 
-## Running coverage
+## Running coverage and mutation tests
+
+Mutation testing (`composer test:mutate`) changes the code and checks that a test fails; surviving mutants mean weak assertions, so fix the test, never lower `--min`. It needs the same driver as coverage: use the steps below with `--mutate` in place of `--coverage` (keep `--parallel`, `--min=100` and `--passthru-php`).
 
 1. Check for a driver: `php -m | grep -iE '^(xdebug|pcov)$'`. If one is listed, run `composer test:coverage`.
 2. Otherwise find the Xdebug build for the current PHP, in this order, and use the first file that exists:
@@ -50,6 +53,7 @@ php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_reques
 
 ## Test layout
 
+- Every feature test file declares `mutates(<Class>::class)` (enforced by `PackageConventionsTest`).
 - Tests live in `tests/Features/<Name>/...` mirroring `src/Features/<Name>/...`, written Pest-style (`it()`, `expect()`, datasets). No test classes.
 - `tests/Pest.php` binds `TestCase` to everything under `tests/Features`; do not add per-feature bindings. Tests that need a different base case (like the generic provider tests in `tests/Core`) use `uses(...)` themselves.
 - `tests/TestCase.php` registers the providers listed in `composer.json`; nothing to wire for new features.

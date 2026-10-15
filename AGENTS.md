@@ -11,7 +11,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Quality Bar
 
 - PHPStan runs at `level: max` over `src`, `config` and `tests`. Fix the underlying type; do not use `@phpstan-ignore`, baselines, `assert()` or casts to silence it.
-- Type coverage and code coverage must stay at 100%.
+- Type coverage, code coverage and mutation score (`composer test:mutate`) must stay at 100%.
 - Every PHP file declares `strict_types=1`.
 
 ## Git & Commits

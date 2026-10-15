@@ -5,11 +5,14 @@ declare(strict_types=1);
 use Illuminate\Support\ServiceProvider;
 use Statamic\Addons\Manifest;
 use Statamic\Facades\Addon;
+use Vitamin2\Juicebox\Features\FeatureServiceProvider;
 use Vitamin2\Juicebox\Tests\Core\FeatureServiceProviderTestCase;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
 
 uses(FeatureServiceProviderTestCase::class);
+
+mutates(FeatureServiceProvider::class);
 
 it('merges feature config under namespaced key', function (): void {
     expect(config('juicebox.has_config'))->toBeArray()

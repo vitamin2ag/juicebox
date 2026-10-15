@@ -53,6 +53,19 @@ it('documents the config publish tag of every feature in the README', function (
     expect($readme)->toContain('statamic-juicebox-'.Str::kebab($feature).'-config');
 })->with('features with config');
 
+it('declares what its tests mutate for every feature', function (string $feature): void {
+    $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/Features/$feature", FilesystemIterator::SKIP_DOTS));
+    $declared = false;
+
+    foreach ($tests as $file) {
+        if ($file instanceof SplFileInfo && str_contains((string) file_get_contents($file->getPathname()), 'mutates(')) {
+            $declared = true;
+        }
+    }
+
+    expect($declared)->toBeTrue();
+})->with('features');
+
 it('does not silence PHPStan', function (): void {
     expect(glob(__DIR__.'/../*baseline*'))->toBe([]);
 
