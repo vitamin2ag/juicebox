@@ -105,6 +105,11 @@ it('declares what its tests mutate for every feature', function (string $feature
     expect($declared)->toBeTrue();
 })->with('features');
 
+it('keeps the changelog and release notes config the release workflow needs', function (): void {
+    expect(__DIR__.'/../.github/release.yml')->toBeFile()
+        ->and((string) file_get_contents(__DIR__.'/../CHANGELOG.md'))->toMatch('/^## \[Unreleased\]/m');
+});
+
 it('does not silence PHPStan', function (): void {
     expect(glob(__DIR__.'/../*baseline*'))->toBe([]);
 
