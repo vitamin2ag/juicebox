@@ -65,7 +65,7 @@ php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_reques
 
 ## Tooling gotchas
 
-- PHPStan runs at `level: max` over `src`, `config` and `tests`. Do not suppress errors with `@phpstan-ignore`, baselines, `assert()` or casts; fix the type.
+- PHPStan runs at `level: max` over `src`, `config` and `tests`, with `pest-plugin-phpstan` (registered automatically) so it understands `it()`, `expect()` and `$this` in tests. Its `pest.*` errors (redundant or impossible expectations, empty tests, duplicate descriptions) point at real test problems; fix the test. Do not suppress errors with `@phpstan-ignore`, baselines, `assert()` or casts; fix the type.
 - Rector skips name importing in `tests/` (`NameImportingPostRector`). Do not add namespaces to Pest files just to satisfy imports.
 - Rector's first-class-callable rewrite breaks closures that rely on `->call($object)`; use `ReflectionMethod` to reach protected members.
 - Pint style is the repo's `pint.json`. Run `composer lint` rather than hand-formatting.
