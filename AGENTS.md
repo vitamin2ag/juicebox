@@ -28,6 +28,11 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - `tests/Features/<Name>/` mirrors `src/`; `tests/Core/` covers the base provider.
 - `workbench/`: Statamic 6 site for manual checks (`composer serve`, then e.g. `curl -I http://127.0.0.1:8000`).
 
+## Releases
+
+- Tags and GitHub releases are named `vX.Y.Z` (SemVer). Release notes come from PR labels (`.github/release.yml`); `CHANGELOG.md` is written by the release workflow, so don't edit released sections.
+- Never tag, push, publish a release or create labels without explicit approval; use the `package-release` skill.
+
 ## Quick Commands
 
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit). Fix with `composer lint` / `composer refactor`.
@@ -37,3 +42,5 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 - `package-scaffold`: use when adding a feature module or changing how features are wired, configured, or published (steps live in `docs/adding-a-feature.md`).
 - `package-testing`: use when writing or changing tests, or running the quality gates.
+- `package-release`: use when preparing a release, release notes, tags, or changing release workflows.
+- `package-compatibility`: use when reviewing code, dependencies, or CI against the supported PHP and Statamic range.
