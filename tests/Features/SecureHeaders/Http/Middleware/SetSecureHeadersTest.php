@@ -7,6 +7,8 @@ use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 
+mutates(SetSecureHeaders::class);
+
 /**
  * @param  array<string, mixed>  $config
  */

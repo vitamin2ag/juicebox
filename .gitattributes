@@ -12,3 +12,8 @@ phpunit.xml.dist export-ignore
 /.claude export-ignore
 /testbench.yaml export-ignore
 /workbench export-ignore
+/rector.php export-ignore
+/pint.json export-ignore
+/phpstan.neon.dist export-ignore
+/build export-ignore
+/.github export-ignore

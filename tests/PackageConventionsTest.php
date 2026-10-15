@@ -1,0 +1,131 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Str;
+use Vitamin2\Juicebox\Features\FeatureServiceProvider;
+use Vitamin2\Juicebox\Tests\TestCase;
+
+/**
+ * @return array<string, array{string}>
+ */
+function juiceboxFeatures(): array
+{
+    $features = [];
+
+    foreach (glob(__DIR__.'/../src/Features/*', GLOB_ONLYDIR) ?: [] as $directory) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+                $features[basename($directory)] = [basename($directory)];
+
+                break;
+            }
+        }
+    }
+
+    return $features;
+}
+
+dataset('features', juiceboxFeatures(...));
+
+dataset('features with config', fn (): array => array_filter(
+    juiceboxFeatures(),
+    fn (array $feature): bool => file_exists(__DIR__.'/../config/'.Str::snake($feature[0]).'.php'),
+));
+
+it('has a provider for every feature registered in composer.json', function (string $feature): void {
+    expect(TestCase::composerProviders())
+        ->toContain("Vitamin2\\Juicebox\\Features\\$feature\\ServiceProvider");
+})->with('features');
+
+it('extends the feature base provider in every feature', function (string $feature): void {
+    expect("Vitamin2\\Juicebox\\Features\\$feature\\ServiceProvider")
+        ->toExtend(FeatureServiceProvider::class);
+})->with('features');
+
+it('ships a Boost skill for every feature', function (string $feature): void {
+    expect(__DIR__.'/../resources/boost/skills/juicebox-'.Str::kebab($feature).'/SKILL.md')->toBeFile();
+})->with('features');
+
+/**
+ * Returns the body of the README `###` section whose heading contains the given text.
+ */
+function readmeSection(string $headline): ?string
+{
+    $section = null;
+
+    foreach (explode("\n", (string) file_get_contents(__DIR__.'/../README.md')) as $line) {
+        if (preg_match('/^#{1,3} /', $line) === 1) {
+            if ($section !== null) {
+                break;
+            }
+
+            if (str_starts_with($line, '### ') && str_contains($line, $headline)) {
+                $section = '';
+            }
+
+            continue;
+        }
+
+        if ($section !== null) {
+            $section .= $line."\n";
+        }
+    }
+
+    return $section;
+}
+
+it('documents every config key and the publish command of every feature in its README section', function (string $feature): void {
+    $headline = Str::headline($feature);
+    $section = readmeSection($headline);
+
+    if ($section === null) {
+        $this->fail("README.md needs a '### ' heading containing '$headline' under Features.");
+    }
+
+    $config = require __DIR__.'/../config/'.Str::snake($feature).'.php';
+
+    expect($section)->toContain('php artisan vendor:publish --tag=statamic-juicebox-'.Str::kebab($feature).'-config');
+
+    foreach (array_keys(is_array($config) ? $config : []) as $key) {
+        expect($section)->toContain("`$key`");
+    }
+})->with('features with config');
+
+it('declares what its tests mutate for every feature', function (string $feature): void {
+    $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/Features/$feature", FilesystemIterator::SKIP_DOTS));
+    $declared = false;
+
+    foreach ($tests as $file) {
+        if ($file instanceof SplFileInfo && str_contains((string) file_get_contents($file->getPathname()), 'mutates(')) {
+            $declared = true;
+        }
+    }
+
+    expect($declared)->toBeTrue();
+})->with('features');
+
+it('keeps the changelog and release notes config the release workflow needs', function (): void {
+    expect(__DIR__.'/../.github/release.yml')->toBeFile()
+        ->and((string) file_get_contents(__DIR__.'/../CHANGELOG.md'))->toMatch('/^## \[Unreleased\]/m');
+});
+
+it('does not silence PHPStan', function (): void {
+    expect(glob(__DIR__.'/../*baseline*'))->toBe([]);
+
+    $neon = (string) file_get_contents(__DIR__.'/../phpstan.neon.dist');
+
+    expect($neon)->not->toContain('baseline')->not->toContain('ignoreErrors');
+
+    foreach (['src', 'config', 'tests'] as $directory) {
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../$directory"));
+
+        foreach ($files as $file) {
+            if (! $file instanceof SplFileInfo || $file->getExtension() !== 'php' || $file->getFilename() === basename(__FILE__)) {
+                continue;
+            }
+
+            expect((string) file_get_contents($file->getPathname()))->not->toContain('@phpstan-ignore');
+        }
+    }
+});

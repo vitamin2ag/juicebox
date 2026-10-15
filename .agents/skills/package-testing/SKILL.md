@@ -22,38 +22,50 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 | `composer test` | the full gate: analyse, lint:check, refactor:check, test:types, test:unit |
 | `composer test:unit` | `pest --parallel` |
 | `composer test:types` | `pest --type-coverage --min=100` |
-| `composer test:coverage` | `pest --parallel --coverage --min=100` (needs Xdebug; not part of `composer test`) |
+| `composer test:coverage` | `pest --parallel --coverage --min=100` (needs a loaded driver; locally see "Running coverage" below; not part of `composer test`) |
+| `composer test:mutate` | `pest --mutate --parallel --min=100` (needs a loaded driver like coverage; not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |
 
-## Running coverage under Herd
+## Running coverage and mutation tests
 
-`composer test:coverage` needs Xdebug, which Herd may have disabled in its CLI `php.ini`. If `php -m | grep -i xdebug` is empty, enable it for the run only. This single command restores the file afterwards, even if tests fail (keep it as one call; the subshell makes the `trap` fire at the end):
+Mutation testing (`composer test:mutate`) changes the code and checks that a test fails; surviving mutants mean weak assertions, so fix the test, never lower `--min`. It needs the same driver as coverage: use the steps below with `--mutate --min=100` in place of `--coverage`, but run it **serially** (no `--parallel`, no `--passthru-php`): a local parallel run with `--passthru-php` reported a false 100% while CI found surviving mutants. If CI and local disagree, trust the serial run (add `--no-cache` to rule out stale results).
+
+1. Check for a driver: `php -m | grep -iE '^(xdebug|pcov)$'`. If one is listed, run `composer test:coverage`.
+2. Otherwise find the Xdebug build for the current PHP, in this order, and use the first file that exists:
+   - a `zend_extension=` line mentioning `xdebug` (commented out is fine) in the ini files listed by `php --ini`;
+   - `xdebug.so` in the directory printed by `php -r 'echo ini_get("extension_dir");'`;
+   - a file named like `*xdebug*` that matches this PHP's major.minor (`php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'`) and CPU (`uname -m`), looked for beside the PHP binary (`php -r 'echo PHP_BINARY;'`) and in the install directory of whatever manages this PHP (a version manager, Homebrew, an app bundle). Search those directories only, never the whole disk.
+
+   Example (Herd): `/Applications/Herd.app/Contents/Resources/xdebug/xdebug-<major><minor>-<arch>.so`, e.g. `xdebug-85-arm64.so`.
+
+   If none exists, stop and tell the user to install Xdebug or pcov for this PHP version.
+3. Load it for this run only, passing the same flags to the parallel workers:
 
 ```bash
-(
-  ini=$(php --ini | sed -n 's/^Additional .ini files parsed: *//p')
-  cp "$ini" "$ini.bak"
-  trap 'mv "$ini.bak" "$ini"' EXIT
-  sed -i '' -E 's/^[;#][[:space:]]*(zend_extension=.*xdebug.*)$/\1/' "$ini"
-  composer test:coverage
-)
+php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_request=no \
+  vendor/bin/pest --parallel --coverage --min=100 \
+  --passthru-php="-d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_request=no"
 ```
 
-Always quote `"$ini"` (the path contains a space). Never leave Xdebug enabled; afterwards `php -m | grep -i xdebug` must be empty again. No `herd restart` is needed; only the CLI PHP is affected.
+- Never edit `php.ini` to enable a driver.
+- `--passthru-php` is required with `--parallel`; without it the workers fail with `MissingResultsException`.
+- `composer test` only checks type coverage (`--type-coverage --min=100`), never code coverage.
 
 ## Test layout
 
+- Every feature test file declares `mutates(<Class>::class)` (enforced by `PackageConventionsTest`).
 - Tests live in `tests/Features/<Name>/...` mirroring `src/Features/<Name>/...`, written Pest-style (`it()`, `expect()`, datasets). No test classes.
-- `tests/Pest.php` binds `Vitamin2\Juicebox\Tests\TestCase` to `Features/SecureHeaders`. **Pest throws `TestCaseAlreadyInUse` if a folder is bound twice**, so bind each new feature folder with its own `->in('Features/<Name>')` line instead of widening an existing one.
-- `tests/TestCase.php` registers the real feature providers. Add new ones there.
-- Tests for the generic `FeatureServiceProvider` use fixture providers from `tests/Fixtures/Features/` and the `FeatureServiceProviderTestCase` base class, so the fixtures stay out of the feature tests.
+- `tests/Pest.php` binds `TestCase` to everything under `tests/Features`; do not add per-feature bindings. Tests that need a different base case (like the generic provider tests in `tests/Core`) call `pest()->extend(...)` themselves (Rector rewrites `uses()` to this).
+- `tests/TestCase.php` registers the providers listed in `composer.json`; nothing to wire for new features.
+- Tests for the generic `FeatureServiceProvider` live in `tests/Core/` and use fixture providers from `tests/Fixtures/Features/` and the `FeatureServiceProviderTestCase` base class, so the fixtures stay out of the feature tests.
+- `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider registered, Boost skill, README section (publish command and config keys), no PHPStan suppressions).
 - `tests/ArchTest.php` holds architecture rules (Pest `php` and `security` presets, `strict_types` on the whole namespace, features must not depend on test code). A new PHP file without `declare(strict_types=1);` fails it.
 - Set config per test with `config(['juicebox.<name>.<key>' => $value])`. To test env handling, `putenv(...)`, load the real `config/<name>.php` with `require`, and reset the env var in `afterEach`.
 - Use datasets for repeated cases instead of copy-pasted tests.
 
 ## Tooling gotchas
 
-- PHPStan runs at `level: max` over `src`, `config` and `tests`. Do not suppress errors with `@phpstan-ignore`, baselines, `assert()` or casts; fix the type.
+- PHPStan runs at `level: max` over `src`, `config` and `tests`, with `pest-plugin-phpstan` (registered automatically) so it understands `it()`, `expect()` and `$this` in tests. Its `pest.*` errors (redundant or impossible expectations, empty tests, duplicate descriptions) point at real test problems; fix the test. Do not suppress errors with `@phpstan-ignore`, baselines, `assert()` or casts; fix the type.
 - Rector skips name importing in `tests/` (`NameImportingPostRector`). Do not add namespaces to Pest files just to satisfy imports.
 - Rector's first-class-callable rewrite breaks closures that rely on `->call($object)`; use `ReflectionMethod` to reach protected members.
 - Pint style is the repo's `pint.json`. Run `composer lint` rather than hand-formatting.

@@ -40,6 +40,7 @@ class WorkbenchServiceProvider extends ServiceProvider
                 'id' => 'vitamin2/juicebox',
                 'slug' => null,
                 'version' => 'dev-main',
+                'raw_version' => 'dev-main',
                 'namespace' => 'Vitamin2\\Juicebox',
                 'autoload' => 'src',
                 'provider' => JuiceboxServiceProvider::class,

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Pest\Rector\Set\PestSetList;
 use Rector\Config\RectorConfig;
 use Rector\PostRector\Rector\NameImportingPostRector;
 use Rector\Set\ValueObject\LevelSetList;
@@ -28,6 +29,7 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_COLLECTION,
         LaravelSetList::LARAVEL_TESTING,
         LaravelSetList::LARAVEL_TYPE_DECLARATIONS,
+        PestSetList::CODING_STYLE,
     ])
     ->withImportNames(importDocBlockNames: false)
     ->withSkip([

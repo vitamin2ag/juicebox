@@ -5,11 +5,15 @@ declare(strict_types=1);
 use Illuminate\Support\ServiceProvider;
 use Statamic\Addons\Manifest;
 use Statamic\Facades\Addon;
-use Vitamin2\Juicebox\Tests\Features\FeatureServiceProviderTestCase;
+use Vitamin2\Juicebox\Features\FeatureServiceProvider;
+use Vitamin2\Juicebox\Features\SecureHeaders\ServiceProvider as SecureHeadersServiceProvider;
+use Vitamin2\Juicebox\Tests\Core\FeatureServiceProviderTestCase;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
 
-uses(FeatureServiceProviderTestCase::class);
+pest()->extend(FeatureServiceProviderTestCase::class);
+
+mutates(FeatureServiceProvider::class);
 
 it('merges feature config under namespaced key', function (): void {
     expect(config('juicebox.has_config'))->toBeArray()
@@ -33,6 +37,13 @@ it('calls bootFeature on extending class', function (): void {
 
 it('skips config merge when feature has no config file', function (): void {
     expect(config('juicebox.no_config'))->toBeNull();
+});
+
+it('resolves the config path inside the addon directory', function (): void {
+    $provider = new SecureHeadersServiceProvider(app());
+
+    expect(new ReflectionMethod($provider, 'featureConfigPath')->invoke($provider))
+        ->toBe(dirname(__DIR__, 2).'/config/secure_headers.php');
 });
 
 it('throws when the addon cannot be resolved', function (): void {

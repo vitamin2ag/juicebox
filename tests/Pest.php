@@ -6,4 +6,4 @@ use Vitamin2\Juicebox\Tests\TestCase;
 
 pest()
     ->extend(TestCase::class)
-    ->in('Features/SecureHeaders');
+    ->in('Features');

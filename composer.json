@@ -86,6 +86,10 @@
             "@putenv XDEBUG_MODE=coverage",
             "vendor/bin/pest --parallel --coverage --min=100"
         ],
+        "test:mutate": [
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/pest --mutate --parallel --min=100"
+        ],
         "test:types": [
             "vendor/bin/pest --type-coverage --min=100"
         ],
