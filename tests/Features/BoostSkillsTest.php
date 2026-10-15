@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 
-dataset('boost skills', function (): array {
+/**
+ * @return array<string, array{string, string}>
+ */
+function boostSkills(): array
+{
     $skills = [];
 
     foreach (glob(__DIR__.'/../../resources/boost/skills/*/SKILL.md') ?: [] as $path) {
@@ -12,7 +16,14 @@ dataset('boost skills', function (): array {
     }
 
     return $skills;
-});
+}
+
+dataset('boost skills', boostSkills(...));
+
+dataset('boost skills with config', fn (): array => array_filter(
+    boostSkills(),
+    fn (array $skill): bool => file_exists(__DIR__.'/../../config/'.Str::snake(Str::studly(Str::after($skill[0], 'juicebox-'))).'.php'),
+));
 
 it('has Boost skill front matter matching its folder', function (string $name, string $skill): void {
     expect($skill)->toStartWith("---\nname: $name\ndescription: ");
@@ -24,4 +35,4 @@ it('documents every config key in the Boost skill', function (string $name, stri
     foreach (array_keys(config()->array("juicebox.$feature")) as $key) {
         expect($skill)->toContain("`$key`");
     }
-})->with('boost skills');
+})->with('boost skills with config');

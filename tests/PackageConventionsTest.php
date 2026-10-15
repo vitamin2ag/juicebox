@@ -14,10 +14,12 @@ function juiceboxFeatures(): array
     $features = [];
 
     foreach (glob(__DIR__.'/../src/Features/*', GLOB_ONLYDIR) ?: [] as $directory) {
-        $php = glob("$directory/{,*/,*/*/,*/*/*/}*.php", GLOB_BRACE) ?: [];
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+                $features[basename($directory)] = [basename($directory)];
 
-        if ($php !== []) {
-            $features[basename($directory)] = [basename($directory)];
+                break;
+            }
         }
     }
 
@@ -52,7 +54,11 @@ it('documents the config publish tag of every feature in the README', function (
 })->with('features with config');
 
 it('does not silence PHPStan', function (): void {
-    expect(__DIR__.'/../phpstan-baseline.neon')->not->toBeFile();
+    expect(glob(__DIR__.'/../*baseline*'))->toBe([]);
+
+    $neon = (string) file_get_contents(__DIR__.'/../phpstan.neon.dist');
+
+    expect($neon)->not->toContain('baseline')->not->toContain('ignoreErrors');
 
     foreach (['src', 'config', 'tests'] as $directory) {
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../$directory"));

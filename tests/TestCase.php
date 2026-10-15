@@ -7,6 +7,7 @@ namespace Vitamin2\Juicebox\Tests;
 use Illuminate\Config\Repository;
 use JsonException;
 use Override;
+use RuntimeException;
 use Statamic\Testing\AddonTestCase;
 use Vitamin2\Juicebox\ServiceProvider;
 
@@ -26,7 +27,7 @@ abstract class TestCase extends AddonTestCase
     /**
      * @return list<class-string>
      *
-     * @throws JsonException
+     * @throws JsonException|RuntimeException
      */
     public static function composerProviders(): array
     {
@@ -37,9 +38,11 @@ abstract class TestCase extends AddonTestCase
         $classes = [];
 
         foreach ($providers as $provider) {
-            if (is_string($provider) && class_exists($provider)) {
-                $classes[] = $provider;
+            if (! is_string($provider) || ! class_exists($provider)) {
+                throw new RuntimeException('composer.json lists a provider that cannot be loaded: '.(is_string($provider) ? $provider : get_debug_type($provider)).'.');
             }
+
+            $classes[] = $provider;
         }
 
         return $classes;
