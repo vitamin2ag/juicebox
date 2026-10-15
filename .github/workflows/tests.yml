@@ -17,12 +17,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: true
-      matrix:
-        stability: [prefer-lowest, prefer-stable]
-
-    name: P8.5 - ${{ matrix.stability }}
+    name: Tests
 
     steps:
       - name: Checkout code
@@ -39,7 +34,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress --no-scripts
+          composer update --prefer-stable --prefer-dist --no-interaction --no-progress --no-scripts
           composer run prepare
 
       - name: PHPStan
@@ -97,7 +92,7 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
           ini-values: error_reporting=E_ALL
           tools: composer:v2
-          coverage: pcov
+          coverage: xdebug
 
       - name: Install dependencies
         run: |
