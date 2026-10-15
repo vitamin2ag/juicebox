@@ -10,7 +10,7 @@ use Vitamin2\Juicebox\Tests\Core\FeatureServiceProviderTestCase;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
 
-uses(FeatureServiceProviderTestCase::class);
+pest()->extend(FeatureServiceProviderTestCase::class);
 
 mutates(FeatureServiceProvider::class);
 

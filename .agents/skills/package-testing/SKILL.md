@@ -55,7 +55,7 @@ php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_reques
 
 - Every feature test file declares `mutates(<Class>::class)` (enforced by `PackageConventionsTest`).
 - Tests live in `tests/Features/<Name>/...` mirroring `src/Features/<Name>/...`, written Pest-style (`it()`, `expect()`, datasets). No test classes.
-- `tests/Pest.php` binds `TestCase` to everything under `tests/Features`; do not add per-feature bindings. Tests that need a different base case (like the generic provider tests in `tests/Core`) use `uses(...)` themselves.
+- `tests/Pest.php` binds `TestCase` to everything under `tests/Features`; do not add per-feature bindings. Tests that need a different base case (like the generic provider tests in `tests/Core`) call `pest()->extend(...)` themselves (Rector rewrites `uses()` to this).
 - `tests/TestCase.php` registers the providers listed in `composer.json`; nothing to wire for new features.
 - Tests for the generic `FeatureServiceProvider` live in `tests/Core/` and use fixture providers from `tests/Fixtures/Features/` and the `FeatureServiceProviderTestCase` base class, so the fixtures stay out of the feature tests.
 - `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider registered, Boost skill, README publish tag, no PHPStan suppressions).
