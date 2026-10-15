@@ -47,10 +47,49 @@ it('ships a Boost skill for every feature', function (string $feature): void {
     expect(__DIR__.'/../resources/boost/skills/juicebox-'.Str::kebab($feature).'/SKILL.md')->toBeFile();
 })->with('features');
 
-it('documents the config publish tag of every feature in the README', function (string $feature): void {
-    $readme = (string) file_get_contents(__DIR__.'/../README.md');
+/**
+ * Returns the body of the README `###` section whose heading contains the given text.
+ */
+function readmeSection(string $headline): ?string
+{
+    $section = null;
 
-    expect($readme)->toContain('statamic-juicebox-'.Str::kebab($feature).'-config');
+    foreach (explode("\n", (string) file_get_contents(__DIR__.'/../README.md')) as $line) {
+        if (preg_match('/^#{1,3} /', $line) === 1) {
+            if ($section !== null) {
+                break;
+            }
+
+            if (str_starts_with($line, '### ') && str_contains($line, $headline)) {
+                $section = '';
+            }
+
+            continue;
+        }
+
+        if ($section !== null) {
+            $section .= $line."\n";
+        }
+    }
+
+    return $section;
+}
+
+it('documents every config key and the publish command of every feature in its README section', function (string $feature): void {
+    $headline = Str::headline($feature);
+    $section = readmeSection($headline);
+
+    if ($section === null) {
+        $this->fail("README.md needs a '### ' heading containing '$headline' under Features.");
+    }
+
+    $config = require __DIR__.'/../config/'.Str::snake($feature).'.php';
+
+    expect($section)->toContain('php artisan vendor:publish --tag=statamic-juicebox-'.Str::kebab($feature).'-config');
+
+    foreach (array_keys(is_array($config) ? $config : []) as $key) {
+        expect($section)->toContain("`$key`");
+    }
 })->with('features with config');
 
 it('declares what its tests mutate for every feature', function (string $feature): void {

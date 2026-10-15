@@ -10,5 +10,5 @@ Read `docs/adding-a-feature.md` first: it is the single source for the checklist
 ## Agent gotchas
 
 - Config filename, key and publish tag come from the second-to-last namespace segment of the provider (`Features\<Name>\ServiceProvider`). Do not move providers.
-- Provider registration, Boost skill presence and README publish tag are enforced by `tests/PackageConventionsTest.php`; run `composer test` before reporting done.
+- Provider registration, Boost skill presence and README section (publish command and config keys) are enforced by `tests/PackageConventionsTest.php`; run `composer test` before reporting done.
 - Overriding `bootAddon()`, empty `bootFeature()` overrides, properties repeating the base default, and files "for later" are anti-patterns.

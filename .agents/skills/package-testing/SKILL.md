@@ -58,7 +58,7 @@ php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_reques
 - `tests/Pest.php` binds `TestCase` to everything under `tests/Features`; do not add per-feature bindings. Tests that need a different base case (like the generic provider tests in `tests/Core`) call `pest()->extend(...)` themselves (Rector rewrites `uses()` to this).
 - `tests/TestCase.php` registers the providers listed in `composer.json`; nothing to wire for new features.
 - Tests for the generic `FeatureServiceProvider` live in `tests/Core/` and use fixture providers from `tests/Fixtures/Features/` and the `FeatureServiceProviderTestCase` base class, so the fixtures stay out of the feature tests.
-- `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider registered, Boost skill, README publish tag, no PHPStan suppressions).
+- `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider registered, Boost skill, README section (publish command and config keys), no PHPStan suppressions).
 - `tests/ArchTest.php` holds architecture rules (Pest `php` and `security` presets, `strict_types` on the whole namespace, features must not depend on test code). A new PHP file without `declare(strict_types=1);` fails it.
 - Set config per test with `config(['juicebox.<name>.<key>' => $value])`. To test env handling, `putenv(...)`, load the real `config/<name>.php` with `require`, and reset the env var in `afterEach`.
 - Use datasets for repeated cases instead of copy-pasted tests.
