@@ -5,33 +5,10 @@ description: "Use this skill when adding a new feature to the Juicebox addon (a 
 
 # Package Scaffold
 
-## Primary Goal
+Read `docs/adding-a-feature.md` first: it is the single source for the checklist, conventions and a worked example. Use `src/Features/SecureHeaders/` as the reference feature.
 
-Add features as self-contained modules under `src/Features/<Name>/`, wired through a `FeatureServiceProvider` subclass, so config merging and publish tags stay consistent.
+## Agent gotchas
 
-## Workflow
-
-1. Look at `src/Features/SecureHeaders/` as the reference feature, and at `src/Features/FeatureServiceProvider.php` for what the base class does for you.
-2. Create `src/Features/<Name>/ServiceProvider.php`, class `ServiceProvider`, extending `Vitamin2\Juicebox\Features\FeatureServiceProvider`. Put feature code next to it (`Http/Middleware/`, `Concerns/`, ...).
-3. Use Statamic's `AddonServiceProvider` properties (`$middlewareGroups`, `$commands`, ...) for registration. Override `bootFeature()` only when you need custom boot logic; the base class calls it from `bootAddon()`.
-4. If the feature has config, add `config/<snake_name>.php`. It is merged under `juicebox.<snake_name>` and published with the tag `statamic-juicebox-<kebab-name>-config`. `$config` is on by default; the file is skipped silently if it does not exist.
-5. Register the provider in `composer.json` under `extra.laravel.providers`, and add it to `getPackageProviders()` in `tests/TestCase.php`.
-6. For consumer-facing behaviour, add a Laravel Boost skill at `resources/boost/skills/juicebox-<feature>/SKILL.md` (front matter `name` equal to the folder name, plus `description`). Write it for apps that install the package, not for maintainers, and keep it in sync with the config; see `resources/boost/skills/juicebox-secure-headers/` and its drift test. This folder ships in the package, unlike `.agents/`.
-7. Document user-facing behaviour in the README `Features` section, including the publish command and config keys.
-8. Cover it with tests (see the `package-testing` skill), then run `composer test`.
-
-## Conventions
-
-- The config filename and tag are derived from the **second-to-last namespace segment** of the provider class (`...\Features\SecureHeaders\ServiceProvider` -> `secure_headers` / `secure-headers`). Keep the `Features\<Name>\ServiceProvider` layout or the derivation breaks.
-- Config values are read with `config('juicebox.<snake_name>.<key>')`. Never call `env()` outside `config/`; read env vars in the config file.
-- `false` in a config value disables the corresponding behaviour. Do not use `null` for "off".
-- Treat config values as `mixed`: validate or narrow them at the point of use (PHPStan runs at `max`).
-- All PHP files use `declare(strict_types=1);`. Use `#[Override]` when overriding parent properties or methods.
-
-## Anti-Patterns
-
-- Adding feature code outside `src/Features/<Name>/`.
-- Overriding `bootAddon()` in a feature instead of `bootFeature()`.
-- Empty `bootFeature()` overrides, or properties that repeat the base default.
-- Hand-rolling `mergeConfigFrom` or `publishes` calls in a feature; the base class does it.
-- Adding files "because a feature might need them later".
+- Config filename, key and publish tag come from the second-to-last namespace segment of the provider (`Features\<Name>\ServiceProvider`). Do not move providers.
+- Provider registration, Boost skill presence and README publish tag are enforced by `tests/PackageConventionsTest.php`; run `composer test` before reporting done.
+- Overriding `bootAddon()`, empty `bootFeature()` overrides, properties repeating the base default, and files "for later" are anti-patterns.

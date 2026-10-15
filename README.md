@@ -64,6 +64,8 @@ composer refactor:check  # rector --dry-run
 
 `lint` and `refactor` (without `:check`) apply fixes instead of just checking.
 
+See [docs/adding-a-feature.md](docs/adding-a-feature.md) for how to add a feature.
+
 ### Workbench
 
 A minimal Statamic 6 site (Orchestra Workbench) for trying the addon in a browser:
