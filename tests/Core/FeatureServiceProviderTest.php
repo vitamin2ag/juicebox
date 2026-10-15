@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\ServiceProvider;
 use Statamic\Addons\Manifest;
 use Statamic\Facades\Addon;
-use Vitamin2\Juicebox\Tests\Features\FeatureServiceProviderTestCase;
+use Vitamin2\Juicebox\Tests\Core\FeatureServiceProviderTestCase;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
 

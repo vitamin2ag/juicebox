@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vitamin2\Juicebox\Tests\Features;
+namespace Vitamin2\Juicebox\Tests\Core;
 
 use Vitamin2\Juicebox\Tests\Fixtures\Features\HasConfig\ServiceProvider as HasConfigServiceProvider;
 use Vitamin2\Juicebox\Tests\Fixtures\Features\NoConfig\ServiceProvider as NoConfigServiceProvider;
