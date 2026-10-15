@@ -17,6 +17,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Git & Commits
 
 - Only commit when explicitly instructed for that specific commit.
+- Never commit or push to `main`. Work on a branch and open a pull request; every change, new features included, goes through a PR. Force pushes to `main` are blocked.
 - Commit in logical units: one self-contained change per commit; split unrelated changes.
 - Keep subjects short, imperative and precise (e.g. `Add master toggle for Secure Headers`); add a body only when the subject is not self-explanatory.
 - No co-author trailers or AI attribution.
