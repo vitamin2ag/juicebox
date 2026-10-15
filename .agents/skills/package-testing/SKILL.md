@@ -28,7 +28,7 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 
 ## Running coverage and mutation tests
 
-Mutation testing (`composer test:mutate`) changes the code and checks that a test fails; surviving mutants mean weak assertions, so fix the test, never lower `--min`. It needs the same driver as coverage: use the steps below with `--mutate` in place of `--coverage` (keep `--parallel`, `--min=100` and `--passthru-php`).
+Mutation testing (`composer test:mutate`) changes the code and checks that a test fails; surviving mutants mean weak assertions, so fix the test, never lower `--min`. It needs the same driver as coverage: use the steps below with `--mutate --min=100` in place of `--coverage`, but run it **serially** (no `--parallel`, no `--passthru-php`): a local parallel run with `--passthru-php` reported a false 100% while CI found surviving mutants. If CI and local disagree, trust the serial run (add `--no-cache` to rule out stale results).
 
 1. Check for a driver: `php -m | grep -iE '^(xdebug|pcov)$'`. If one is listed, run `composer test:coverage`.
 2. Otherwise find the Xdebug build for the current PHP, in this order, and use the first file that exists:

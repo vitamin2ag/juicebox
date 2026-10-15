@@ -86,7 +86,7 @@ class SetSecureHeaders
 
     private function configValue(string $key): ?string
     {
-        $value = config("juicebox.secure_headers.{$key}", false);
+        $value = config("juicebox.secure_headers.{$key}");
 
         return is_string($value) ? $value : null;
     }
