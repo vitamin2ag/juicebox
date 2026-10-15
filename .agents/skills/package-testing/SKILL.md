@@ -22,24 +22,31 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 | `composer test` | the full gate: analyse, lint:check, refactor:check, test:types, test:unit |
 | `composer test:unit` | `pest --parallel` |
 | `composer test:types` | `pest --type-coverage --min=100` |
-| `composer test:coverage` | `pest --parallel --coverage --min=100` (needs Xdebug; not part of `composer test`) |
+| `composer test:coverage` | `pest --parallel --coverage --min=100` (needs a loaded driver; locally see "Running coverage" below; not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |
 
-## Running coverage under Herd
+## Running coverage
 
-`composer test:coverage` needs Xdebug, which Herd may have disabled in its CLI `php.ini`. If `php -m | grep -i xdebug` is empty, enable it for the run only. This single command restores the file afterwards, even if tests fail (keep it as one call; the subshell makes the `trap` fire at the end):
+1. Check for a driver: `php -m | grep -iE '^(xdebug|pcov)$'`. If one is listed, run `composer test:coverage`.
+2. Otherwise find the Xdebug build for the current PHP, in this order, and use the first file that exists:
+   - a `zend_extension=` line mentioning `xdebug` (commented out is fine) in the ini files listed by `php --ini`;
+   - `xdebug.so` in the directory printed by `php -r 'echo ini_get("extension_dir");'`;
+   - a file named like `*xdebug*` that matches this PHP's major.minor (`php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'`) and CPU (`uname -m`), looked for beside the PHP binary (`php -r 'echo PHP_BINARY;'`) and in the install directory of whatever manages this PHP (a version manager, Homebrew, an app bundle). Search those directories only, never the whole disk.
+
+   Example (Herd): `/Applications/Herd.app/Contents/Resources/xdebug/xdebug-<major><minor>-<arch>.so`, e.g. `xdebug-85-arm64.so`.
+
+   If none exists, stop and tell the user to install Xdebug or pcov for this PHP version.
+3. Load it for this run only, passing the same flags to the parallel workers:
 
 ```bash
-(
-  ini=$(php --ini | sed -n 's/^Additional .ini files parsed: *//p')
-  cp "$ini" "$ini.bak"
-  trap 'mv "$ini.bak" "$ini"' EXIT
-  sed -i '' -E 's/^[;#][[:space:]]*(zend_extension=.*xdebug.*)$/\1/' "$ini"
-  composer test:coverage
-)
+php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_request=no \
+  vendor/bin/pest --parallel --coverage --min=100 \
+  --passthru-php="-d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_request=no"
 ```
 
-Always quote `"$ini"` (the path contains a space). Never leave Xdebug enabled; afterwards `php -m | grep -i xdebug` must be empty again. No `herd restart` is needed; only the CLI PHP is affected.
+- Never edit `php.ini` to enable a driver.
+- `--passthru-php` is required with `--parallel`; without it the workers fail with `MissingResultsException`.
+- `composer test` only checks type coverage (`--type-coverage --min=100`), never code coverage.
 
 ## Test layout
 
