@@ -16,5 +16,5 @@ Read `docs/adding-a-feature.md` first: it is the single source for the checklist
 - Keep fieldsets, blueprints and stubs in `features/<Name>/resources/`, and fixtures in `features/<Name>/tests/__Fixtures__/`.
 - Name artisan commands `statamic:juicebox:<slug>:<action>`.
 - Call the parent first when overriding `boot()` or `register()`.
-- Run `composer test` before reporting done; it enforces the provider location, the Boost skill and the README section (publish command and config keys).
+- Run `composer test` before reporting done; it enforces the provider location, the Boost skill, the feature doc `docs/features/<slug>.md` (publish command and config keys) and its link in the README.
 - Add only the code the behaviour needs.
