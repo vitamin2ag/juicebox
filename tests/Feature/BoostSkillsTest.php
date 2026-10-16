@@ -22,7 +22,7 @@ dataset('boost skills', boostSkills(...));
 
 dataset('boost skills with config', fn (): array => array_filter(
     boostSkills(),
-    fn (array $skill): bool => file_exists(__DIR__.'/../../config/'.Str::snake(Str::studly(Str::after($skill[0], 'juicebox-'))).'.php'),
+    fn (array $skill): bool => glob(__DIR__.'/../../features/*/config/'.Str::replace('-', '_', Str::after($skill[0], 'juicebox-')).'.php') !== [],
 ));
 
 it('has Boost skill front matter matching its folder', function (string $name, string $skill): void {
@@ -30,7 +30,7 @@ it('has Boost skill front matter matching its folder', function (string $name, s
 })->with('boost skills');
 
 it('documents every config key in the Boost skill', function (string $name, string $skill): void {
-    $feature = Str::snake(Str::studly(Str::after($name, 'juicebox-')));
+    $feature = Str::replace('-', '_', Str::after($name, 'juicebox-'));
 
     foreach (array_keys(config()->array("juicebox.$feature")) as $key) {
         expect($skill)->toContain("`$key`");

@@ -113,8 +113,7 @@
         },
         "laravel": {
             "providers": [
-                "Vitamin2\\Juicebox\\ServiceProvider",
-                "Vitamin2\\Juicebox\\Features\\SecureHeaders\\ServiceProvider"
+                "Vitamin2\\Juicebox\\ServiceProvider"
             ]
         }
     },

@@ -11,6 +11,13 @@ You can install this addon via Composer:
 composer require vitamin2/juicebox
 ```
 
+Features live in `features/` and are autoloaded by the [`edalzell/laravel-features-plugin`](https://github.com/edalzell/laravel-features) Composer plugin. Composer asks whether to allow it on install; if it was declined, allow it and rebuild the autoloader:
+
+``` bash
+composer config allow-plugins.edalzell/laravel-features-plugin true
+composer dump-autoload
+```
+
 ## Features
 
 ### Secure Headers Middleware
@@ -31,7 +38,7 @@ Appends security-related HTTP response headers to every request. Registered auto
 Publish the config file:
 
 ``` bash
-php artisan vendor:publish --tag=statamic-juicebox-secure-headers-config
+php artisan vendor:publish --tag=juicebox-secure-headers-config
 ```
 
 | Key | Default | Accepted values |
@@ -56,7 +63,8 @@ Set any value to `false` to omit that header entirely.
 composer test            # full gate: analyse + lint:check + refactor:check + test:types + test:unit
 composer test:unit       # pest (parallel)
 composer test:types      # pest --type-coverage --min=100
-composer test:coverage   # pest --coverage --min=100 (needs Xdebug)
+composer test:coverage   # pest --coverage --min=100 (needs a coverage driver)
+composer test:mutate     # pest --mutate --min=100 (needs a coverage driver)
 composer analyse         # phpstan
 composer lint:check      # pint --test
 composer refactor:check  # rector --dry-run

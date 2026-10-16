@@ -11,7 +11,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to change, dis
 
 ## How it works
 
-- The `SetSecureHeaders` middleware is registered automatically on the `web` middleware group. Do not register it again and do not set the same headers in another middleware, a server config, or a Blade layout.
+- The `SetSecureHeaders` middleware is registered automatically on the `web` middleware group. Configure these headers through the config file below, not in another middleware, a server config, or a Blade layout.
 - No setup is needed to get the defaults.
 
 | Header | Default | Notes |
@@ -28,7 +28,7 @@ No `Content-Security-Policy` is included; add that separately if needed.
 Publish the config, then edit `config/juicebox/secure_headers.php`:
 
 ```bash
-php artisan vendor:publish --tag=statamic-juicebox-secure-headers-config
+php artisan vendor:publish --tag=juicebox-secure-headers-config
 ```
 
 | Key | Accepted values |
@@ -51,8 +51,8 @@ $this->get('/')->assertHeader('X-Frame-Options', 'SAMEORIGIN');
 
 HSTS only appears on secure requests, so test it with `$this->get('https://localhost/')` or by setting `HTTPS=on` on the request.
 
-## Anti-patterns
+## Rules
 
-- Adding the same headers manually, which duplicates or conflicts with this middleware.
-- Setting a header to `null` or `true` to "disable" it; use `false`.
-- Calling `env()` outside the config file.
+- Let this middleware set the headers.
+- Disable a header with `false`.
+- Call `env()` only inside the published config file.

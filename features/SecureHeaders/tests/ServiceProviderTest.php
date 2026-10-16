@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
+use Vitamin2\Juicebox\Features\SecureHeaders\ServiceProvider;
+
 use function Pest\Laravel\get;
+
+mutates(ServiceProvider::class);
 
 dataset('web headers', [
     'X-Frame-Options' => ['X-Frame-Options', 'SAMEORIGIN'],
@@ -26,4 +31,11 @@ it('sends no headers when disabled', function (): void {
         ->assertHeaderMissing('X-Frame-Options')
         ->assertHeaderMissing('X-Content-Type-Options')
         ->assertHeaderMissing('Referrer-Policy');
+});
+
+it('pushes the secure headers middleware onto the web group only', function (): void {
+    $groups = resolve('router')->getMiddlewareGroups();
+
+    expect($groups['web'])->toContain(SetSecureHeaders::class)
+        ->and($groups['api'] ?? [])->not->toContain(SetSecureHeaders::class);
 });

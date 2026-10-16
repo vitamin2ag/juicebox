@@ -4,47 +4,52 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Tests;
 
-use Illuminate\Config\Repository;
-use JsonException;
+use Edalzell\Features\ServiceProvider as FeaturesServiceProvider;
 use Override;
-use RuntimeException;
 use Statamic\Testing\AddonTestCase;
+use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 use Vitamin2\Juicebox\ServiceProvider;
 
 abstract class TestCase extends AddonTestCase
 {
+    use PreventsSavingStacheItemsToDisk {
+        preventSavingStacheItemsToDisk as private preventSavingStacheItemsToSharedDisk;
+    }
+
     #[Override]
     protected string $addonServiceProvider = ServiceProvider::class;
 
     /**
-     * Registers every provider declared in composer.json, so new features need no test wiring.
+     * Features are discovered by the addon provider, so new features need no test wiring.
      */
+    #[Override]
     protected function getPackageProviders($app): array
     {
-        return array_values(array_unique(array_merge(parent::getPackageProviders($app), self::composerProviders())));
+        return [FeaturesServiceProvider::class, ...parent::getPackageProviders($app)];
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The local search index defaults to a file inside the vendored
+        // testbench skeleton, which parallel workers would write to at once.
+        config(['statamic.search.drivers.local.path' => sys_get_temp_dir().'/juicebox-search-'.getmypid()]);
     }
 
     /**
-     * @return list<class-string>
-     *
-     * @throws JsonException|RuntimeException
+     * Statamic fakes the Stache into one fixed directory, which parallel
+     * workers would wipe under each other; give every process its own.
      */
-    public static function composerProviders(): array
+    protected function preventSavingStacheItemsToDisk(): void
     {
-        $composer = json_decode((string) file_get_contents(__DIR__.'/../composer.json'), true, flags: JSON_THROW_ON_ERROR);
+        $this->fakeStacheDirectory = sys_get_temp_dir().'/juicebox-stache-'.getmypid().'/dev-null';
 
-        $providers = new Repository(is_array($composer) ? $composer : [])->array('extra.laravel.providers');
-
-        $classes = [];
-
-        foreach ($providers as $provider) {
-            if (! is_string($provider) || ! class_exists($provider)) {
-                throw new RuntimeException('composer.json lists a provider that cannot be loaded: '.(is_string($provider) ? $provider : get_debug_type($provider)).'.');
-            }
-
-            $classes[] = $provider;
+        if (! is_dir($this->fakeStacheDirectory)) {
+            mkdir($this->fakeStacheDirectory, recursive: true);
         }
 
-        return $classes;
+        $this->preventSavingStacheItemsToSharedDisk();
     }
 }
