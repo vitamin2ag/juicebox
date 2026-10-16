@@ -46,48 +46,21 @@ it('ships a Boost skill for every feature', function (string $feature): void {
     expect(__DIR__.'/../resources/boost/skills/juicebox-'.Str::kebab($feature).'/SKILL.md')->toBeFile();
 })->with('features');
 
-/**
- * Returns the body of the README `###` section whose heading contains the given text.
- */
-function readmeSection(string $headline): ?string
-{
-    $section = null;
+it('documents every feature in docs/features and links it from the README', function (string $feature): void {
+    $path = 'docs/features/'.Str::kebab($feature).'.md';
 
-    foreach (explode("\n", (string) file_get_contents(__DIR__.'/../README.md')) as $line) {
-        if (preg_match('/^#{1,3} /', $line) === 1) {
-            if ($section !== null) {
-                break;
-            }
+    expect(__DIR__.'/../'.$path)->toBeFile()
+        ->and((string) file_get_contents(__DIR__.'/../README.md'))->toContain("]($path)");
+})->with('features');
 
-            if (str_starts_with($line, '### ') && str_contains($line, $headline)) {
-                $section = '';
-            }
-
-            continue;
-        }
-
-        if ($section !== null) {
-            $section .= $line."\n";
-        }
-    }
-
-    return $section;
-}
-
-it('documents every config key and the publish command of every feature in its README section', function (string $feature): void {
-    $headline = Str::headline($feature);
-    $section = readmeSection($headline);
-
-    if ($section === null) {
-        $this->fail("README.md needs a '### ' heading containing '$headline' under Features.");
-    }
-
+it('documents every config key and the publish command of every feature with config in its feature doc', function (string $feature): void {
+    $doc = (string) file_get_contents(__DIR__.'/../docs/features/'.Str::kebab($feature).'.md');
     $config = require __DIR__."/../features/$feature/config/".Str::snake($feature).'.php';
 
-    expect($section)->toContain('php artisan vendor:publish --tag=juicebox-'.Str::kebab($feature).'-config');
+    expect($doc)->toContain('php artisan vendor:publish --tag=juicebox-'.Str::kebab($feature).'-config');
 
     foreach (array_keys(is_array($config) ? $config : []) as $key) {
-        expect($section)->toContain("`$key`");
+        expect($doc)->toContain("`$key`");
     }
 })->with('features with config');
 

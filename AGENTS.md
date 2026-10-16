@@ -27,6 +27,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - `features/<Name>/`: feature modules (`config/<snake_name>.php`, `src/ServiceProvider.php`, `resources/`, `tests/`, ...). Place files where laravel-features expects them (see its Boost skill in `vendor/edalzell/laravel-features/resources/boost/skills/`).
 - `src/FeatureServiceProvider.php`: base for feature providers (Statamic `AddonServiceProvider` plus the package's `Features`). `src/ServiceProvider.php` registers all features by discovery; `composer.json` lists only `Vitamin2\Juicebox\ServiceProvider`.
 - `resources/boost/skills/`: consumer-facing Boost skills (ships with the package; `.agents/` and `docs/` do not).
+- `docs/features/<slug>.md`: user documentation of one feature, linked from the README's `Features` list.
 - `features/<Name>/tests/` covers a feature; `tests/Feature/` holds the cross-cutting tests that boot the app (discovery, the base provider, Boost skills); the rest of `tests/` holds checks that need no app (conventions, architecture). Fixtures live in `__Fixtures__/` folders.
 - `workbench/`: Statamic 6 site for manual checks (`composer serve`, then e.g. `curl -I http://127.0.0.1:8000`).
 

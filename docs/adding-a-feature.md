@@ -46,12 +46,12 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 
 1. Create `features/<Name>/src/ServiceProvider.php` in the namespace `Vitamin2\Juicebox\Features\<Name>` extending `Vitamin2\Juicebox\FeatureServiceProvider` **(enforced)**. The folder name equals the namespace segment; name it `Ai`, not `AI` (the slug is its kebab-case). Register with Statamic in `bootAddon()`; when you override `boot()` or `register()`, call the parent first.
 2. Run `composer dump-autoload` so the plugin picks up the new folder. Leave `extra.laravel.providers` with `Vitamin2\Juicebox\ServiceProvider` only **(enforced)**.
-3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill and README entry below.
+3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
 4. Let Statamic discover classes in `Tags/`, `Console/Commands/`, `UpdateScripts/` and the other folders next to the provider; register the rest in `bootAddon()` (for example `pushMiddlewareToGroup`, `Fieldset::addNamespace`). Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
 5. If configurable, add `features/<Name>/config/<snake_name>.php`. Read env vars there only. Use `false` to switch a value off.
 6. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
 7. Add the Boost skill `resources/boost/skills/juicebox-<slug>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
-8. Document the feature in the README `Features` section under a `###` heading containing the feature's name in words (`SecureHeaders` becomes "Secure Headers"). For features with config the section contains the publish command (`--tag=juicebox-<slug>-config`) and every config key in backticks **(enforced)**.
+8. Document the feature in `docs/features/<slug>.md` and list it in the README `Features` section as `- [<Feature name>](docs/features/<slug>.md): <one-line summary>` **(enforced)**. For features with config the doc contains the publish command (`--tag=juicebox-<slug>-config`) and every config key in backticks **(enforced)**.
 9. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (100% required each; both need a coverage driver).
 
 ## Conventions
@@ -194,4 +194,6 @@ description: Disable or verify the removal of the X-Powered-By response header d
 | `enabled` | `true`, `false`. Also set by `JUICEBOX_REMOVE_POWERED_BY_ENABLED`. |
 ```
 
-README `Features` entry: a `### Remove Powered By` section with the middleware class, a config table, and the publish command `php artisan vendor:publish --tag=juicebox-remove-powered-by-config`.
+`docs/features/remove-powered-by.md`: the middleware class, a config table, and the publish command `php artisan vendor:publish --tag=juicebox-remove-powered-by-config`.
+
+README `Features` entry: `- [Remove Powered By](docs/features/remove-powered-by.md): removes the X-Powered-By response header.`

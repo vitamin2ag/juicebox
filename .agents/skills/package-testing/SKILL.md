@@ -63,7 +63,7 @@ rm -rf "$d"
 - Features are discovered through the addon provider, so `tests/TestCase.php` needs no change for a new feature. It gives every test process its own Stache and search-index directory, so tests that save entries or globals run in parallel.
 - Put fixtures in `features/<Name>/tests/__Fixtures__/`.
 - Tests for discovery and the generic `FeatureServiceProvider` live in `tests/Feature/ServiceProviderTest.php` and `tests/Feature/FeatureServiceProviderTest.php` (mirroring `src/`) and use the real `SecureHeaders` feature as the sample.
-- `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider location, composer.json providers, Boost skill, README section with publish command and config keys, no PHPStan suppressions).
+- `tests/PackageConventionsTest.php` enforces repo conventions per feature (provider location, composer.json providers, Boost skill, feature doc with publish command and config keys and its README link, no PHPStan suppressions).
 - `tests/ArchTest.php` holds architecture rules (Pest `php` and `security` presets, `strict_types` on the whole namespace, features free of test code; the security preset excludes the `Features\<Name>\Tests` namespaces). Start every new PHP file with `declare(strict_types=1);`.
 - Set config per test with `config(['juicebox.<snake_name>.<key>' => $value])`. To test env handling, `putenv(...)`, load the real `features/<Name>/config/<snake_name>.php` with `require`, and reset the env var in `afterEach`.
 - Use datasets for repeated cases.
