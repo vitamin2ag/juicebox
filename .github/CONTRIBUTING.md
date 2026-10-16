@@ -9,7 +9,7 @@ For significant changes, please open an issue first so we can discuss the approa
 1. Fork the project
 2. Create a new branch
 3. Code, test, commit, and push
-4. Open a pull request detailing your changes
+4. Open a pull request with a short description of what changes and why
 
 Every change, including new features, goes through a pull request that passes CI; open a pull request instead of pushing to `main`.
 

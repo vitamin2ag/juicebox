@@ -21,6 +21,8 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - Commit in logical units: one self-contained change per commit; split unrelated changes.
 - Keep subjects short, imperative and precise (e.g. `Add master toggle for Secure Headers`); add a body only when the subject is not self-explanatory.
 - Write commit messages without co-author trailers or AI attribution.
+- Title a pull request with a short release-note line (e.g. `Refactor to laravel-features`) and give it one release label (`breaking`, `enhancement`, `bug`, `documentation`, `dependencies` or `maintenance`).
+- Keep the description to one or two sentences on what changes and why. List breaking changes as short bullets under a `**Breaking:**` line. Add no AI attribution.
 
 ## Layout
 
