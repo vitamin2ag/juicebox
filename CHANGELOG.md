@@ -1,6 +1,25 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.3.0...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.0...HEAD)
+
+## [v0.4.0](https://github.com/vitamin2ag/juicebox/compare/v0.3.0...v0.4.0) - 2026-10-16
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Breaking Changes
+
+* Refactor to laravel-features by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/4
+
+#### Dependencies
+
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 by @dependabot[bot] in https://github.com/vitamin2ag/juicebox/pull/3
+
+### New Contributors
+
+* @dependabot[bot] made their first contribution in https://github.com/vitamin2ag/juicebox/pull/3
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.3.0...v0.4.0
 
 ## [v0.3.0](https://github.com/vitamin2ag/juicebox/compare/0.2.0...v0.3.0) - 2026-10-15
 
