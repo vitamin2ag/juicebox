@@ -1,0 +1,77 @@
+<?php
+
+// PHPStan resolves types referenced inside a stub file only against other
+// classes also known to the stub universe (PHP built-ins, or classes stubbed
+// here) — not via normal Composer autoloading. So every non-scalar property
+// type below needs a minimal companion mirror of the real vendor class.
+
+namespace Statamic\Globals {
+    /**
+     * Augmented shape of the "general" global set used by the SchemaOrg
+     * feature. Declared here because Variables resolves fields dynamically
+     * at runtime via blueprint-driven magic properties.
+     *
+     * @property-read \Statamic\Dictionaries\Item|null $json_ld_entity
+     * @property-read string|null $json_ld_entity_name
+     * @property-read string|null $json_ld_entity_alternate_name
+     * @property-read string|null $json_ld_entity_description
+     * @property-read string|null $json_ld_entity_url
+     * @property-read string|null $json_ld_entity_email
+     * @property-read string|null $json_ld_entity_telephone
+     * @property-read array<int, string>|null $json_ld_entity_same_as
+     * @property-read string|null $json_ld_entity_address_street
+     * @property-read string|null $json_ld_entity_address_zip
+     * @property-read string|null $json_ld_entity_address_city
+     * @property-read string|null $json_ld_entity_address_region
+     * @property-read string|null $json_ld_entity_address_country
+     * @property-read string|null $json_ld_entity_latitude
+     * @property-read string|null $json_ld_entity_longitude
+     * @property-read \Statamic\Assets\Asset|null $json_ld_entity_logo
+     * @property-read string|null $json_ld_entity_legal_name
+     * @property-read \Illuminate\Support\Carbon|null $json_ld_entity_founding_date
+     * @property-read string|null $json_ld_entity_vat_id
+     * @property-read string|null $json_ld_entity_ticker_symbol
+     * @property-read string|null $json_ld_entity_price_range
+     * @property-read array<int, \Statamic\Fields\Values>|null $json_ld_entity_opening_hours
+     * @property-read string|null $json_ld_website_name
+     * @property-read string|null $json_ld_website_alternate_name
+     * @property-read string|null $json_ld_website_description
+     * @property-read string|null $json_ld_website_search_url
+     */
+    class Variables
+    {
+    }
+}
+
+namespace Statamic\Dictionaries {
+    class Item
+    {
+        public function value(): mixed {}
+
+        public function label(): mixed {}
+    }
+}
+
+namespace Statamic\Assets {
+    class Asset
+    {
+        public function isSvg(): bool {}
+
+        public function url(): string {}
+
+        public function manipulate(mixed $params = null): mixed {}
+    }
+}
+
+namespace Statamic\Fields {
+    class Values
+    {
+        public function raw(mixed $key): mixed {}
+    }
+}
+
+namespace Illuminate\Support {
+    class Carbon extends \DateTime
+    {
+    }
+}
