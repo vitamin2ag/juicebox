@@ -65,7 +65,7 @@ jobs:
         with:
           php-version: 8.5
           extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
-          ini-values: error_reporting=E_ALL
+          ini-values: error_reporting=E_ALL, pcov.directory=.
           tools: composer:v2
           coverage: pcov
 
@@ -90,9 +90,9 @@ jobs:
         with:
           php-version: 8.5
           extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
-          ini-values: error_reporting=E_ALL
+          ini-values: error_reporting=E_ALL, pcov.directory=.
           tools: composer:v2
-          coverage: xdebug
+          coverage: pcov
 
       - name: Install dependencies
         run: |
