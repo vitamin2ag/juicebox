@@ -1,6 +1,6 @@
 # Juicebox
 
-This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package). It is built from self-contained feature modules under `src/Features/`. Keep it focused, idiomatic, and easy to install, test, and maintain.
+This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package). It is built from self-contained feature folders under `features/`, discovered by [`edalzell/laravel-features`](https://github.com/edalzell/laravel-features). Keep it focused, idiomatic, and easy to install, test, and maintain.
 
 ## Package Conventions
 
@@ -10,34 +10,35 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 ## Quality Bar
 
-- PHPStan runs at `level: max` over `src`, `config` and `tests`. Fix the underlying type; do not use `@phpstan-ignore`, baselines, `assert()` or casts to silence it.
-- Type coverage, code coverage and mutation score (`composer test:mutate`) must stay at 100%.
+- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts.
+- Keep type coverage, code coverage and mutation score (`composer test:mutate`) at 100%.
 - Every PHP file declares `strict_types=1`.
 
 ## Git & Commits
 
-- Only commit when explicitly instructed for that specific commit.
-- Never commit or push to `main`. Work on a branch and open a pull request; every change, new features included, goes through a PR. Force pushes to `main` are blocked.
+- Commit only when explicitly instructed for that specific commit.
+- Work on a branch and open a pull request for every change, new features included. `main` receives changes only through merged pull requests (direct pushes and force pushes are blocked).
 - Commit in logical units: one self-contained change per commit; split unrelated changes.
 - Keep subjects short, imperative and precise (e.g. `Add master toggle for Secure Headers`); add a body only when the subject is not self-explanatory.
-- No co-author trailers or AI attribution.
+- Write commit messages without co-author trailers or AI attribution.
 
 ## Layout
 
-- `src/Features/<Name>/`: feature modules; `src/Features/FeatureServiceProvider.php` is their base.
-- `config/<snake_name>.php`: per-feature config. `resources/boost/skills/`: consumer-facing Boost skills (ships with the package; `.agents/` and `docs/` do not).
-- `tests/Features/<Name>/` mirrors `src/`; `tests/Core/` covers the base provider.
+- `features/<Name>/`: feature modules (`config/<snake_name>.php`, `src/ServiceProvider.php`, `resources/`, `tests/`, ...). Place files where laravel-features expects them (see its Boost skill in `vendor/edalzell/laravel-features/resources/boost/skills/`).
+- `src/FeatureServiceProvider.php`: base for feature providers (Statamic `AddonServiceProvider` plus the package's `Features`). `src/ServiceProvider.php` registers all features by discovery; `composer.json` lists only `Vitamin2\Juicebox\ServiceProvider`.
+- `resources/boost/skills/`: consumer-facing Boost skills (ships with the package; `.agents/` and `docs/` do not).
+- `features/<Name>/tests/` covers a feature; `tests/Feature/` holds the cross-cutting tests that boot the app (discovery, the base provider, Boost skills); the rest of `tests/` holds checks that need no app (conventions, architecture). Fixtures live in `__Fixtures__/` folders.
 - `workbench/`: Statamic 6 site for manual checks (`composer serve`, then e.g. `curl -I http://127.0.0.1:8000`).
 
 ## Releases
 
-- Tags and GitHub releases are named `vX.Y.Z` (SemVer). Release notes come from PR labels (`.github/release.yml`); `CHANGELOG.md` is written by the release workflow, so don't edit released sections.
-- Never tag, push, publish a release or create labels without explicit approval; use the `package-release` skill.
+- Name tags and GitHub releases `vX.Y.Z` (SemVer). Release notes come from PR labels (`.github/release.yml`); the release workflow writes `CHANGELOG.md`, so leave released sections as they are.
+- Get explicit approval before you tag, push, publish a release or create labels; use the `package-release` skill.
 
 ## Quick Commands
 
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit). Fix with `composer lint` / `composer refactor`.
-- Code coverage: `composer test:coverage` (not part of `composer test`; if no driver is loaded, the `package-testing` skill explains how to load Xdebug for a single run; never edit php.ini).
+- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`). The `package-testing` skill explains how to load a driver for a single run.
 
 ## Local Skills
 

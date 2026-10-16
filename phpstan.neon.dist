@@ -2,8 +2,8 @@ parameters:
     level: max
     paths:
         - src
-        - config
+        - features
         - tests
     tmpDir: build/phpstan
     configDirectories:
-        - config
+        - features/*/config

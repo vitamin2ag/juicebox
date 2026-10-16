@@ -65,7 +65,7 @@ it('skips all headers when disabled', function (): void {
 
 it('reads enabled state from env variable', function (): void {
     putenv('JUICEBOX_SECURE_HEADERS_ENABLED=false');
-    config(['juicebox.secure_headers' => require __DIR__.'/../../../../../config/secure_headers.php']);
+    config(['juicebox.secure_headers' => require __DIR__.'/../../../config/secure_headers.php']);
 
     $response = runSecureHeaders(secureHeadersRequest(secure: true));
 

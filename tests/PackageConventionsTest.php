@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vitamin2\Juicebox\Features\FeatureServiceProvider;
-use Vitamin2\Juicebox\Tests\TestCase;
+use Vitamin2\Juicebox\FeatureServiceProvider;
 
 /**
  * @return array<string, array{string}>
@@ -13,14 +12,8 @@ function juiceboxFeatures(): array
 {
     $features = [];
 
-    foreach (glob(__DIR__.'/../src/Features/*', GLOB_ONLYDIR) ?: [] as $directory) {
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)) as $file) {
-            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
-                $features[basename($directory)] = [basename($directory)];
-
-                break;
-            }
-        }
+    foreach (glob(__DIR__.'/../features/*', GLOB_ONLYDIR) ?: [] as $directory) {
+        $features[basename($directory)] = [basename($directory)];
     }
 
     return $features;
@@ -30,12 +23,18 @@ dataset('features', juiceboxFeatures(...));
 
 dataset('features with config', fn (): array => array_filter(
     juiceboxFeatures(),
-    fn (array $feature): bool => file_exists(__DIR__.'/../config/'.Str::snake($feature[0]).'.php'),
+    fn (array $feature): bool => file_exists(__DIR__.'/../features/'.$feature[0].'/config/'.Str::snake($feature[0]).'.php'),
 ));
 
-it('has a provider for every feature registered in composer.json', function (string $feature): void {
-    expect(TestCase::composerProviders())
-        ->toContain("Vitamin2\\Juicebox\\Features\\$feature\\ServiceProvider");
+it('has the provider where feature discovery looks for it', function (string $feature): void {
+    expect(__DIR__."/../features/$feature/src/ServiceProvider.php")->toBeFile();
+})->with('features');
+
+it('leaves feature providers to discovery instead of composer.json', function (string $feature): void {
+    $composer = json_decode((string) file_get_contents(__DIR__.'/../composer.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect(data_get($composer, 'extra.laravel.providers'))
+        ->not->toContain("Vitamin2\\Juicebox\\Features\\$feature\\ServiceProvider");
 })->with('features');
 
 it('extends the feature base provider in every feature', function (string $feature): void {
@@ -83,9 +82,9 @@ it('documents every config key and the publish command of every feature in its R
         $this->fail("README.md needs a '### ' heading containing '$headline' under Features.");
     }
 
-    $config = require __DIR__.'/../config/'.Str::snake($feature).'.php';
+    $config = require __DIR__."/../features/$feature/config/".Str::snake($feature).'.php';
 
-    expect($section)->toContain('php artisan vendor:publish --tag=statamic-juicebox-'.Str::kebab($feature).'-config');
+    expect($section)->toContain('php artisan vendor:publish --tag=juicebox-'.Str::kebab($feature).'-config');
 
     foreach (array_keys(is_array($config) ? $config : []) as $key) {
         expect($section)->toContain("`$key`");
@@ -93,7 +92,7 @@ it('documents every config key and the publish command of every feature in its R
 })->with('features with config');
 
 it('declares what its tests mutate for every feature', function (string $feature): void {
-    $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/Features/$feature", FilesystemIterator::SKIP_DOTS));
+    $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../features/$feature/tests", FilesystemIterator::SKIP_DOTS));
     $declared = false;
 
     foreach ($tests as $file) {
@@ -117,7 +116,7 @@ it('does not silence PHPStan', function (): void {
 
     expect($neon)->not->toContain('baseline')->not->toContain('ignoreErrors');
 
-    foreach (['src', 'config', 'tests'] as $directory) {
+    foreach (['src', 'features', 'tests'] as $directory) {
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../$directory"));
 
         foreach ($files as $file) {

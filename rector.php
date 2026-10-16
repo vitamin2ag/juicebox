@@ -14,7 +14,7 @@ return RectorConfig::configure()
     ->withPhpVersion(PhpVersion::PHP_85)
     ->withPaths([
         __DIR__.'/src',
-        __DIR__.'/config',
+        __DIR__.'/features',
         __DIR__.'/tests',
     ])
     ->withPreparedSets(
@@ -33,5 +33,5 @@ return RectorConfig::configure()
     ])
     ->withImportNames(importDocBlockNames: false)
     ->withSkip([
-        NameImportingPostRector::class => [__DIR__.'/tests'],
+        NameImportingPostRector::class => [__DIR__.'/tests', __DIR__.'/features/*/tests'],
     ]);

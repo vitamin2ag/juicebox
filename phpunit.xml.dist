@@ -3,11 +3,17 @@
   <source>
     <include>
       <directory>src</directory>
+      <directory>features</directory>
     </include>
+    <exclude>
+      <directory>features/*/config</directory>
+      <directory>features/*/tests</directory>
+    </exclude>
   </source>
   <testsuites>
     <testsuite name="Test Suite">
       <directory suffix="Test.php">./tests</directory>
+      <directory suffix="Test.php">./features</directory>
     </testsuite>
   </testsuites>
   <php>
