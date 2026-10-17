@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects;
 
+use Illuminate\Routing\Router;
 use Override;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
@@ -32,5 +34,9 @@ class ServiceProvider extends FeatureServiceProvider
         }
 
         Stache::registerStore($this->app->make(RedirectStore::class));
+
+        $router = $this->app->make(Router::class);
+        $router->prependMiddlewareToGroup('web', HandleNotFound::class);
+        $router->prependMiddlewareToGroup('statamic.web', HandleNotFound::class);
     }
 }
