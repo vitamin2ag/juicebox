@@ -1,0 +1,10 @@
+id: 5da06fa7-6162-4053-8fa6-8e7ae1bc2d06
+enabled: false
+source: '/kampagne/(.*)'
+source_md5: d2282e3c53e175d738d91a2056f913dd
+destination: '/aktion/$1'
+type: '302'
+site: en
+match_type: regex
+description: 'Old campaign'
+order: 2

@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vitamin2\Juicebox\Features\Redirects\Data;
+
+use Statamic\Data\ExistsAsFile;
+use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
+
+class Redirect
+{
+    use ExistsAsFile;
+
+    public function __construct(
+        private readonly string $id,
+        private readonly string $site,
+        private readonly ?string $source = null,
+        private readonly ?string $destination = null,
+        private readonly int $type = 301,
+        private readonly string $matchType = 'exact',
+        private readonly bool $enabled = true,
+        private readonly ?string $description = null,
+        private readonly ?int $order = null,
+    ) {}
+
+    public function id(): string
+    {
+        return $this->id;
+    }
+
+    public function site(): string
+    {
+        return $this->site;
+    }
+
+    public function enabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    public function path(): string
+    {
+        return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fileData(): array
+    {
+        return [
+            'id' => $this->id,
+            'enabled' => $this->enabled,
+            'source' => $this->source,
+            'destination' => $this->destination,
+            'type' => $this->type,
+            'match_type' => $this->matchType,
+            'description' => $this->description,
+            'order' => $this->order,
+        ];
+    }
+}

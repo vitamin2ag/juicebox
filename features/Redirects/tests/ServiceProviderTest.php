@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Statamic\Facades\Addon;
+use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
+use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
 mutates(ServiceProvider::class);
 
@@ -30,4 +33,30 @@ it('disables the feature through JUICEBOX_REDIRECTS_ENABLED', function (): void 
     config(['juicebox.redirects' => require __DIR__.'/../config/redirects.php']);
 
     expect(config('juicebox.redirects.enabled'))->toBeFalse();
+});
+
+it('keeps redirects in content/redirects by default', function (): void {
+    app()->forgetInstance(RedirectStore::class);
+
+    expect(resolve(RedirectStore::class)->directory())->toBe(base_path('content/redirects/'));
+});
+
+it('registers one redirect store in the Stache', function (): void {
+    expect(Stache::store('redirects'))->toBe(resolve(RedirectStore::class));
+});
+
+it('points the redirect store at the configured directory', function (): void {
+    config(['juicebox.redirects.store' => 'storage/app/redirects']);
+    app()->forgetInstance(RedirectStore::class);
+
+    expect(resolve(RedirectStore::class)->directory())->toBe(base_path('storage/app/redirects/'));
+});
+
+it('leaves the redirects to rias/statamic-redirect while it is installed', function (): void {
+    Stache::stores()->forget('redirects');
+    Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
+
+    new ServiceProvider(app())->bootAddon();
+
+    expect(Stache::stores()->has('redirects'))->toBeFalse();
 });

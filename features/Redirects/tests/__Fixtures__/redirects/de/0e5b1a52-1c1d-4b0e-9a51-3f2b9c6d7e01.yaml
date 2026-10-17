@@ -1,0 +1,8 @@
+id: 0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01
+enabled: true
+source: /alte-seite
+source_md5: b6a36f0455a8d55897f513acaf0a0493
+destination: /neue-seite
+type: 301
+site: de
+match_type: exact
