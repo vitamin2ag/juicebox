@@ -38,6 +38,36 @@ class Redirect
         return $this->enabled;
     }
 
+    public function source(): ?string
+    {
+        return $this->source;
+    }
+
+    public function destination(): ?string
+    {
+        return $this->destination;
+    }
+
+    public function type(): int
+    {
+        return $this->type;
+    }
+
+    public function matchType(): string
+    {
+        return $this->matchType;
+    }
+
+    public function order(): ?int
+    {
+        return $this->order;
+    }
+
+    public function withDestination(?string $destination): self
+    {
+        return clone ($this, ['destination' => $destination]);
+    }
+
     public function path(): string
     {
         return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";

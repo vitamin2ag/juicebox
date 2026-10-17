@@ -55,6 +55,23 @@ it('exposes the id, site and state the store indexes', function (): void {
         ->and($redirect->enabled())->toBeFalse();
 });
 
+it('exposes what the lookup and the redirect response need', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'de', source: '/old/(.*)', destination: '/new/$1', type: 302, matchType: 'regex', order: 2);
+
+    expect($redirect->source())->toBe('/old/(.*)')
+        ->and($redirect->destination())->toBe('/new/$1')
+        ->and($redirect->type())->toBe(302)
+        ->and($redirect->matchType())->toBe('regex')
+        ->and($redirect->order())->toBe(2);
+});
+
+it('copies itself with another destination', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'de', source: '/old/(.*)', destination: '/new/$1', matchType: 'regex');
+
+    expect($redirect->withDestination('/new/page')->fileData())->toBe([...$redirect->fileData(), 'destination' => '/new/page'])
+        ->and($redirect->destination())->toBe('/new/$1');
+});
+
 it('lives in its site folder, named by its id', function (): void {
     expect(new Redirect(id: 'one', site: 'de', order: 2)->path())
         ->toBe(resolve(RedirectStore::class)->directory().'de/one.yaml');

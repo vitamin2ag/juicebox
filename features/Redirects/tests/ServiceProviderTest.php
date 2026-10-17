@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
@@ -52,11 +53,20 @@ it('points the redirect store at the configured directory', function (): void {
     expect(resolve(RedirectStore::class)->directory())->toBe(base_path('storage/app/redirects/'));
 });
 
+it('handles the 404s of the :dataset middleware group first', function (string $group): void {
+    expect(data_get(resolve('router')->getMiddlewareGroups(), [$group, 0]))->toBe(HandleNotFound::class);
+})->with(['web', 'statamic.web']);
+
 it('leaves the redirects to rias/statamic-redirect while it is installed', function (): void {
+    $router = resolve('router');
+    $router->removeMiddlewareFromGroup('web', HandleNotFound::class);
+    $router->removeMiddlewareFromGroup('statamic.web', HandleNotFound::class);
     Stache::stores()->forget('redirects');
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
     new ServiceProvider(app())->bootAddon();
 
-    expect(Stache::stores()->has('redirects'))->toBeFalse();
+    expect(Stache::stores()->has('redirects'))->toBeFalse()
+        ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
+        ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
 });

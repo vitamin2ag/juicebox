@@ -11,6 +11,7 @@ use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 mutates(RedirectRepository::class);
 
 beforeEach(function (): void {
+    RedirectFixtures::isolate();
     RedirectFixtures::copyIntoStore();
 });
 
@@ -64,6 +65,88 @@ it('saves a redirect into its site folder', function (): void {
 
     expect(resolve(RedirectStore::class)->directory().'en/new.yaml')->toBeFile()
         ->and($redirects->find('new')?->id())->toBe('new');
+});
+
+it('finds an exact redirect for :dataset', function (string $source, string $url): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'found', site: 'de', source: $source, destination: '/neu'));
+
+    expect($redirects->findByUrl('de', $url)?->id())->toBe('found');
+})->with([
+    'the same url' => ['/alt', '/alt'],
+    'a url without the leading slash' => ['/alt', 'alt'],
+    'a url with a trailing slash' => ['/alt', '/alt/'],
+    'a source with a trailing slash' => ['/alt/', '/alt'],
+    'a url with a slash before its query string' => ['/news?page=2', '/news/?page=2'],
+    'a source without the leading slash' => ['alt', '/alt'],
+    'a url with a query string' => ['/alt', '/alt?utm_source=newsletter'],
+    'a source with a query string' => ['/news?page=2', '/news?page=2'],
+]);
+
+it('finds no exact redirect for :dataset', function (string $source, string $url): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'found', site: 'de', source: $source, destination: '/neu'));
+
+    expect($redirects->findByUrl('de', $url))->toBeNull();
+})->with([
+    'another query string' => ['/news?page=2', '/news?page=3'],
+    'a longer url' => ['/alt', '/alt/seite'],
+]);
+
+it('tries every url it gets', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'prefixed', site: 'en', source: '/en/alt', destination: '/en/neu'));
+
+    expect($redirects->findByUrl('en', '/alt', '/en/alt')?->id())->toBe('prefixed');
+});
+
+it('only finds the enabled redirects of the site', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'disabled', site: 'de', source: '/alt', destination: '/neu', enabled: false));
+    $redirects->save(new Redirect(id: 'english', site: 'en', source: '/alt', destination: '/new'));
+
+    expect($redirects->findByUrl('de', '/alt'))->toBeNull()
+        ->and($redirects->findByUrl('en', '/alt')?->id())->toBe('english');
+});
+
+it('never matches :dataset redirect without a source', function (string $matchType): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'sourceless', site: 'de', matchType: $matchType));
+
+    expect($redirects->findByUrl('de', '/'))->toBeNull();
+})->with(['an exact' => 'exact', 'a regex' => 'regex']);
+
+it('prefers an exact redirect over a regex one', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'regex', site: 'de', source: '/alt.*', destination: '/regex', matchType: 'regex', order: 1));
+    $redirects->save(new Redirect(id: 'exact', site: 'de', source: '/alt', destination: '/exact', order: 2));
+
+    expect($redirects->findByUrl('de', '/alt')?->id())->toBe('exact');
+});
+
+it('takes the regex redirect with the lowest order', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'later', site: 'de', source: '/alt/(.*)', destination: '/later', matchType: 'regex', order: 2));
+    $redirects->save(new Redirect(id: 'sooner', site: 'de', source: '/alt/.*', destination: '/sooner', matchType: 'regex', order: 1));
+
+    expect($redirects->findByUrl('de', '/alt/seite')?->id())->toBe('sooner');
+});
+
+it('fills the regex captures of :dataset into the destination', function (string $url): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'regex', site: 'de', source: '/kampagne/(.*)', destination: '/aktion/$1', matchType: 'regex'));
+
+    expect($redirects->findByUrl('de', $url)?->destination())->toBe('/aktion/sommer');
+})->with([
+    'the url' => '/kampagne/sommer',
+    'the url with a trailing slash' => '/kampagne/sommer/',
+]);
+
+it('keeps a regex destination without captures as it is', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'regex', site: 'de', source: '/kampagne', destination: '/aktion', matchType: 'regex'));
+
+    expect($redirects->findByUrl('de', '/kampagne/sommer')?->destination())->toBe('/aktion');
 });
 
 it('deletes a redirect and its file', function (): void {

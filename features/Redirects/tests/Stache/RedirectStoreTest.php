@@ -8,6 +8,10 @@ use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(RedirectStore::class);
 
+beforeEach(function (): void {
+    RedirectFixtures::isolate();
+});
+
 it('reads a redirect written by rias', function (): void {
     expect(RedirectFixtures::read('de/1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02.yaml')->fileData())->toBe([
         'id' => '1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02',
