@@ -18,3 +18,4 @@ phpunit.xml.dist export-ignore
 /phpstan.neon.dist export-ignore
 /build export-ignore
 /.github export-ignore
+/.phpstan export-ignore
