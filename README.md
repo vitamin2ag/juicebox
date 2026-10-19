@@ -11,7 +11,7 @@ You can install this addon via Composer:
 composer require vitamin2/juicebox
 ```
 
-Features live in `features/` and are autoloaded by the [`edalzell/laravel-features-plugin`](https://github.com/edalzell/laravel-features) Composer plugin. Composer asks whether to allow it on install; if it was declined, allow it and rebuild the autoloader:
+Features live in `features/`, are registered by [`edalzell/laravel-features`](https://github.com/edalzell/laravel-features) and, for the Statamic side (tags, fieldtypes, fieldsets, blueprints, routes, update scripts and control panel assets), by [`edalzell/statamic-features`](https://github.com/edalzell/statamic-features). Both are installed with this addon. They are autoloaded by the `edalzell/laravel-features-plugin` Composer plugin. Composer asks whether to allow it on install; if it was declined, allow it and rebuild the autoloader:
 
 ``` bash
 composer config allow-plugins.edalzell/laravel-features-plugin true

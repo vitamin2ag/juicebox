@@ -19,6 +19,6 @@ it('publishes feature config under the addon with an addon-prefixed tag', functi
     expect(array_values($paths))->toBe([config_path('juicebox/secure_headers.php')]);
 });
 
-it('boots the Statamic addon features of a feature provider', function (): void {
+it('boots a feature provider', function (): void {
     expect(resolve('router')->getMiddlewareGroups()['web'])->toContain(SetSecureHeaders::class);
 });

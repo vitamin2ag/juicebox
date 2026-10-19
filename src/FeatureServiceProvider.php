@@ -4,39 +4,21 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox;
 
-use Edalzell\Features\Features;
-use Illuminate\Contracts\Foundation\Application;
+use Edalzell\Features\Providers\FeatureServiceProvider as BaseFeatureServiceProvider;
 use Illuminate\Support\Str;
 use Override;
-use Statamic\Providers\AddonServiceProvider;
 
-abstract class FeatureServiceProvider extends AddonServiceProvider
+abstract class FeatureServiceProvider extends BaseFeatureServiceProvider
 {
-    private readonly Features $features;
-
-    public function __construct(Application $app)
+    #[Override]
+    protected function configFileName(): string
     {
-        parent::__construct($app);
-
-        $name = Str::of(static::class)->beforeLast('\\')->classBasename();
-
-        $this->features = new Features($this)
-            ->configGroup('juicebox')
-            ->configFileName($name->snake()->toString())
-            ->configPublishHandle('juicebox-'.$name->kebab());
+        return Str::snake($this->name());
     }
 
     #[Override]
-    public function boot(): void
+    protected function configPublishHandle(): string
     {
-        parent::boot();
-
-        $this->features->bootFeature();
-    }
-
-    #[Override]
-    public function register(): void
-    {
-        $this->features->registerFeature();
+        return 'juicebox-'.$this->slug();
     }
 }
