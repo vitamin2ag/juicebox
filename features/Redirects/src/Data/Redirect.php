@@ -59,6 +59,11 @@ class Redirect
         return $this->matchType;
     }
 
+    public function description(): ?string
+    {
+        return $this->description;
+    }
+
     public function order(): ?int
     {
         return $this->order;
