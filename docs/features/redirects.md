@@ -52,6 +52,31 @@ php artisan statamic:juicebox:redirects:prune
 
 Deletes every redirect with `enabled: false`, in every site, and prints how many it deleted. Empty or broken redirect files are read as disabled redirects, so it deletes them as well.
 
+``` bash
+php artisan statamic:juicebox:redirects:import redirects.csv --delimiter=";"
+```
+
+Imports the redirects of a CSV file and prints how many rows it imported and skipped. `--delimiter` defaults to `,`.
+
+### CSV format
+
+The first row names the columns, in any order; other columns are ignored. The columns are those of the `rias/statamic-redirect` import.
+
+| Column | Required | Value |
+|---|---|---|
+| `source` | Yes | As in a redirect file. |
+| `destination` | Unless `type` is `410` | A URL or `entry::<id>`. |
+| `type` | Yes | `301`, `302` or `410`. |
+| `match_type` | Yes | `exact` or `regex`. |
+| `site` | No | The site handle. Empty or missing: the current site, which on the command line is the site of `APP_URL`, usually the default site. |
+| `enabled` | No | `1`, `true`, `yes` or `on` enable the redirect, any other value, an empty one included, disables it. Without the column, every row is enabled. |
+| `description` | No | Empty keeps the description of the redirect the row replaces. |
+
+- A row with the `source` and `site` of an existing redirect replaces it and keeps its `id` and `order`, so importing the same file again changes nothing. Of the rows with the same `source` and `site` in one file, the last one wins.
+- A row without a required value, or with a `type` that is not a number, is skipped and counted. Empty lines are ignored.
+- Values that contain the delimiter or a line break are wrapped in double quotes. The file is UTF-8, with or without the byte order mark Excel writes.
+- Unlike rias, the import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number instead of saving a broken redirect.
+
 ## Configuration
 
 Publish the config file:

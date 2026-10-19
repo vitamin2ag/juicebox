@@ -20,6 +20,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to change, dis
 - When the URI of a published entry changes (new slug, or a new parent in a structure, children included), an exact `301` redirect from the old to the new URI is saved. Do not add these by hand.
 - Saving a published entry at a URI that an enabled redirect of its site redirects from sets that redirect to `enabled: false`; it is not deleted.
 - `php artisan statamic:juicebox:redirects:prune` deletes the disabled redirects of every site, including empty or broken redirect files.
+- `php artisan statamic:juicebox:redirects:import <file> --delimiter=,` imports a CSV whose first row names the columns `source`, `destination`, `type`, `match_type`, `site`, `enabled` and `description`. `source`, `type` and `match_type` are required, and `destination` too unless `type` is `410`; rows without them are skipped and counted. A missing `site` is the current site; a missing `enabled` column enables every row, an empty value disables it. A row replaces the redirect with its `source` and `site`, keeping its `id` and `order`, so importing the same file twice is safe.
 
 ## Configure
 

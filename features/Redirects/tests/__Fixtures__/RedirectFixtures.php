@@ -22,6 +22,11 @@ class RedirectFixtures
         return __DIR__.'/redirects/'.$file;
     }
 
+    public static function csv(string $file): string
+    {
+        return __DIR__.'/imports/'.$file;
+    }
+
     /**
      * The test case moves only the stores of the Stache into its per-process directory. Tests
      * that write redirects call this first, so a mutant that leaves the store out of the Stache

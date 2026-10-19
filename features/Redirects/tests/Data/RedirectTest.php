@@ -66,6 +66,10 @@ it('exposes what the lookup and the redirect response need', function (): void {
         ->and($redirect->order())->toBe(2);
 });
 
+it('exposes the description an import keeps', function (): void {
+    expect(new Redirect(id: 'one', site: 'de', description: 'Moved')->description())->toBe('Moved');
+});
+
 it('copies itself with another destination', function (): void {
     $redirect = new Redirect(id: 'one', site: 'de', source: '/old/(.*)', destination: '/new/$1', matchType: 'regex');
 
