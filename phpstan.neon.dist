@@ -8,5 +8,6 @@ parameters:
     checkMissingOverrideMethodAttribute: true
     stubFiles:
         - .phpstan/stubs/statamic.stub
+        - .phpstan/stubs/statamic-globals.stub
     configDirectories:
         - features/*/config
