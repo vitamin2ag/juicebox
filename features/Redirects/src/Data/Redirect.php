@@ -68,6 +68,11 @@ class Redirect
         return clone ($this, ['destination' => $destination]);
     }
 
+    public function withEnabled(bool $enabled): self
+    {
+        return clone ($this, ['enabled' => $enabled]);
+    }
+
     public function path(): string
     {
         return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";

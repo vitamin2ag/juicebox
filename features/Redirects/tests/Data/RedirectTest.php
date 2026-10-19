@@ -72,6 +72,13 @@ it('copies itself with another destination', function (): void {
         ->and($redirect->destination())->toBe('/new/$1');
 });
 
+it('copies itself as disabled', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'de', source: '/old', destination: '/new', order: 2);
+
+    expect($redirect->withEnabled(false)->fileData())->toBe([...$redirect->fileData(), 'enabled' => false])
+        ->and($redirect->enabled())->toBeTrue();
+});
+
 it('lives in its site folder, named by its id', function (): void {
     expect(new Redirect(id: 'one', site: 'de', order: 2)->path())
         ->toBe(resolve(RedirectStore::class)->directory().'de/one.yaml');

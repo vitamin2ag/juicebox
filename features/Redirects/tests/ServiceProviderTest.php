@@ -13,6 +13,7 @@ mutates(ServiceProvider::class);
 
 afterEach(function (): void {
     putenv('JUICEBOX_REDIRECTS_ENABLED');
+    putenv('JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS');
 });
 
 it('registers the provider through feature discovery', function (): void {
@@ -34,6 +35,17 @@ it('disables the feature through JUICEBOX_REDIRECTS_ENABLED', function (): void 
     config(['juicebox.redirects' => require __DIR__.'/../config/redirects.php']);
 
     expect(config('juicebox.redirects.enabled'))->toBeFalse();
+});
+
+it('creates entry redirects by default', function (): void {
+    expect(config('juicebox.redirects.create_entry_redirects'))->toBeTrue();
+});
+
+it('stops creating entry redirects through JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS', function (): void {
+    putenv('JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS=false');
+    config(['juicebox.redirects' => require __DIR__.'/../config/redirects.php']);
+
+    expect(config('juicebox.redirects.create_entry_redirects'))->toBeFalse();
 });
 
 it('keeps redirects in content/redirects by default', function (): void {
