@@ -31,4 +31,18 @@ return [
 
     'store' => 'content/redirects',
 
+    /*
+    |----------------------------------------------------------------------
+    | Create Entry Redirects
+    |----------------------------------------------------------------------
+    |
+    | Creates a 301 redirect from the old to the new URI when the URI of a
+    | published entry changes, through its slug or its place in a structure.
+    |
+    | Accepted values: true, false
+    |
+    */
+
+    'create_entry_redirects' => env('JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS', true),
+
 ];

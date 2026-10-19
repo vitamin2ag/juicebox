@@ -36,6 +36,14 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 - `destination` is a URL or `entry::<id>`, which redirects to the URL of that entry. Without a destination, or when the entry is missing, the 404 stays.
 - A relative `destination` gets the prefix of its site (`/neu` in a site at `/en` redirects to `/en/neu`), unless it already starts with the prefix of a site.
 
+## Entry redirects
+
+When the URI of a published entry changes, because its slug changes or because it moves to another parent in a structure, the feature saves an exact `301` redirect from the old to the new URI in the site of the entry. Moving a parent redirects its children as well. A save that keeps the URI, an unpublished entry and a new entry, including a new page placed in a structure, get no redirect.
+
+When a published entry is saved at a URI that an enabled redirect of its site redirects from, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. rias deleted it; here it stays until it is removed. This also happens while `create_entry_redirects` is `false`.
+
+Changing the slug of a parent in a structure changes the URIs of its children without saving them, so the children get no redirect.
+
 ## Configuration
 
 Publish the config file:
@@ -48,9 +56,11 @@ php artisan vendor:publish --tag=juicebox-redirects-config
 |---|---|---|
 | `enabled` | `true` | `true`, `false` |
 | `store` | `'content/redirects'` | Directory relative to the project root |
+| `create_entry_redirects` | `true` | `true`, `false` |
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `JUICEBOX_REDIRECTS_ENABLED` | `true` | Master toggle for the feature. |
+| `JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS` | `true` | Creates a redirect when the URI of an entry changes. |
