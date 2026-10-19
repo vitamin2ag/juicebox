@@ -64,7 +64,7 @@ it('leaves the redirects to rias/statamic-redirect while it is installed', funct
     Stache::stores()->forget('redirects');
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
-    new ServiceProvider(app())->bootAddon();
+    new ServiceProvider(app())->boot();
 
     expect(Stache::stores()->has('redirects'))->toBeFalse()
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
