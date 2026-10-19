@@ -27,14 +27,22 @@ class ServiceProvider extends FeatureServiceProvider
      * so the feature stays off until rias is removed.
      */
     #[Override]
-    public function bootAddon(): void
+    public function boot(): void
     {
+        parent::boot();
+
         if (Addon::all()->has('rias/statamic-redirect')) {
             return;
         }
 
         Stache::registerStore($this->app->make(RedirectStore::class));
 
+        // Statamic creates the statamic.web group in its own boot, and prepending skips a group that does not exist yet.
+        $this->app->booted($this->prependMiddleware(...));
+    }
+
+    private function prependMiddleware(): void
+    {
         $router = $this->app->make(Router::class);
         $router->prependMiddlewareToGroup('web', HandleNotFound::class);
         $router->prependMiddlewareToGroup('statamic.web', HandleNotFound::class);
