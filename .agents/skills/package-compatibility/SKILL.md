@@ -7,7 +7,7 @@ description: "Use this skill when reviewing Juicebox code, dependencies or CI ag
 
 ## Primary Goal
 
-Keep code, dependencies and workflows within the supported range: PHP `^8.5` and Statamic `^6` (see `composer.json`). The runtime dependency `edalzell/laravel-features` (PHP `^8.3`, Illuminate `^12 || ^13`, `composer/composer ^2.8`) and its Composer plugin `edalzell/laravel-features-plugin` (allowed by consuming sites) set their own floors; check them when raising or lowering our constraints.
+Keep code, dependencies and workflows within the supported range: PHP `^8.5` and Statamic `^6` (see `composer.json`). The runtime dependencies `edalzell/laravel-features` (PHP `^8.3`, Illuminate `^12 || ^13`, `composer/composer ^2.8`) and `edalzell/statamic-features` (PHP `^8.3`, `laravel-features ^1.2`, Statamic `^6`) and the Composer plugin `edalzell/laravel-features-plugin` (allowed by consuming sites) set their own floors; check them when raising or lowering our constraints.
 
 ## Workflow
 

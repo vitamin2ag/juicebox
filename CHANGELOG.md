@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.0...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.1...HEAD)
+
+## [v0.4.1](https://github.com/vitamin2ag/juicebox/compare/v0.4.0...v0.4.1) - 2026-10-19
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Enhancements
+
+* Adopt statamic-features for Statamic registration by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/9
+
+#### Documentation
+
+* Move feature docs into docs/features by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/7
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.4.0...v0.4.1
 
 ## [v0.4.0](https://github.com/vitamin2ag/juicebox/compare/v0.3.0...v0.4.0) - 2026-10-16
 
