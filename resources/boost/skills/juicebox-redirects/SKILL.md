@@ -19,6 +19,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to change, dis
 - `type` is `301`, `302` or `410` (Gone, no `destination`). `destination` is a URL or `entry::<id>`; a relative URL gets the site prefix unless it already has one.
 - When the URI of a published entry changes (new slug, or a new parent in a structure, children included), an exact `301` redirect from the old to the new URI is saved. Do not add these by hand.
 - Saving a published entry at a URI that an enabled redirect of its site redirects from sets that redirect to `enabled: false`; it is not deleted.
+- `php artisan statamic:juicebox:redirects:prune` deletes the disabled redirects of every site, including empty or broken redirect files.
 
 ## Configure
 
