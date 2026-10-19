@@ -1,0 +1,304 @@
+title: 'Globals – JSON-LD'
+sections:
+  -
+    display: 'Unternehmen / Person'
+    instructions: 'Grundlegende Informationen über die Organisation oder Person, für die diese Website steht.'
+    fields:
+      -
+        handle: json_ld_entity
+        field:
+          dictionary:
+            type: schemas
+            category: Globals
+          max_items: 1
+          type: dictionary
+          display: Schema-Typ
+          instructions: 'Legt fest, welcher strukturierte Schema-Typ (Organisation, Person, lokales Unternehmen, Aktiengesellschaft) global ausgegeben wird. (`@type`)'
+          instructions_position: below
+      -
+        handle: json_ld_entity_name
+        field:
+          type: text
+          display: Name
+          instructions: 'Leer lassen, um den Websitenamen zu verwenden. (`name`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_alternate_name
+        field:
+          type: text
+          display: 'Alternativer Name'
+          instructions: 'Zweitname oder Kurzform, unter der die Organisation ebenfalls bekannt ist. (`alternateName`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_legal_name
+        field:
+          type: text
+          display: 'Rechtlicher Name'
+          instructions: 'Falls abweichend vom Markennamen. (`legalName`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_description
+        field:
+          type: textarea
+          display: Beschreibung
+          instructions: 'Kurze Beschreibung der Organisation für Suchmaschinen. (`description`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_email
+        field:
+          type: text
+          display: E-Mail
+          instructions: 'Allgemeine Kontakt-E-Mail-Adresse. (`email`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+          validate:
+            - email
+      -
+        handle: json_ld_entity_telephone
+        field:
+          type: text
+          display: Telefon
+          instructions: 'Allgemeine Kontakttelefonnummer. (`telephone`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_address_street
+        field:
+          type: text
+          display: Strasse
+          instructions: 'Strasse und Hausnummer. (`streetAddress`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_address_zip
+        field:
+          type: text
+          display: PLZ
+          instructions: 'Postleitzahl. (`postalCode`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_address_city
+        field:
+          type: text
+          display: Ort
+          instructions: 'Ort / Stadt. (`addressLocality`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_address_region
+        field:
+          type: text
+          display: 'Kanton / Region'
+          instructions: 'Kanton oder Region. (`addressRegion`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_address_country
+        field:
+          type: text
+          display: Land
+          width: 50
+          instructions: '[ISO 3166 Ländercode](https://de.wikipedia.org/wiki/ISO-3166-1-Kodierliste) (`addressCountry`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_latitude
+        field:
+          type: text
+          display: Breitengrad
+          width: 50
+          instructions: 'Koordinaten finden auf [latlong.net](https://www.latlong.net/) (`latitude`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_longitude
+        field:
+          type: text
+          display: Längengrad
+          instructions: 'Koordinaten finden auf [latlong.net](https://www.latlong.net/) (`longitude`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_same_as
+        field:
+          type: list
+          display: 'Gleich wie'
+          instructions: 'Social-Media-Profile oder andere URLs, die diese Organisation repräsentieren. (`sameAs`)'
+          add_row: 'URL hinzufügen'
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_logo
+        field:
+          type: assets
+          container: assets
+          max_files: 1
+          display: Logo
+          instructions: 'Wird als Logo bzw. Bild im strukturierten Datenformat ausgegeben. (`logo` / `image`)'
+          instructions_position: below
+          validate:
+            - image
+          if:
+            json_ld_entity: 'not empty'
+          width: 50
+      -
+        handle: json_ld_entity_url
+        field:
+          type: text
+          input_type: url
+          display: URL
+          instructions: 'Leer lassen, um die Website-URL zu verwenden. (`url`)'
+          instructions_position: below
+          width: 50
+          validate:
+            - url
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_founding_date
+        field:
+          type: date
+          display: Gründungsdatum
+          instructions: 'Datum der Unternehmensgründung. (`foundingDate`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_vat_id
+        field:
+          type: text
+          display: MWST-Nummer
+          width: 50
+          instructions: 'Schweizer UID/MWST-Nummer, z.B. CHE-123.456.789 MWST. (`vatID`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_price_range
+        field:
+          type: select
+          display: Preisklasse
+          instructions: 'Relative Preisklasse des Unternehmens, z.B. $$ für mittleres Preissegment. (`priceRange`)'
+          instructions_position: below
+          clearable: true
+          options:
+            $: $
+            $$: $$
+            $$$: $$$
+            $$$$: $$$$
+          if:
+            json_ld_entity: 'equals LocalBusiness'
+      -
+        handle: json_ld_entity_ticker_symbol
+        field:
+          type: text
+          display: Börsenkürzel
+          instructions: 'Börsenkürzel der Aktiengesellschaft, z.B. AAPL. (`tickerSymbol`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'equals Corporation'
+      -
+        handle: json_ld_entity_opening_hours
+        field:
+          type: grid
+          display: Öffnungszeiten
+          instructions: 'Öffnungszeiten pro Wochentag. Tag weglassen, wenn geschlossen. (`openingHoursSpecification`)'
+          instructions_position: below
+          max_rows: 7
+          if:
+            json_ld_entity: 'equals LocalBusiness'
+          fields:
+            -
+              handle: day
+              field:
+                type: select
+                display: Tag
+                instructions: 'Wochentag. (`dayOfWeek`)'
+                width: 34
+                options:
+                  monday: Montag
+                  tuesday: Dienstag
+                  wednesday: Mittwoch
+                  thursday: Donnerstag
+                  friday: Freitag
+                  saturday: Samstag
+                  sunday: Sonntag
+                validate:
+                  - required
+            -
+              handle: opening
+              field:
+                type: time
+                display: Von
+                instructions: 'Öffnungszeit. (`opens`)'
+                width: 33
+            -
+              handle: closing
+              field:
+                type: time
+                display: Bis
+                instructions: 'Schliesszeit. (`closes`)'
+                width: 33
+  -
+    display: Website
+    instructions: 'Angaben zur Website als Ganzes, unabhängig von der Organisation/Person.'
+    fields:
+      -
+        handle: json_ld_website_name
+        field:
+          type: text
+          display: Name
+          instructions: 'Leer lassen, um den Websitenamen zu verwenden. (`name`)'
+          instructions_position: below
+          width: 50
+      -
+        handle: json_ld_website_alternate_name
+        field:
+          type: text
+          display: 'Alternativer Name'
+          instructions: 'Zweitname oder Kurzform der Website. (`alternateName`)'
+          instructions_position: below
+          width: 50
+      -
+        handle: json_ld_website_description
+        field:
+          type: textarea
+          display: Beschreibung
+          instructions: 'Kurze Beschreibung der Website für Suchmaschinen. (`description`)'
+          instructions_position: below
+      -
+        handle: json_ld_website_search_url
+        field:
+          type: text
+          display: Such-URL
+          instructions: 'Leer lassen, wenn keine Suchfunktion vorhanden ist. Vollständige URL oder Pfad ab der Website-Wurzel (mit `/` beginnend). `{search_term_string}` als Platzhalter für den Suchbegriff. (`potentialAction`)'
+          instructions_position: below
+          validate:
+            - 'regex:/^(https?:\/\/|\/)\S*\{search_term_string\}\S*$/'

@@ -7,3 +7,5 @@ parameters:
     tmpDir: build/phpstan
     configDirectories:
         - features/*/config
+    stubFiles:
+        - .phpstan/stubs/statamic-globals.stub

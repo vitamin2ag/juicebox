@@ -50,7 +50,7 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 
 1. Create `features/<Name>/src/ServiceProvider.php` in the namespace `Vitamin2\Juicebox\Features\<Name>` extending `Vitamin2\Juicebox\FeatureServiceProvider` **(enforced)**. The folder name equals the namespace segment; name it `Ai`, not `AI` (the slug is its kebab-case). When you override `boot()` or `register()`, call the parent first.
 2. Run `composer dump-autoload` so the plugin picks up the new folder. Leave `extra.laravel.providers` with `Vitamin2\Juicebox\ServiceProvider` only **(enforced)**.
-3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
+3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. A tag class in `Tags/<Name>.php` is available as `{{ juicebox::<name> }}` through the core `juicebox` tag; leave `src/Tags/Juicebox.php` unchanged. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
 4. Put classes in the folders listed under Layout so they register themselves; register the rest in `boot()` (for example `pushMiddlewareToGroup`). Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
 5. If configurable, add `features/<Name>/config/<snake_name>.php`. Read env vars there only. Use `false` to switch a value off.
 6. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
@@ -63,6 +63,7 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 - Every PHP file declares `strict_types=1`; use `#[Override]` when overriding parent members.
 - Read config with `config('juicebox.<snake_name>.<key>')`. Values are `mixed`; narrow them at the point of use (PHPStan runs at `max`; fix the type instead of using `@phpstan-ignore`, `assert()` or casts).
 - Name artisan commands `statamic:juicebox:<slug>:<action>`.
+- Use `.phpstan/stubs/` only to describe dynamic Statamic properties (for example blueprint-driven fields); satisfy a vendor type by fixing the call, not by relaxing it in a stub.
 - Add only the files the behaviour needs.
 
 ## Worked example: `RemovePoweredBy`
