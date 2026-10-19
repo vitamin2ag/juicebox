@@ -40,9 +40,17 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 
 When the URI of a published entry changes, because its slug changes or because it moves to another parent in a structure, the feature saves an exact `301` redirect from the old to the new URI in the site of the entry. Moving a parent redirects its children as well. A save that keeps the URI, an unpublished entry and a new entry, including a new page placed in a structure, get no redirect.
 
-When a published entry is saved at a URI that an enabled redirect of its site redirects from, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. rias deleted it; here it stays until it is removed. This also happens while `create_entry_redirects` is `false`.
+When a published entry is saved at a URI that an enabled redirect of its site redirects from, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. rias deleted it; here it stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
 Changing the slug of a parent in a structure changes the URIs of its children without saving them, so the children get no redirect.
+
+## Commands
+
+``` bash
+php artisan statamic:juicebox:redirects:prune
+```
+
+Deletes every redirect with `enabled: false`, in every site, and prints how many it deleted. Empty or broken redirect files are read as disabled redirects, so it deletes them as well.
 
 ## Configuration
 

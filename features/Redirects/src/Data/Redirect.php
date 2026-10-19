@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects\Data;
 
+use Illuminate\Support\Facades\File;
 use Statamic\Data\ExistsAsFile;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
@@ -76,6 +77,16 @@ class Redirect
     public function path(): string
     {
         return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";
+    }
+
+    /**
+     * rias puts the order in front of the id in the file name, so a file it wrote is not at path().
+     */
+    public function deleteFile(): void
+    {
+        $file = $this->initialPath();
+
+        File::delete(is_string($file) ? $file : $this->path());
     }
 
     /**
