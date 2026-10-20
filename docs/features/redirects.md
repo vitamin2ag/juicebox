@@ -2,7 +2,7 @@
 
 Redirects requests that would otherwise return a 404 to a new URL.
 
-Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder. Files written by `rias/statamic-redirect` keep working as they are and get the format below the next time they are saved. While `rias/statamic-redirect` is installed, the feature stays off; remove rias to switch it on.
+Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder. Files written by `rias/statamic-redirect` keep working as they are and get the format below the next time they are saved. While `rias/statamic-redirect` is installed, the feature stays off entirely, with no redirects, entry redirects, commands or control panel pages; remove rias to switch it on.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -43,6 +43,28 @@ When the URI of a published entry changes, because its slug changes or because i
 When a published entry is saved at a URI that an enabled redirect of its site redirects from, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. rias deleted it; here it stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
 Changing the slug of a parent in a structure changes the URIs of its children without saving them, so the children get no redirect.
+
+## Control panel
+
+**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, and links to the form, the CSV import and a button that deletes the disabled redirects.
+
+- The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`, and rewrites a file rias named `<order>_<id>.yaml` as `<id>.yaml`.
+- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias.
+- The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
+- Deleting the disabled redirects does what the [prune command](#commands) does.
+
+### Permissions
+
+The permissions have the names of `rias/statamic-redirect`, so roles that have them keep working.
+
+| Permission | Allows |
+|---|---|
+| `view redirects` | The list and the navigation item. |
+| `edit redirects` | Editing a redirect. |
+| `create redirects` | Creating redirects and importing a CSV file. |
+| `delete redirects` | Deleting a redirect and deleting the disabled redirects. |
+
+`create redirects` and `delete redirects` sit under `edit redirects`, and that under `view redirects`, so the role editor grants a child only together with its parent.
 
 ## Commands
 
