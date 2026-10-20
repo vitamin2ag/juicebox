@@ -1,0 +1,63 @@
+title: Redirect
+tabs:
+  main:
+    display: Main
+    sections:
+      -
+        fields:
+          -
+            handle: match_type
+            field:
+              type: select
+              display: 'Match type'
+              instructions: 'A regex matches anywhere in the URL and ignores upper and lower case.'
+              options:
+                exact: 'Exact match'
+                regex: 'Regex match'
+              default: exact
+              validate: 'required|in:exact,regex'
+          -
+            handle: source
+            field:
+              type: text
+              display: Source
+              instructions: 'The URL to redirect from, relative to the site, e.g. `/old-page`, or as a regex `/campaign/(.*)`.'
+              validate: 'required|string'
+          -
+            handle: destination
+            field:
+              type: link
+              display: Destination
+              instructions: 'An entry or a URL. A regex destination takes the captures as `$1`, `$2`, ...'
+              select_across_sites: true
+              validate: 'required_unless:type,410|nullable|string'
+          -
+            handle: type
+            field:
+              type: select
+              display: Type
+              options:
+                301: 'Permanent (301)'
+                302: 'Temporary (302)'
+                410: 'Gone (410)'
+              default: 301
+              validate: 'required|in:301,302,410'
+          -
+            handle: description
+            field:
+              type: textarea
+              display: Description
+              instructions: 'For internal use only.'
+              validate: 'nullable|string'
+  sidebar:
+    display: Sidebar
+    sections:
+      -
+        fields:
+          -
+            handle: enabled
+            field:
+              type: toggle
+              display: Enabled
+              default: true
+              validate: 'required|boolean'

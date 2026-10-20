@@ -2,12 +2,20 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Statamic\CP\Navigation\Nav as Navigation;
+use Statamic\CP\Navigation\NavItem;
+use Statamic\Events\EntrySaving;
 use Statamic\Facades\Addon;
+use Statamic\Facades\CP\Nav;
+use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
+use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(ServiceProvider::class);
 
@@ -69,16 +77,72 @@ it('handles the 404s of the :dataset middleware group first', function (string $
     expect(data_get(resolve('router')->getMiddlewareGroups(), [$group, 0]))->toBe(HandleNotFound::class);
 })->with(['web', 'statamic.web']);
 
-it('leaves the redirects to rias/statamic-redirect while it is installed', function (): void {
+it('registers the permissions of rias/statamic-redirect in a Redirects group', function (): void {
+    $permission = fn (string $value, string $label, array $children = []): array => [
+        'value' => $value,
+        'label' => $label,
+        'description' => null,
+        'group' => 'redirects',
+        'hidden_by' => [],
+        'children' => $children,
+    ];
+
+    expect(Collection::wrap(Permission::boot()->tree())->firstWhere('handle', 'redirects'))->toBe([
+        'handle' => 'redirects',
+        'label' => 'Redirects',
+        'permissions' => [
+            $permission('view redirects', 'View Redirects', [
+                $permission('edit redirects', 'Edit Redirects', [
+                    $permission('create redirects', 'Create Redirects'),
+                    $permission('delete redirects', 'Delete Redirects'),
+                ]),
+            ]),
+        ],
+    ]);
+});
+
+/**
+ * The test case replaces the navigation with an empty mock, so the provider extends a real one here.
+ *
+ * @return array<int, array{mixed, mixed, mixed, mixed}>
+ */
+function navigation(): array
+{
+    Nav::swap(new Navigation);
+    new ServiceProvider(app())->boot();
+
+    return Nav::build()
+        ->flatMap(fn (mixed $section): Collection => Collection::wrap(data_get($section, 'items')))
+        ->whereInstanceOf(NavItem::class)
+        ->map(fn (NavItem $item): array => [$item->section(), $item->display(), $item->url(), $item->icon()])
+        ->values()
+        ->all();
+}
+
+it('lists Redirects under Tools for a user who can view redirects', function (): void {
+    $this->actingAs(RedirectFixtures::userWith('view redirects'));
+
+    expect(navigation())->toContain(['Tools', 'Redirects', RedirectFixtures::cpUrl('redirects.index'), 'arrow-up-right']);
+});
+
+it('leaves Redirects out of the navigation for a user who cannot view redirects', function (): void {
+    $this->actingAs(RedirectFixtures::userWith('edit redirects', 'create redirects', 'delete redirects'));
+
+    expect(array_column(navigation(), 1))->not->toContain('Redirects');
+});
+
+it('boots none of the feature while rias/statamic-redirect is installed', function (): void {
     $router = resolve('router');
     $router->removeMiddlewareFromGroup('web', HandleNotFound::class);
     $router->removeMiddlewareFromGroup('statamic.web', HandleNotFound::class);
     Stache::stores()->forget('redirects');
+    $listeners = Event::getRawListeners()[EntrySaving::class];
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
     new ServiceProvider(app())->boot();
 
     expect(Stache::stores()->has('redirects'))->toBeFalse()
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
-        ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
+        ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class)
+        ->and(Event::getRawListeners()[EntrySaving::class])->toBe($listeners);
 });

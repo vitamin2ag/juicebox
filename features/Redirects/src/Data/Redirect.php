@@ -79,6 +79,21 @@ class Redirect
         return clone ($this, ['enabled' => $enabled]);
     }
 
+    /**
+     * Keeps the id, site and order, and the file the redirect was read from, so saving it replaces that file.
+     */
+    public function withValues(?string $source, ?string $destination, int $type, string $matchType, bool $enabled, ?string $description): self
+    {
+        return clone ($this, [
+            'source' => $source,
+            'destination' => $destination,
+            'type' => $type,
+            'matchType' => $matchType,
+            'enabled' => $enabled,
+            'description' => $description,
+        ]);
+    }
+
     public function path(): string
     {
         return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";
