@@ -48,6 +48,17 @@ class ServiceProvider extends FeatureServiceProvider
     }
 
     /**
+     * The root .gitignore ignores every build folder, so the control panel build goes to dist.
+     *
+     * @return array<string, mixed>
+     */
+    #[Override]
+    protected function options(): array
+    {
+        return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+    }
+
+    /**
      * The names are those of rias/statamic-redirect, so the roles that have them keep working.
      */
     private function registerPermissions(): void

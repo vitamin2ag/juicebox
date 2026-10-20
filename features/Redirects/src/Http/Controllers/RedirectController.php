@@ -11,6 +11,7 @@ use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Statamic\CP\PublishForm;
 use Statamic\Facades\Blueprint as Blueprints;
 use Statamic\Facades\Site as Sites;
 use Statamic\Fields\Blueprint;
@@ -52,11 +53,11 @@ class RedirectController extends CpController
         ]);
     }
 
-    public function create(): Response
+    public function create(): PublishForm
     {
         $this->authorize('create redirects');
 
-        return $this->form('Create Redirect', cp_route('redirects.store'));
+        return $this->form('Create Redirect', route('statamic.cp.redirects.store'), 'POST');
     }
 
     /**
@@ -71,11 +72,11 @@ class RedirectController extends CpController
         return ['redirect' => cp_route('redirects.edit', $redirect->id())];
     }
 
-    public function edit(string $id): Response
+    public function edit(string $id): PublishForm
     {
         $this->authorize('edit redirects');
 
-        return $this->form('Edit Redirect', cp_route('redirects.update', $id), $this->find($id));
+        return $this->form('Edit Redirect', route('statamic.cp.redirects.update', $id), 'PATCH')->values($this->find($id)->fileData());
     }
 
     public function update(string $id): EmptyResponse
@@ -96,20 +97,13 @@ class RedirectController extends CpController
         return response()->noContent();
     }
 
-    private function form(string $title, mixed $submitUrl, ?Redirect $redirect = null): Response
+    /**
+     * Statamic's publish form saves through the submit URL and opens the URL in the
+     * `redirect` key of the response, which store() returns.
+     */
+    private function form(string $title, string $submitUrl, string $method): PublishForm
     {
-        $blueprint = $this->blueprint();
-        $fields = $this->fields($this->fields($blueprint->fields()->addValues($redirect?->fileData() ?? []))->preProcess());
-
-        return Inertia::render('redirects::Publish', [
-            'title' => $title,
-            'isCreating' => ! $redirect instanceof Redirect,
-            'blueprint' => $blueprint->toPublishArray(),
-            'values' => $fields->values(),
-            'meta' => $fields->meta(),
-            'submitUrl' => $submitUrl,
-            'listingUrl' => cp_route('redirects.index'),
-        ]);
+        return PublishForm::make($this->blueprint())->icon('arrow-up-right')->title($title)->submittingTo($submitUrl, $method);
     }
 
     private function save(Redirect $redirect): Redirect
