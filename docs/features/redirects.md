@@ -23,6 +23,7 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 - Exact redirects win over regex ones; within each, the lowest `order` wins.
 - An exact `source` matches with or without a leading or trailing slash, and with or without the query string of the request: `/alt` matches `/alt/` and `/alt?utm_source=newsletter`, while `/news?page=2` matches only that query.
 - A regex `source` works as in rias: case-insensitive and not anchored. A `destination` with `$1`, `$2`, ... takes the captures, so `/kampagne/(.*)` to `/aktion/$1` sends `/kampagne/sommer` to `/aktion/sommer`.
+- A regex `source` is matched between backticks with the `i` flag, so a backtick in it needs a backslash. A regex `source` that does not compile, for example in an old rias file, is skipped, so it never turns a 404 into an error.
 - A `source` is relative to its site: `/alt` in a site at `/en` matches `/en/alt`. Sources that carry the site prefix, as rias needed on sites with an absolute URL, keep working.
 
 ## Responses
@@ -49,7 +50,7 @@ Changing the slug of a parent in a structure changes the URIs of its children wi
 **Tools > Redirects** lists the redirects of the site selected in the control panel, by source, and links to the form, the CSV import and a button that deletes the disabled redirects.
 
 - The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`, and rewrites a file rias named `<order>_<id>.yaml` as `<id>.yaml`.
-- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias.
+- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
 
@@ -95,9 +96,9 @@ The first row names the columns, in any order; other columns are ignored. The co
 | `description` | No | Empty keeps the description of the redirect the row replaces. |
 
 - A row with the `source` and `site` of an existing redirect replaces it and keeps its `id` and `order`, so importing the same file again changes nothing. Of the rows with the same `source` and `site` in one file, the last one wins.
-- A row without a required value, or with a `type` that is not a number, is skipped and counted. Empty lines are ignored.
+- A row without a required value, with a `type` that is not a number, or with a regex `source` that does not compile, is skipped and counted. Empty lines are ignored.
 - Values that contain the delimiter or a line break are wrapped in double quotes. The file is UTF-8, with or without the byte order mark Excel writes.
-- Unlike rias, the import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number instead of saving a broken redirect.
+- Unlike rias, the import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number or a regex that does not compile instead of saving a broken redirect.
 
 ## Configuration
 

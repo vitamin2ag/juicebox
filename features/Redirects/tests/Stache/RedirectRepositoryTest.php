@@ -132,6 +132,14 @@ it('takes the regex redirect with the lowest order', function (): void {
     expect($redirects->findByUrl('de', '/alt/seite')?->id())->toBe('sooner');
 });
 
+it('skips a regex redirect whose source does not compile', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'broken', site: 'de', source: '/alt/(', destination: '/broken', matchType: 'regex', order: 1));
+    $redirects->save(new Redirect(id: 'valid', site: 'de', source: '/alt/.*', destination: '/valid', matchType: 'regex', order: 2));
+
+    expect($redirects->findByUrl('de', '/alt/seite')?->id())->toBe('valid');
+});
+
 it('fills the regex captures of :dataset into the destination', function (string $url): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'regex', site: 'de', source: '/kampagne/(.*)', destination: '/aktion/$1', matchType: 'regex'));

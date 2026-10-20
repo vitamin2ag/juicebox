@@ -55,6 +55,17 @@ class RedirectRepository
         return $this->findExact($redirects, $urls) ?? $this->findRegex($redirects, $urls);
     }
 
+    /**
+     * The pattern a regex source matches with, or null when it does not compile. Grepping
+     * no subjects only compiles the pattern.
+     */
+    public function pattern(string $source): ?string
+    {
+        $pattern = "`{$source}`i";
+
+        return @preg_grep($pattern, []) === false ? null : $pattern;
+    }
+
     public function save(Redirect $redirect): void
     {
         $this->store->save($redirect);
@@ -91,7 +102,11 @@ class RedirectRepository
                 continue;
             }
 
-            $pattern = "`{$redirect->source()}`i";
+            $pattern = $this->pattern($redirect->source());
+
+            if ($pattern === null) {
+                continue;
+            }
 
             foreach ($urls as $url) {
                 if (preg_match($pattern, $url) === 1) {

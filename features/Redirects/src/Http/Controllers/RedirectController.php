@@ -20,6 +20,7 @@ use Statamic\Sites\Site;
 use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Rules\UniqueSource;
+use Vitamin2\Juicebox\Features\Redirects\Rules\ValidRegex;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 class RedirectController extends CpController
@@ -114,7 +115,7 @@ class RedirectController extends CpController
     private function save(Redirect $redirect): Redirect
     {
         $fields = $this->fields($this->blueprint()->fields()->addValues($this->request->all()));
-        $fields->validate(['source' => [new UniqueSource($redirect, $this->redirects)]]);
+        $fields->validate(['source' => [new UniqueSource($redirect, $this->redirects), new ValidRegex($this->redirects)]]);
         $values = new Fluent(Collection::wrap($this->fields($fields->process())->values())->all());
 
         $redirect = $redirect->withValues(
