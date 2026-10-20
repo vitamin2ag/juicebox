@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.1...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.2...HEAD)
+
+## [v0.4.2](https://github.com/vitamin2ag/juicebox/compare/v0.4.1...v0.4.2) - 2026-10-20
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Maintenance
+
+* Register ServiceProvider in the workbench by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/12
+* Load statamic-features in the tests by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/13
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.4.1...v0.4.2
 
 ## [v0.4.1](https://github.com/vitamin2ag/juicebox/compare/v0.4.0...v0.4.1) - 2026-10-19
 
