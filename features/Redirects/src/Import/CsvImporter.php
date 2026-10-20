@@ -20,7 +20,8 @@ class CsvImporter
     /**
      * Reads the columns of the rias/statamic-redirect import. A row replaces the redirect with
      * its source and site, keeping its id and order, and a row without source, type or match
-     * type, or without destination unless its type is 410, is skipped.
+     * type, without destination unless its type is 410, or with a regex source that does not
+     * compile, is skipped.
      */
     public function import(string $path, string $delimiter = ','): ImportResult
     {
@@ -72,6 +73,10 @@ class CsvImporter
         $matchType = $this->value($row, 'match_type');
 
         if ($source === null || $type === null || $matchType === null || ($destination === null && $type !== 410)) {
+            return null;
+        }
+
+        if ($matchType === 'regex' && $this->redirects->pattern($source) === null) {
             return null;
         }
 

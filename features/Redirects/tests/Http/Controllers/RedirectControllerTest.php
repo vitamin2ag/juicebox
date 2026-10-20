@@ -153,6 +153,15 @@ it('rejects a source that already redirects in the selected site', function (): 
     expect(resolve(RedirectRepository::class)->all())->toHaveCount(1);
 });
 
+it('rejects a regex source that does not compile', function (): void {
+    $this->actingAs(RedirectFixtures::superUser())
+        ->postJson(RedirectFixtures::cpUrl('redirects.store'), redirectForm(['source' => '/kampagne/(', 'match_type' => 'regex']))
+        ->assertUnprocessable()
+        ->assertOnlyJsonValidationErrors('source');
+
+    expect(resolve(RedirectRepository::class)->all())->toBeEmpty();
+});
+
 it('shows the form to edit a redirect with its values', function (): void {
     resolve(RedirectRepository::class)->save(new Redirect(id: 'edited', site: 'default', source: '/alt', destination: '/neu', type: 302, matchType: 'regex', description: 'Alt'));
 

@@ -97,6 +97,13 @@ it('skips the rows without source, type, match type or destination', function ()
         ->and(array_keys(importedRedirects()))->toBe(['de/gueltig']);
 });
 
+it('skips the rows with a regex source that does not compile', function (): void {
+    $result = resolve(CsvImporter::class)->import(RedirectFixtures::csv('regex.csv'));
+
+    expect($result)->toEqual(new ImportResult(imported: 2, skipped: 1))
+        ->and(array_keys(importedRedirects()))->toBe(['de/kampagne/(.*)', 'de/klammer(']);
+});
+
 it('enables a row without the enabled column in the current site', function (): void {
     Site::setCurrent('en');
 
