@@ -84,6 +84,27 @@ it('copies itself as disabled', function (): void {
         ->and($redirect->enabled())->toBeTrue();
 });
 
+it('copies itself with the values of the form, keeping its id, site, order and file', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'en', source: '/old', destination: '/new', order: 2);
+    $redirect->initialPath('en/2_one.yaml');
+
+    $edited = $redirect->withValues(source: '/old/(.*)', destination: null, type: 410, matchType: 'regex', enabled: false, description: 'Gone');
+
+    expect($edited->fileData())->toBe([
+        'id' => 'one',
+        'enabled' => false,
+        'source' => '/old/(.*)',
+        'destination' => null,
+        'type' => 410,
+        'match_type' => 'regex',
+        'description' => 'Gone',
+        'order' => 2,
+    ])
+        ->and($edited->site())->toBe('en')
+        ->and($edited->initialPath())->toBe('en/2_one.yaml')
+        ->and($redirect->source())->toBe('/old');
+});
+
 it('lives in its site folder, named by its id', function (): void {
     expect(new Redirect(id: 'one', site: 'de', order: 2)->path())
         ->toBe(resolve(RedirectStore::class)->directory().'de/one.yaml');
