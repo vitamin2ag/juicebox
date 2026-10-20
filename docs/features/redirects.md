@@ -47,12 +47,14 @@ Changing the slug of a parent in a structure changes the URIs of its children wi
 
 ## Control panel
 
-**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, and links to the form, the CSV import and a button that deletes the disabled redirects.
+**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import and to deleting the disabled redirects.
 
 - The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`, and rewrites a file rias named `<order>_<id>.yaml` as `<id>.yaml`.
 - `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
+- The form is Statamic's publish form. The list and the import are Vue pages, built into `features/Redirects/resources/dist` and published to `public/vendor/redirects/dist`. `statamic:install`, which a Statamic site runs after `composer update`, publishes them; to publish them by hand, run `php artisan vendor:publish --tag=redirects --force`.
+- To change the pages, edit `features/Redirects/resources/js`, run `nvm use && npm ci && npm run build` in `features/Redirects` and commit `resources/dist`.
 
 ### Permissions
 

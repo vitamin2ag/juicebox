@@ -81,9 +81,9 @@ it('shows the form to create a redirect with the blueprint defaults', function (
         ->get(RedirectFixtures::cpUrl('redirects.create'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('redirects::Publish')
+            ->component('PublishForm')
             ->where('title', 'Create Redirect')
-            ->where('isCreating', true)
+            ->where('icon', 'arrow-up-right')
             ->where('blueprint.handle', 'redirect')
             ->where('values.match_type', 'exact')
             ->where('values.source', null)
@@ -91,7 +91,7 @@ it('shows the form to create a redirect with the blueprint defaults', function (
             ->where('values.enabled', true)
             ->has('meta.destination')
             ->where('submitUrl', RedirectFixtures::cpUrl('redirects.store'))
-            ->where('listingUrl', RedirectFixtures::cpUrl('redirects.index')));
+            ->where('submitMethod', 'POST'));
 });
 
 it('stores a redirect in the selected site in the format of rias', function (): void {
@@ -169,9 +169,9 @@ it('shows the form to edit a redirect with its values', function (): void {
         ->get(RedirectFixtures::cpUrl('redirects.edit', 'edited'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('redirects::Publish')
+            ->component('PublishForm')
             ->where('title', 'Edit Redirect')
-            ->where('isCreating', false)
+            ->where('icon', 'arrow-up-right')
             ->where('blueprint.handle', 'redirect')
             ->where('values.source', '/alt')
             ->where('values.destination', '/neu')
@@ -181,7 +181,7 @@ it('shows the form to edit a redirect with its values', function (): void {
             ->where('values.enabled', true)
             ->has('meta.destination')
             ->where('submitUrl', RedirectFixtures::cpUrl('redirects.update', 'edited'))
-            ->where('listingUrl', RedirectFixtures::cpUrl('redirects.index')));
+            ->where('submitMethod', 'PATCH'));
 });
 
 it('updates a rias redirect into one file with its id, site and order', function (): void {
