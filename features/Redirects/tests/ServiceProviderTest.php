@@ -12,6 +12,7 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
@@ -36,6 +37,23 @@ it('publishes the config with the juicebox-redirects-config tag', function (): v
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-redirects-config');
 
     expect(array_values($paths))->toBe([config_path('juicebox/redirects.php')]);
+});
+
+it('registers the control panel build with Vite', function (): void {
+    $feature = dirname(__DIR__);
+
+    expect(Statamic::availableVites(request()))->toHaveKey('redirects', [
+        'hotFile' => "{$feature}/resources/hot",
+        'buildDirectory' => 'vendor/redirects/dist',
+        'input' => 'resources/js/cp.js',
+    ]);
+});
+
+it('publishes the control panel build with the redirects tag', function (): void {
+    $feature = dirname(__DIR__);
+    $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'redirects');
+
+    expect($paths)->toBe(["{$feature}/resources/dist/" => public_path('vendor/redirects/dist/')]);
 });
 
 it('disables the feature through JUICEBOX_REDIRECTS_ENABLED', function (): void {
