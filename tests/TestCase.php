@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Tests;
 
 use Edalzell\Features\ServiceProvider as FeaturesServiceProvider;
+use Edalzell\StatamicFeatures\ServiceProvider as StatamicFeaturesServiceProvider;
 use Override;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
@@ -21,11 +22,13 @@ abstract class TestCase extends AddonTestCase
 
     /**
      * Features are discovered by the addon provider, so new features need no test wiring.
+     * Testbench skips package discovery, so the framework providers an application would
+     * discover are listed here.
      */
     #[Override]
     protected function getPackageProviders($app): array
     {
-        return [FeaturesServiceProvider::class, ...parent::getPackageProviders($app)];
+        return [FeaturesServiceProvider::class, StatamicFeaturesServiceProvider::class, ...parent::getPackageProviders($app)];
     }
 
     #[Override]
