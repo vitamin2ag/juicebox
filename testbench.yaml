@@ -2,6 +2,7 @@ laravel: '@testbench'
 
 providers:
   - Workbench\App\Providers\WorkbenchServiceProvider
+  - Vitamin2\Juicebox\ServiceProvider
 
 env:
   # Statamic's CheckComposerJsonScripts middleware inspects the skeleton's composer.json
