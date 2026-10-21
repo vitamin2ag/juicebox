@@ -1,0 +1,8 @@
+id: 3b8e4d85-4f40-4e31-8d84-6c5ecf9a0b04
+enabled: true
+source: /team-alt
+source_md5: 52f3059d5c37d16c83532aad80a6e651
+destination: /team
+type: 301
+site: en
+match_type: exact

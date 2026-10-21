@@ -1,0 +1,4 @@
+﻿source;destination;type;match_type;site;description
+/alt;/neu;301;exact;de;"Alt; neu"
+/kurz;/neu;301;exact
+/lang;/neu;301;exact;en;Lang;
