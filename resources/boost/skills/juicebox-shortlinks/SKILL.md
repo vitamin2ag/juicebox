@@ -15,6 +15,8 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - Each shortlink is a YAML file `content/shortlinks/<slug>.yaml`; the file name is the slug, so do not add a `slug` key. Commit these files with the project's content.
 - `/s/<slug>` redirects with a `302` to `destination`: a URL, or `entry::<id>`, resolved to the entry's absolute URL on each request. With `utm: true`, `utm_source`, `utm_medium` and `utm_campaign` are added to the destination's query string; existing parameters and the fragment stay.
 - An unknown slug, `enabled: false`, a missing `destination` or a deleted entry redirect to the home page of the default site.
+- The short URL is `/s/<slug>` at the root of the default site's domain, without the site's path (`https://www.example.ch/de/` gives `https://www.example.ch/s/<slug>`). A relative site URL (`/`) takes the domain of the current request; set an absolute URL on the default site if QR codes must always hold the live domain.
+- The QR code is a server-generated SVG of the short URL, not of the destination, so printed codes survive a changed destination.
 
 ## Configure
 

@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Shortlinks\Data;
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Uri;
 use Statamic\Data\ExistsAsFile;
+use Statamic\Facades\Site as Sites;
+use Statamic\Sites\Site;
+use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 
 class Shortlink
@@ -81,6 +86,18 @@ class Shortlink
             'utmCampaign' => $utmCampaign,
             'enabled' => $enabled,
         ]);
+    }
+
+    /**
+     * The route answers at the root of every domain, so the path of the default site is dropped.
+     */
+    public function url(): string
+    {
+        $site = Collection::wrap(Sites::default())->whereInstanceOf(Site::class)->firstOrFail()->absoluteUrl();
+
+        return Uri::of(is_string($site) ? $site : throw new UnexpectedValueException('Statamic returned no site URL.'))
+            ->withPath("s/{$this->slug}")
+            ->value();
     }
 
     public function path(): string
