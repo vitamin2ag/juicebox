@@ -17,4 +17,18 @@ return [
 
     'enabled' => env('JUICEBOX_SHORTLINKS_ENABLED', false),
 
+    /*
+    |----------------------------------------------------------------------
+    | Store
+    |----------------------------------------------------------------------
+    |
+    | Directory of the shortlink YAML files, one file per shortlink, named
+    | by its slug.
+    |
+    | Accepted values: a directory relative to the project root
+    |
+    */
+
+    'store' => 'content/shortlinks',
+
 ];
