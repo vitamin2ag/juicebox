@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Shortlinks\ServiceProvider;
+use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 
 mutates(ServiceProvider::class);
 
@@ -31,4 +33,26 @@ it('publishes the config with the juicebox-shortlinks-config tag while the featu
 
     expect(config('juicebox.shortlinks.enabled'))->toBeFalse()
         ->and(array_values($paths))->toBe([config_path('juicebox/shortlinks.php')]);
+});
+
+it('keeps shortlinks in content/shortlinks by default', function (): void {
+    expect(resolve(ShortlinkStore::class)->directory())->toBe(base_path('content/shortlinks/'));
+});
+
+it('points the shortlink store at the configured directory', function (): void {
+    config(['juicebox.shortlinks.store' => 'storage/app/shortlinks']);
+
+    expect(resolve(ShortlinkStore::class)->directory())->toBe(base_path('storage/app/shortlinks/'));
+});
+
+it('leaves the shortlink store out of the Stache while the feature is disabled', function (): void {
+    expect(Stache::stores()->has('shortlinks'))->toBeFalse();
+});
+
+it('registers the shortlink store in the Stache when the feature is enabled', function (): void {
+    config(['juicebox.shortlinks.enabled' => true]);
+
+    new ServiceProvider(app())->boot();
+
+    expect(Stache::store('shortlinks'))->toBe(resolve(ShortlinkStore::class));
 });

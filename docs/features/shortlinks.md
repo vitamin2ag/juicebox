@@ -15,6 +15,11 @@ php artisan vendor:publish --tag=juicebox-shortlinks-config
 | Key | Default | Accepted values |
 |---|---|---|
 | `enabled` | `false` | `true`, `false` |
+| `store` | `content/shortlinks` | a directory relative to the project root |
+
+## Storage
+
+Each shortlink is a YAML file in the `store` directory, named by its slug (`content/shortlinks/<slug>.yaml`), in one list for all sites. The slug is not repeated in the file. An empty or broken file is read as a disabled shortlink.
 
 ## Environment variables
 
