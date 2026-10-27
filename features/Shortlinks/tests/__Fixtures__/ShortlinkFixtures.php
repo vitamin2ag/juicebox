@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__;
 
 use Illuminate\Support\Facades\File;
+use Statamic\Entries\Collection;
+use Statamic\Entries\Entry;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
@@ -58,5 +60,22 @@ class ShortlinkFixtures
         $path = ($directory ?? self::path()).$file;
 
         return resolve(ShortlinkStore::class)->makeItemFromFile($path, File::get($path));
+    }
+
+    /**
+     * Saves an entry of a pages collection at /<slug>, with the slug as its id.
+     */
+    public static function page(string $slug): void
+    {
+        $pages = new Collection;
+        $pages->handle('pages');
+        $pages->routes('/{slug}');
+        $pages->save();
+
+        $entry = new Entry;
+        $entry->id($slug);
+        $entry->collection($pages);
+        $entry->slug($slug);
+        $entry->save();
     }
 }
