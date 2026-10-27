@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Shortlinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
+
+use function Pest\Laravel\get;
 
 mutates(ServiceProvider::class);
 
@@ -47,6 +50,12 @@ it('points the shortlink store at the configured directory', function (): void {
 
 it('leaves the shortlink store out of the Stache while the feature is disabled', function (): void {
     expect(Stache::stores()->has('shortlinks'))->toBeFalse();
+});
+
+it('leaves /s/ to the pages of the site while the feature is disabled', function (): void {
+    expect(Route::has('shortlinks.redirect'))->toBeFalse();
+
+    get('/s/sale')->assertNotFound();
 });
 
 it('registers the shortlink store in the Stache when the feature is enabled', function (): void {
