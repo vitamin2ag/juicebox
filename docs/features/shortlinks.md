@@ -28,6 +28,12 @@ php artisan vendor:publish --tag=juicebox-shortlinks-config
 
 The route exists only while the feature is enabled. A project that enables it must not have pages under `/s/`, because the shortlink route answers before Statamic's own routes.
 
+## Short URL and QR code
+
+The short URL of a shortlink is `/s/<slug>` at the root of the default site's domain, without the site's path: a default site at `https://www.example.ch/de/` gives `https://www.example.ch/s/sale`. A relative site URL such as `/` takes the domain of the current request, so give the default site an absolute URL when QR codes made on another domain (staging, say) must point to the live site.
+
+The QR code is an SVG of 400 × 400 pixels, generated on the server. It holds the short URL, not the destination, so a printed code keeps working when the destination changes.
+
 ## Storage
 
 Each shortlink is a YAML file in the `store` directory, named by its slug (`content/shortlinks/<slug>.yaml`), in one list for all sites. The slug is not repeated in the file. An empty or broken file is read as a disabled shortlink.
