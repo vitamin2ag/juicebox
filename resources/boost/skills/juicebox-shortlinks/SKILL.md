@@ -12,6 +12,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 ## How it works
 
 - The feature is off by default. Set `JUICEBOX_SHORTLINKS_ENABLED=true` in the project's `.env` to switch it on.
+- Each shortlink is a YAML file `content/shortlinks/<slug>.yaml`; the file name is the slug, so do not add a `slug` key. Commit these files with the project's content.
 
 ## Configure
 
@@ -24,6 +25,7 @@ php artisan vendor:publish --tag=juicebox-shortlinks-config
 | Key | Accepted values |
 | --- | --- |
 | `enabled` | `true`, `false`. Master switch, off by default, also set by the `JUICEBOX_SHORTLINKS_ENABLED` env variable. |
+| `store` | Directory of the shortlink files, relative to the project root. Default `content/shortlinks`. |
 
 - Read the config as `config('juicebox.shortlinks.<key>')`. Only touch `env()` inside the published config file.
 
