@@ -2,7 +2,7 @@
 
 Short links on `/s/{slug}` that redirect to a URL or an entry, with optional UTM parameters and a QR code of the short link.
 
-The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it adds nothing but its config and its [control panel build](#control-panel), which can both be published either way.
+The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it has no route, control panel pages, permissions or navigation item, but its config, its [control panel build](#control-panel), its blueprint and its German texts are still loaded, and the config and the build can be published.
 
 ## Configuration
 
@@ -43,7 +43,8 @@ While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slu
 - `slug` is required and unique, and holds only lowercase letters, numbers and hyphens (`autumn-sale`). Printed QR codes hold it, so it cannot be changed after saving: the form shows it read-only and an update ignores it. A deleted shortlink sends its QR codes to the home page.
 - The UTM fields show, and are required, only while `utm` is on.
 - The sidebar of a saved shortlink shows its QR code and a link that downloads it as `qr-<slug>.svg`.
-- The form is Statamic's publish form. The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build while the feature is off as well, so it must be published either way. `statamic:install`, which a Statamic site runs after `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
+- The form is Statamic's publish form, built from the blueprint `shortlinks::shortlink`. Users who may configure fields find it under **Fields > Blueprints > Shortlinks**, while the feature is off as well; changes made there are saved to `resources/blueprints/vendor/shortlinks/shortlink.yaml`. The feature saves only its own fields, so keep their handles.
+- The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build while the feature is off as well, so it must be published either way. `statamic:install`, which a Statamic site runs after `composer install` and `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
 - To change the list, edit `features/Shortlinks/resources/js`, run `nvm use && npm ci && npm run build` in `features/Shortlinks` and commit `resources/dist`.
 - The control panel speaks German for users whose control panel language is `de` or `de_CH`, and English for every other language. The texts are in `features/Shortlinks/lang/de.json` and `de_CH.json`; a project overrides one in its own `lang/de.json` or `lang/de_CH.json`.
 
@@ -60,7 +61,30 @@ While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slu
 
 ## Storage
 
-Each shortlink is a YAML file in the `store` directory, named by its slug (`content/shortlinks/<slug>.yaml`), in one list for all sites. The slug is not repeated in the file. An empty or broken file is read as a disabled shortlink.
+Each shortlink is a YAML file in the `store` directory, named by its slug (`content/shortlinks/<slug>.yaml`), in one list for all sites. The slug is not repeated in the file. `content/shortlinks/autumn-sale.yaml`, answering on `/s/autumn-sale`:
+
+```yaml
+destination: 'https://www.example.com/angebot?ref=flyer'
+description: 'Flyer for the autumn sale'
+utm: true
+utm_source: flyer
+utm_medium: print
+utm_campaign: autumn-sale
+enabled: true
+```
+
+| Key | Value |
+|---|---|
+| `destination` | A URL, a path of the site such as `/kontakt`, or `entry::<id>`. |
+| `description` | A note for editors; not used by the redirect. |
+| `utm` | `true` adds `utm_source`, `utm_medium` and `utm_campaign` to the destination. |
+| `utm_source`, `utm_medium`, `utm_campaign` | The UTM values. |
+| `enabled` | `true` switches the shortlink on. A file without it holds a disabled shortlink. |
+
+- `description` and the UTM values are written only when they are set.
+- `utm` and `enabled` also take `yes`, `on` and `1` as `true`. An empty or broken file is read as a disabled shortlink.
+- Name a file written by hand as the form would name it: lowercase letters, numbers and hyphens.
+- The Stache caches the files, as it does entries. With its watcher off, the default outside a `local` environment, a file added or changed by hand shows up after `php please stache:refresh`.
 
 ## Environment variables
 
