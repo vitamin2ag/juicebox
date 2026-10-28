@@ -13,7 +13,8 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to change, dis
 
 - Redirects are YAML files in `content/redirects/<site>/<id>.yaml` with the keys `id`, `enabled`, `source`, `destination`, `type`, `match_type`, `description` and `order`; the site is the folder name.
 - Files written by `rias/statamic-redirect` work as they are; saving one rewrites it with the keys above.
-- While `rias/statamic-redirect` is installed, the feature stays off entirely: no redirects, entry redirects, commands or control panel pages. Remove rias to switch it on; do not run both.
+- While `rias/statamic-redirect` is installed, the feature switches itself off, as if `enabled` were `false`. Remove rias to switch it on; do not run both.
+- A disabled feature handles no 404s, creates no entry redirects and adds nothing to the control panel; its commands stop with an error.
 - A redirect applies only when the request would return a 404, and only the enabled redirects of the request's site count. Exact redirects win over regex ones; a lower `order` wins within each.
 - Write `source` relative to its site (`/alt`, not `/en/alt`). Exact sources ignore leading and trailing slashes and match with or without the request's query string. Regex sources are case-insensitive and not anchored; `$1` in `destination` takes the first capture. A regex source sits between backticks, so escape a backtick in it; one that does not compile is skipped instead of breaking the 404.
 - `type` is `301`, `302` or `410` (Gone, no `destination`). `destination` is a URL or `entry::<id>`; a relative URL gets the site prefix unless it already has one.

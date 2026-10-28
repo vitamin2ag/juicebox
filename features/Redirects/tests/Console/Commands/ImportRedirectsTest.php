@@ -41,6 +41,16 @@ it('reads a file with the delimiter it gets', function (): void {
         ->and(importedSources())->toBe(['de/alt', 'default/kurz', 'en/lang']);
 });
 
+it('imports nothing while the feature is disabled', function (): void {
+    config(['juicebox.redirects.enabled' => false]);
+
+    $status = Artisan::call('statamic:juicebox:redirects:import', ['file' => RedirectFixtures::csv('excel.csv'), '--delimiter' => ';']);
+
+    expect($status)->toBe(1)
+        ->and(Artisan::output())->toBe("Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.\n")
+        ->and(importedSources())->toBeEmpty();
+});
+
 it('fails for a file that does not exist', function (): void {
     $status = Artisan::call('statamic:juicebox:redirects:import', ['file' => 'missing.csv']);
 

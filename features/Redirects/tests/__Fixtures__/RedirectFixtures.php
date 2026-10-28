@@ -7,8 +7,11 @@ namespace Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__;
 use Illuminate\Support\Collection as Items;
 use Illuminate\Support\Facades\File;
 use Statamic\Auth\User;
+use Statamic\CP\Navigation\Nav as Navigation;
+use Statamic\CP\Navigation\NavItem;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
+use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Stache;
 use Statamic\Facades\User as Users;
@@ -16,6 +19,7 @@ use Statamic\Structures\CollectionStructure;
 use Statamic\Structures\CollectionTree;
 use Statamic\Testing\Concerns\FakesRoles;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
 class RedirectFixtures
@@ -96,6 +100,24 @@ class RedirectFixtures
         $user->save();
 
         return $user;
+    }
+
+    /**
+     * The test case replaces the navigation with an empty mock, so the provider extends a real one here.
+     *
+     * @return array<int, array{mixed, mixed, mixed, mixed}>
+     */
+    public static function navigation(): array
+    {
+        Nav::swap(new Navigation);
+        new ServiceProvider(app())->boot();
+
+        return Nav::build()
+            ->flatMap(fn (mixed $section): Items => Items::wrap(data_get($section, 'items')))
+            ->whereInstanceOf(NavItem::class)
+            ->map(fn (NavItem $item): array => [$item->section(), $item->display(), $item->url(), $item->icon()])
+            ->values()
+            ->all();
     }
 
     /**

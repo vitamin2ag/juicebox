@@ -52,6 +52,17 @@ it('deletes one disabled redirect', function (): void {
         ->and(keptRedirects())->toBe(['enabled']);
 });
 
+it('deletes nothing while the feature is disabled', function (): void {
+    RedirectFixtures::copyIntoStore();
+    config(['juicebox.redirects.enabled' => false]);
+
+    $status = Artisan::call('statamic:juicebox:redirects:prune');
+
+    expect($status)->toBe(1)
+        ->and(Artisan::output())->toBe("Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.\n")
+        ->and(keptRedirects())->toHaveCount(8);
+});
+
 it('says so when no redirect is disabled', function (): void {
     resolve(RedirectRepository::class)->save(new Redirect(id: 'enabled', site: 'de', source: '/alt', destination: '/neu'));
 
