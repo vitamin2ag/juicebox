@@ -1,0 +1,3 @@
+source,destination,type,match_type,site
+/alt,/erst,301,exact,de
+/alt,/dann,302,exact,de

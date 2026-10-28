@@ -1,0 +1,9 @@
+id: 2a7d3c74-3e3f-4d20-9c73-5b4dbe8f9a03
+enabled: '1'
+source: /suche
+source_md5: e05bdd68286508f57dc5ede35edac7e6
+destination_type: url
+destination: /de/suche
+type: 301
+site: de
+match_type: exact
