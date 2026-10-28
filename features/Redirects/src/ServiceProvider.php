@@ -26,24 +26,26 @@ class ServiceProvider extends FeatureServiceProvider
     }
 
     /**
-     * rias/statamic-redirect registers the same store and handles the same requests,
-     * so the feature stays off until rias is removed. The parent boots the routes and
-     * listeners, so it is skipped as well.
+     * rias/statamic-redirect registers the same store and handles the same requests, so the
+     * feature switches itself off until rias is removed. The routes, listeners and commands
+     * boot either way and check the same switch.
      */
     #[Override]
-    public function boot(): void
+    protected function bootFeature(): void
     {
         if (Addon::all()->has('rias/statamic-redirect')) {
-            return;
+            config(['juicebox.redirects.enabled' => false]);
         }
 
-        parent::boot();
+        if (! config('juicebox.redirects.enabled')) {
+            return;
+        }
 
         Stache::registerStore($this->app->make(RedirectStore::class));
         Permission::extend($this->registerPermissions(...));
         Nav::extend($this->registerNavigation(...));
 
-        // Statamic creates the statamic.web group in its own boot, and prepending skips a group that does not exist yet.
+        // Statamic creates the statamic.web group in a booted callback of its own, which #[BootAfter] does not wait for, and prepending skips a group that does not exist yet.
         $this->app->booted($this->prependMiddleware(...));
     }
 

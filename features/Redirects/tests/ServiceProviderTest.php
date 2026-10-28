@@ -3,13 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
-use Statamic\CP\Navigation\Nav as Navigation;
-use Statamic\CP\Navigation\NavItem;
-use Statamic\Events\EntrySaving;
 use Statamic\Facades\Addon;
-use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Statamic\Statamic;
@@ -119,48 +114,29 @@ it('registers the permissions of rias/statamic-redirect in a Redirects group', f
     ]);
 });
 
-/**
- * The test case replaces the navigation with an empty mock, so the provider extends a real one here.
- *
- * @return array<int, array{mixed, mixed, mixed, mixed}>
- */
-function navigation(): array
-{
-    Nav::swap(new Navigation);
-    new ServiceProvider(app())->boot();
-
-    return Nav::build()
-        ->flatMap(fn (mixed $section): Collection => Collection::wrap(data_get($section, 'items')))
-        ->whereInstanceOf(NavItem::class)
-        ->map(fn (NavItem $item): array => [$item->section(), $item->display(), $item->url(), $item->icon()])
-        ->values()
-        ->all();
-}
-
 it('lists Redirects under Tools for a user who can view redirects', function (): void {
     $this->actingAs(RedirectFixtures::userWith('view redirects'));
 
-    expect(navigation())->toContain(['Tools', 'Redirects', RedirectFixtures::cpUrl('redirects.index'), 'arrow-up-right']);
+    expect(RedirectFixtures::navigation())->toContain(['Tools', 'Redirects', RedirectFixtures::cpUrl('redirects.index'), 'arrow-up-right']);
 });
 
 it('leaves Redirects out of the navigation for a user who cannot view redirects', function (): void {
     $this->actingAs(RedirectFixtures::userWith('edit redirects', 'create redirects', 'delete redirects'));
 
-    expect(array_column(navigation(), 1))->not->toContain('Redirects');
+    expect(array_column(RedirectFixtures::navigation(), 1))->not->toContain('Redirects');
 });
 
-it('boots none of the feature while rias/statamic-redirect is installed', function (): void {
+it('switches itself off while rias/statamic-redirect is installed', function (): void {
     $router = resolve('router');
     $router->removeMiddlewareFromGroup('web', HandleNotFound::class);
     $router->removeMiddlewareFromGroup('statamic.web', HandleNotFound::class);
     Stache::stores()->forget('redirects');
-    $listeners = Event::getRawListeners()[EntrySaving::class];
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
-    new ServiceProvider(app())->boot();
+    new ReflectionMethod(ServiceProvider::class, 'bootFeature')->invoke(new ServiceProvider(app()));
 
-    expect(Stache::stores()->has('redirects'))->toBeFalse()
+    expect(config('juicebox.redirects.enabled'))->toBeFalse()
+        ->and(Stache::stores()->has('redirects'))->toBeFalse()
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
-        ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class)
-        ->and(Event::getRawListeners()[EntrySaving::class])->toBe($listeners);
+        ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
 });

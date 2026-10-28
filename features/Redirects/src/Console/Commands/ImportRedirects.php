@@ -17,6 +17,12 @@ class ImportRedirects extends Command
 {
     public function handle(CsvImporter $importer): int
     {
+        if (! config('juicebox.redirects.enabled')) {
+            $this->error('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.');
+
+            return self::FAILURE;
+        }
+
         $file = $this->argument('file');
 
         if (! File::isFile($file)) {
