@@ -54,6 +54,8 @@ it('adds the UTM parameters to :dataset', function (string $destination, string 
 })->with([
     'a URL without a query string' => ['https://www.example.com/angebot', 'https://www.example.com/angebot?utm_source=flyer&utm_medium=print&utm_campaign=autumn-sale'],
     'a URL with a query string' => ['https://www.example.com/angebot?ref=flyer', 'https://www.example.com/angebot?ref=flyer&utm_source=flyer&utm_medium=print&utm_campaign=autumn-sale'],
+    'a URL with a fragment' => ['https://www.example.com/angebot#form', 'https://www.example.com/angebot?utm_source=flyer&utm_medium=print&utm_campaign=autumn-sale#form'],
+    'a URL that has a UTM parameter already' => ['https://www.example.com/angebot?utm_source=newsletter', 'https://www.example.com/angebot?utm_source=flyer&utm_medium=print&utm_campaign=autumn-sale'],
 ]);
 
 it('leaves the UTM parameters out while UTM is switched off', function (): void {
