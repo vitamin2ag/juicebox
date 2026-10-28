@@ -24,7 +24,8 @@
         "php": "^8.5",
         "statamic/cms": "^6.0",
         "edalzell/laravel-features": "^1.2",
-        "edalzell/statamic-features": "^1.0"
+        "edalzell/statamic-features": "^1.0",
+        "bacon/bacon-qr-code": "^3.0"
     },
     "require-dev": {
         "orchestra/testbench": "^11.0",
