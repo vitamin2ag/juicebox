@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
+use Statamic\Auth\File\User;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
 use Vitamin2\Juicebox\Features\Shortlinks\Http\Controllers\ShortlinkController;
 use Vitamin2\Juicebox\Features\Shortlinks\Qr\QrCode;
@@ -209,6 +211,25 @@ it('shows the form to edit a shortlink with its values, a read-only slug and its
             ->where('submitUrl', ShortlinkFixtures::cpUrl('shortlinks.update', 'sale'))
             ->where('submitMethod', 'PATCH'));
 });
+
+it('shows the forms in :dataset, the language of the user', function (string $locale): void {
+    resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'sale', destination: '/kontakt'));
+    $user = Collection::wrap(ShortlinkFixtures::superUser())->whereInstanceOf(User::class)->firstOrFail();
+    $user->setPreference('locale', $locale);
+    $user->save();
+
+    $this->actingAs($user)
+        ->get(ShortlinkFixtures::cpUrl('shortlinks.create'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('title', 'Shortlink erstellen')
+            ->where('blueprint.tabs.1.sections.0.fields.1.html', '<p>Der QR-Code erscheint nach dem Speichern.</p>'));
+
+    $this->get(ShortlinkFixtures::cpUrl('shortlinks.edit', 'sale'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('title', 'Shortlink bearbeiten')
+            ->where('blueprint.tabs.1.sections.0.fields.1.html', fn (string $html): bool => str_contains($html, 'alt="QR-Code von '.url('s/sale').'"')
+                && str_contains($html, '>QR-Code herunterladen</a>')));
+})->with(['German' => 'de', 'Swiss German' => 'de_CH']);
 
 it('updates a shortlink and keeps its slug', function (): void {
     resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'sale', destination: '/kontakt'));

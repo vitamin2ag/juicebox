@@ -26,3 +26,10 @@ it('rejects :dataset', function (mixed $destination): void {
     'another scheme' => 'mailto:info@example.com',
     'no string' => [['https://www.example.com']],
 ]);
+
+it('rejects a destination in the language of the app', function (): void {
+    app()->setLocale('de');
+    $validator = Validator::make(['destination' => 'www.example.com'], ['destination' => [new ValidDestination]]);
+
+    expect($validator->errors()->get('destination'))->toBe(['Gib einen Eintrag, eine URL mit http:// oder https:// oder einen Pfad ein, der mit / beginnt.']);
+});

@@ -19,6 +19,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - The QR code is a server-generated SVG of the short URL, not of the destination, so printed codes survive a changed destination.
 - While enabled, the control panel has **Tools > Shortlinks**: a list by slug, with the short URL, destination, description and status, a menu per row to edit, download the QR code or delete, and a form. `destination` must be an entry, an `http://` or `https://` URL, or a path starting with `/`. `slug` is required, unique, only `a-z`, `0-9` and `-`, and read-only after saving. The UTM fields are required only while `utm` is on. A saved shortlink shows its QR code in the sidebar, with a link that downloads `qr-<slug>.svg`.
 - The control panel loads the list's assets from `public/vendor/shortlinks` even while the feature is off: `statamic:install` publishes them after `composer update`. If the list stays blank or the control panel reports a missing Vite manifest for `vendor/shortlinks/dist`, run `php artisan vendor:publish --tag=shortlinks --force`.
+- The control panel texts are German for the control panel languages `de` and `de_CH` and English otherwise. To change a text, add the English text as a key to the project's `lang/de.json` or `lang/de_CH.json`; do not edit the package.
 - Permissions: `view shortlinks` (list, navigation, QR download), `edit shortlinks`, `create shortlinks`, `delete shortlinks`. Grant them through roles; do not add a policy.
 
 ## Configure

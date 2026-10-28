@@ -84,4 +84,3 @@ tabs:
             field:
               type: html
               display: 'QR code'
-              html: '<p>The QR code appears after saving.</p>'
