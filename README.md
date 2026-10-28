@@ -21,6 +21,7 @@ composer dump-autoload
 ## Features
 
 - [Secure Headers](docs/features/secure-headers.md): sets security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on every web response.
+- [Shortlinks](docs/features/shortlinks.md): short links on `/s/{slug}` that redirect to a URL or an entry, with UTM parameters and a QR code.
 
 ## Development
 

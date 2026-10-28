@@ -1,0 +1,86 @@
+title: Shortlink
+tabs:
+  main:
+    display: Main
+    sections:
+      -
+        fields:
+          -
+            handle: destination
+            field:
+              type: link
+              display: Destination
+              instructions: 'An entry, a URL that starts with `https://`, or a path of the site such as `/kontakt`.'
+              select_across_sites: true
+              validate: 'required'
+          -
+            handle: slug
+            field:
+              type: text
+              display: Slug
+              instructions: 'The short URL is `/s/<slug>`. Lowercase letters, numbers and hyphens, e.g. `autumn-sale`. It cannot be changed after saving.'
+              validate:
+                - required
+                - 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'
+          -
+            handle: description
+            field:
+              type: textarea
+              display: Description
+              instructions: 'For internal use only.'
+              validate: 'nullable|string'
+          -
+            handle: utm
+            field:
+              type: toggle
+              display: 'UTM parameters'
+              instructions: 'Adds `utm_source`, `utm_medium` and `utm_campaign` to the destination.'
+              default: false
+              validate: 'required|boolean'
+          -
+            handle: utm_source
+            field:
+              type: text
+              display: 'Campaign source'
+              instructions: 'e.g. `flyer`'
+              width: 33
+              if:
+                utm: true
+              validate: 'required_if:utm,true|nullable|string'
+          -
+            handle: utm_medium
+            field:
+              type: text
+              display: 'Campaign medium'
+              instructions: 'e.g. `print`'
+              width: 33
+              if:
+                utm: true
+              validate: 'required_if:utm,true|nullable|string'
+          -
+            handle: utm_campaign
+            field:
+              type: text
+              display: 'Campaign name'
+              instructions: 'e.g. `autumn-sale`'
+              width: 33
+              if:
+                utm: true
+              validate: 'required_if:utm,true|nullable|string'
+  sidebar:
+    display: Sidebar
+    sections:
+      -
+        fields:
+          -
+            handle: enabled
+            field:
+              type: toggle
+              display: Enabled
+              default: true
+              validate: 'required|boolean'
+          -
+            handle: qr_code
+            field:
+              type: html
+              display: 'QR code'

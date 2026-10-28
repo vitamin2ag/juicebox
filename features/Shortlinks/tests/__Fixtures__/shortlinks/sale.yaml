@@ -1,0 +1,7 @@
+destination: 'https://www.example.com/angebot?ref=flyer'
+description: 'Flyer for the autumn sale'
+utm: true
+utm_source: flyer
+utm_medium: print
+utm_campaign: autumn-sale
+enabled: true
