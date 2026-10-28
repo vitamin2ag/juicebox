@@ -22,14 +22,9 @@ class ServiceProvider extends FeatureServiceProvider
         $this->app->singleton(ShortlinkStore::class, fn (): ShortlinkStore => new ShortlinkStore()->directory(base_path(config()->string('juicebox.shortlinks.store'))));
     }
 
-    /**
-     * The parent offers the config for publishing, which a disabled feature keeps.
-     */
     #[Override]
-    public function boot(): void
+    protected function bootFeature(): void
     {
-        parent::boot();
-
         if (! config('juicebox.shortlinks.enabled')) {
             return;
         }
