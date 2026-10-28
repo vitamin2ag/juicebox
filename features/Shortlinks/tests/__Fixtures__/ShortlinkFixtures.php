@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__;
 
+use Illuminate\Support\Collection as Items;
 use Illuminate\Support\Facades\File;
+use Statamic\Auth\User;
+use Statamic\CP\Navigation\Nav as Navigation;
+use Statamic\CP\Navigation\NavItem;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
+use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Stache;
+use Statamic\Facades\User as Users;
+use Statamic\Testing\Concerns\FakesRoles;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
+use Vitamin2\Juicebox\Features\Shortlinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 
 class ShortlinkFixtures
@@ -60,6 +68,63 @@ class ShortlinkFixtures
         $path = ($directory ?? self::path()).$file;
 
         return resolve(ShortlinkStore::class)->makeItemFromFile($path, File::get($path));
+    }
+
+    /**
+     * Statamic's cp_route() declares no return type, so the tests build control panel URLs with route().
+     */
+    public static function cpUrl(string $name, mixed $parameters = []): string
+    {
+        return route("statamic.cp.{$name}", $parameters);
+    }
+
+    public static function superUser(): User
+    {
+        $user = Items::wrap(Users::make())->whereInstanceOf(User::class)->firstOrFail();
+        $user->email('super@example.com');
+        $user->makeSuper();
+        $user->save();
+
+        return $user;
+    }
+
+    /**
+     * Saves a control panel user whose only role has these permissions. The role is faked,
+     * so no roles file is written.
+     */
+    public static function userWith(string ...$permissions): User
+    {
+        new class
+        {
+            use FakesRoles {
+                setTestRoles as public;
+            }
+        }->setTestRoles(['shortlinks' => ['access cp', ...$permissions]]);
+
+        $user = Items::wrap(Users::make())->whereInstanceOf(User::class)->firstOrFail();
+        $user->email('editor@example.com');
+        $user->assignRole('shortlinks');
+        $user->save();
+
+        return $user;
+    }
+
+    /**
+     * The test case replaces the navigation with an empty mock, so the provider extends a real one here.
+     *
+     * @return array<int, array{mixed, mixed, mixed, mixed}>
+     */
+    public static function navigation(): array
+    {
+        Nav::swap(new Navigation);
+        new ServiceProvider(app())->boot();
+
+        return Nav::build()
+            ->flatMap(fn (mixed $section): Items => Items::wrap(data_get($section, 'items')))
+            ->whereInstanceOf(NavItem::class)
+            ->map(fn (NavItem $item): array => [$item->section(), $item->display(), $item->url(), $item->icon()])
+            ->values()
+            ->all();
     }
 
     /**
