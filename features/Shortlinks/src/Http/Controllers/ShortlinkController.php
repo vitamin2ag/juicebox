@@ -55,7 +55,10 @@ class ShortlinkController extends CpController
     {
         $this->authorize('create shortlinks');
 
-        return $this->form($this->blueprint(), 'Create Shortlink', route('statamic.cp.shortlinks.store'), 'POST');
+        $blueprint = $this->blueprint();
+        $blueprint->ensureFieldHasConfig('qr_code', ['html' => '<p>'.e(__('The QR code appears after saving.')).'</p>']);
+
+        return $this->form($blueprint, __('Create Shortlink'), route('statamic.cp.shortlinks.store'), 'POST');
     }
 
     /**
@@ -80,7 +83,7 @@ class ShortlinkController extends CpController
         $blueprint->ensureFieldHasConfig('slug', ['visibility' => 'read_only']);
         $blueprint->ensureFieldHasConfig('qr_code', ['html' => $this->qrCodeHtml($shortlink)]);
 
-        return $this->form($blueprint, 'Edit Shortlink', route('statamic.cp.shortlinks.update', $slug), 'PATCH')
+        return $this->form($blueprint, __('Edit Shortlink'), route('statamic.cp.shortlinks.update', $slug), 'PATCH')
             ->values(['slug' => $shortlink->slug(), ...$shortlink->fileData()]);
     }
 
@@ -136,10 +139,11 @@ class ShortlinkController extends CpController
     private function qrCodeHtml(Shortlink $shortlink): string
     {
         $svg = base64_encode($this->qrCode->svg($shortlink->url()));
-        $url = e($shortlink->url());
+        $alt = e(__('QR code of :url', ['url' => $shortlink->url()]));
         $download = e(route('statamic.cp.shortlinks.qr', $shortlink->slug()));
+        $text = e(__('Download QR code'));
 
-        return "<img src=\"data:image/svg+xml;base64,{$svg}\" alt=\"QR code of {$url}\"><p><a href=\"{$download}\" class=\"underline\">Download QR code</a></p>";
+        return "<img src=\"data:image/svg+xml;base64,{$svg}\" alt=\"{$alt}\"><p><a href=\"{$download}\" class=\"underline\">{$text}</a></p>";
     }
 
     /**

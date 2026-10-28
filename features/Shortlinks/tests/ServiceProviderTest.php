@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Permission;
@@ -58,6 +59,16 @@ it('publishes the control panel build with the shortlinks tag', function (): voi
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'shortlinks');
 
     expect($paths)->toBe(["{$feature}/resources/dist/" => public_path('vendor/shortlinks/dist/')]);
+});
+
+it('translates the control panel into :dataset', function (string $locale): void {
+    expect(__('Create Shortlink', locale: $locale))->toBe('Shortlink erstellen');
+})->with(['German' => 'de', 'Swiss German' => 'de_CH']);
+
+it('translates the same texts into German and Swiss German', function (): void {
+    $keys = fn (string $locale): array => array_keys(File::json(dirname(__DIR__)."/lang/{$locale}.json"));
+
+    expect($keys('de_CH'))->toBe($keys('de'));
 });
 
 it('keeps shortlinks in content/shortlinks by default', function (): void {

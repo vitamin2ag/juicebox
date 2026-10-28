@@ -25,6 +25,6 @@ class ValidDestination implements ValidationRule
             return;
         }
 
-        $fail('Enter an entry, a URL that starts with http:// or https://, or a path that starts with /.');
+        $fail('Enter an entry, a URL that starts with http:// or https://, or a path that starts with /.')->translate();
     }
 }

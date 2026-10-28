@@ -22,7 +22,7 @@ class UniqueSlug implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_string($value) && $this->shortlinks->find($value) instanceof Shortlink) {
-            $fail('This slug is already taken.');
+            $fail('This slug is already taken.')->translate();
         }
     }
 }
