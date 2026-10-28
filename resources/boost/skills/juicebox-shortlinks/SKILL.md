@@ -17,6 +17,8 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - An unknown slug, `enabled: false`, a missing `destination` or a deleted entry redirect to the home page of the default site.
 - The short URL is `/s/<slug>` at the root of the default site's domain, without the site's path (`https://www.example.ch/de/` gives `https://www.example.ch/s/<slug>`). A relative site URL (`/`) takes the domain of the current request; set an absolute URL on the default site if QR codes must always hold the live domain.
 - The QR code is a server-generated SVG of the short URL, not of the destination, so printed codes survive a changed destination.
+- While enabled, the control panel has **Tools > Shortlinks**: a list by slug and a form. `destination` must be an entry, an `http://` or `https://` URL, or a path starting with `/`. `slug` is required, unique, only `a-z`, `0-9` and `-`, and read-only after saving. The UTM fields are required only while `utm` is on. A saved shortlink shows its QR code in the sidebar, with a link that downloads `qr-<slug>.svg`.
+- Permissions: `view shortlinks` (list, navigation, QR download), `edit shortlinks`, `create shortlinks`, `delete shortlinks`. Grant them through roles; do not add a policy.
 
 ## Configure
 
@@ -37,4 +39,5 @@ php artisan vendor:publish --tag=juicebox-shortlinks-config
 
 - Call `env()` only inside the published config file.
 - Do not create pages or routes under `/s/` while the feature is enabled; the shortlink route answers first.
+- Do not rename or delete a shortlink whose QR code is printed; a deleted slug redirects to the home page. Change its `destination` instead.
 - Check a shortlink with `curl -I https://<site>/s/<slug>`: expect `302` and the destination in `Location`.

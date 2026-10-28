@@ -34,6 +34,27 @@ The short URL of a shortlink is `/s/<slug>` at the root of the default site's do
 
 The QR code is an SVG of 400 × 400 pixels, generated on the server. It holds the short URL, not the destination, so a printed code keeps working when the destination changes.
 
+## Control panel
+
+While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slug, with their short URLs.
+
+- The form has the fields `destination` (an entry or a URL), `slug`, `description` and `utm` with `utm_source`, `utm_medium` and `utm_campaign`; the sidebar has `enabled` (on by default) and the QR code.
+- `destination` is required: an entry, a URL that starts with `http://` or `https://`, or a path of the site such as `/kontakt`.
+- `slug` is required and unique, and holds only lowercase letters, numbers and hyphens (`autumn-sale`). Printed QR codes hold it, so it cannot be changed after saving: the form shows it read-only and an update ignores it. A deleted shortlink sends its QR codes to the home page.
+- The UTM fields show, and are required, only while `utm` is on.
+- The sidebar of a saved shortlink shows its QR code and a link that downloads it as `qr-<slug>.svg`.
+
+### Permissions
+
+| Permission | Allows |
+|---|---|
+| `view shortlinks` | The list, the navigation item and downloading QR codes. |
+| `edit shortlinks` | Editing a shortlink. |
+| `create shortlinks` | Creating shortlinks. |
+| `delete shortlinks` | Deleting a shortlink. |
+
+`create shortlinks` and `delete shortlinks` sit under `edit shortlinks`, and that under `view shortlinks`, so the role editor grants a child only together with its parent.
+
 ## Storage
 
 Each shortlink is a YAML file in the `store` directory, named by its slug (`content/shortlinks/<slug>.yaml`), in one list for all sites. The slug is not repeated in the file. An empty or broken file is read as a disabled shortlink.

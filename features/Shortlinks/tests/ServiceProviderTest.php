@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Shortlinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
+use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
 use function Pest\Laravel\get;
 
@@ -58,10 +61,11 @@ it('leaves /s/ to the pages of the site while the feature is disabled', function
     get('/s/sale')->assertNotFound();
 });
 
-it('registers the shortlink store in the Stache when the feature is enabled', function (): void {
-    config(['juicebox.shortlinks.enabled' => true]);
+it('leaves the control panel without shortlinks while the feature is disabled', function (): void {
+    $this->actingAs(ShortlinkFixtures::superUser());
 
-    new ServiceProvider(app())->boot();
-
-    expect(Stache::store('shortlinks'))->toBe(resolve(ShortlinkStore::class));
+    expect(Route::has('statamic.cp.shortlinks.index'))->toBeFalse()
+        ->and(Route::has('statamic.cp.shortlinks.qr'))->toBeFalse()
+        ->and(Collection::wrap(Permission::boot()->tree())->firstWhere('handle', 'shortlinks'))->toBeNull()
+        ->and(array_column(ShortlinkFixtures::navigation(), 1))->not->toContain('Shortlinks');
 });
