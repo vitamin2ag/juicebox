@@ -29,6 +29,13 @@ it('rejects the slug of another shortlink', function (): void {
     expect($validator->errors()->get('slug'))->toBe(['This slug is already taken.']);
 });
 
+it('rejects the slug of another shortlink in the language of the app', function (): void {
+    app()->setLocale('de');
+    $validator = Validator::make(['slug' => 'sale'], ['slug' => [new UniqueSlug(resolve(ShortlinkRepository::class))]]);
+
+    expect($validator->errors()->get('slug'))->toBe(['Dieser Slug ist bereits vergeben.']);
+});
+
 it('accepts a slug no shortlink has', function (): void {
     expect(Validator::make(['slug' => 'team'], ['slug' => [new UniqueSlug(resolve(ShortlinkRepository::class))]])->passes())->toBeTrue();
 });

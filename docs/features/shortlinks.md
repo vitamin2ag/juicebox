@@ -45,6 +45,7 @@ While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slu
 - The sidebar of a saved shortlink shows its QR code and a link that downloads it as `qr-<slug>.svg`.
 - The form is Statamic's publish form. The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build while the feature is off as well, so it must be published either way. `statamic:install`, which a Statamic site runs after `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
 - To change the list, edit `features/Shortlinks/resources/js`, run `nvm use && npm ci && npm run build` in `features/Shortlinks` and commit `resources/dist`.
+- The control panel speaks German for users whose control panel language is `de` or `de_CH`, and English for every other language. The texts are in `features/Shortlinks/lang/de.json` and `de_CH.json`; a project overrides one in its own `lang/de.json` or `lang/de_CH.json`.
 
 ### Permissions
 
