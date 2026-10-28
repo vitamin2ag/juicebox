@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\Shortlinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
@@ -39,6 +40,24 @@ it('publishes the config with the juicebox-shortlinks-config tag while the featu
 
     expect(config('juicebox.shortlinks.enabled'))->toBeFalse()
         ->and(array_values($paths))->toBe([config_path('juicebox/shortlinks.php')]);
+});
+
+it('registers the control panel build with Vite while the feature is disabled', function (): void {
+    $feature = dirname(__DIR__);
+
+    expect(config('juicebox.shortlinks.enabled'))->toBeFalse()
+        ->and(Statamic::availableVites(request()))->toHaveKey('shortlinks', [
+            'hotFile' => "{$feature}/resources/hot",
+            'buildDirectory' => 'vendor/shortlinks/dist',
+            'input' => 'resources/js/cp.js',
+        ]);
+});
+
+it('publishes the control panel build with the shortlinks tag', function (): void {
+    $feature = dirname(__DIR__);
+    $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'shortlinks');
+
+    expect($paths)->toBe(["{$feature}/resources/dist/" => public_path('vendor/shortlinks/dist/')]);
 });
 
 it('keeps shortlinks in content/shortlinks by default', function (): void {

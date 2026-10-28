@@ -38,6 +38,7 @@ class ShortlinkController extends CpController
             'shortlinks' => $this->shortlinks->all()
                 ->sortBy(fn (Shortlink $shortlink): string => $shortlink->slug())
                 ->map(fn (Shortlink $shortlink): array => [
+                    'id' => $shortlink->id(),
                     'slug' => $shortlink->slug(),
                     ...$shortlink->fileData(),
                     'url' => $shortlink->url(),
@@ -138,7 +139,7 @@ class ShortlinkController extends CpController
         $url = e($shortlink->url());
         $download = e(route('statamic.cp.shortlinks.qr', $shortlink->slug()));
 
-        return "<img src=\"data:image/svg+xml;base64,{$svg}\" alt=\"QR code of {$url}\"><p><a href=\"{$download}\">Download QR code</a></p>";
+        return "<img src=\"data:image/svg+xml;base64,{$svg}\" alt=\"QR code of {$url}\"><p><a href=\"{$download}\" class=\"underline\">Download QR code</a></p>";
     }
 
     /**

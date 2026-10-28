@@ -2,7 +2,7 @@
 
 Short links on `/s/{slug}` that redirect to a URL or an entry, with optional UTM parameters and a QR code of the short link.
 
-The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it adds nothing but its config, which can be published either way.
+The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it adds nothing but its config and its [control panel build](#control-panel), which can both be published either way.
 
 ## Configuration
 
@@ -36,13 +36,15 @@ The QR code is an SVG of 400 × 400 pixels, generated on the server. It holds th
 
 ## Control panel
 
-While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slug, with their short URLs.
+While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slug, with their short URLs, destinations, descriptions and status. A menu per row edits a shortlink, downloads its QR code as `qr-<slug>.svg` or deletes it. The header links to the form.
 
 - The form has the fields `destination` (an entry or a URL), `slug`, `description` and `utm` with `utm_source`, `utm_medium` and `utm_campaign`; the sidebar has `enabled` (on by default) and the QR code.
 - `destination` is required: an entry, a URL that starts with `http://` or `https://`, or a path of the site such as `/kontakt`.
 - `slug` is required and unique, and holds only lowercase letters, numbers and hyphens (`autumn-sale`). Printed QR codes hold it, so it cannot be changed after saving: the form shows it read-only and an update ignores it. A deleted shortlink sends its QR codes to the home page.
 - The UTM fields show, and are required, only while `utm` is on.
 - The sidebar of a saved shortlink shows its QR code and a link that downloads it as `qr-<slug>.svg`.
+- The form is Statamic's publish form. The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build while the feature is off as well, so it must be published either way. `statamic:install`, which a Statamic site runs after `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
+- To change the list, edit `features/Shortlinks/resources/js`, run `nvm use && npm ci && npm run build` in `features/Shortlinks` and commit `resources/dist`.
 
 ### Permissions
 
