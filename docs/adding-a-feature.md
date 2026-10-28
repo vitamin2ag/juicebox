@@ -40,7 +40,7 @@ The config file and key use the snake_case of the folder name (the base class se
 
 `Vitamin2\Juicebox\FeatureServiceProvider` is the base class. It extends laravel-features' `FeatureServiceProvider` and only sets the snake_case config file name and the publish tag prefix `juicebox-`; the config group `juicebox` is the Composer package name. It loads config, routes, views and translations; rely on it instead of calling `mergeConfigFrom`, `publishes`, `loadRoutesFrom` or `loadViewsFrom`. Config is merged in `register()` and offered for publishing in the console only.
 
-Do not register fieldsets, blueprints, tags, fieldtypes and the like by hand; the folders above are enough. Only what has no folder (middleware, say) goes in the provider's `boot()`, after `parent::boot()`.
+Do not register fieldsets, blueprints, tags, fieldtypes and the like by hand; the folders above are enough. Only what has no folder (middleware, say) goes in the provider's `bootFeature()`, which laravel-features runs once the folder conventions have booted.
 
 Read stubs by path from the command that uses them, for example `dirname(__DIR__, 3).'/resources/stubs/<name>.stub'` from `src/Console/Commands`.
 
@@ -48,10 +48,10 @@ Read stubs by path from the command that uses them, for example `dirname(__DIR__
 
 Steps marked **(enforced)** fail `composer test` when forgotten.
 
-1. Create `features/<Name>/src/ServiceProvider.php` in the namespace `Vitamin2\Juicebox\Features\<Name>` extending `Vitamin2\Juicebox\FeatureServiceProvider` **(enforced)**. The folder name equals the namespace segment; name it `Ai`, not `AI` (the slug is its kebab-case). When you override `boot()` or `register()`, call the parent first.
+1. Create `features/<Name>/src/ServiceProvider.php` in the namespace `Vitamin2\Juicebox\Features\<Name>` extending `Vitamin2\Juicebox\FeatureServiceProvider` **(enforced)**. The folder name equals the namespace segment; name it `Ai`, not `AI` (the slug is its kebab-case). Put the feature's own boot code in `bootFeature()` rather than overriding `boot()`; when you override `register()`, call the parent first.
 2. Run `composer dump-autoload` so the plugin picks up the new folder. Leave `extra.laravel.providers` with `Vitamin2\Juicebox\ServiceProvider` only **(enforced)**.
 3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
-4. Put classes in the folders listed under Layout so they register themselves; register the rest in `boot()` (for example `pushMiddlewareToGroup`). Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
+4. Put classes in the folders listed under Layout so they register themselves; register the rest in `bootFeature()` (for example `pushMiddlewareToGroup`). Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
 5. If configurable, add `features/<Name>/config/<snake_name>.php`. Read env vars there only. Use `false` to switch a value off.
 6. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
 7. Add the Boost skill `resources/boost/skills/juicebox-<slug>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
@@ -86,10 +86,8 @@ use Vitamin2\Juicebox\Features\RemovePoweredBy\Http\Middleware\RemovePoweredHead
 class ServiceProvider extends FeatureServiceProvider
 {
     #[Override]
-    public function boot(): void
+    protected function bootFeature(): void
     {
-        parent::boot();
-
         $this->app->make(Router::class)->pushMiddlewareToGroup('web', RemovePoweredHeader::class);
     }
 }

@@ -12,10 +12,8 @@ use Vitamin2\Juicebox\FeatureServiceProvider;
 class ServiceProvider extends FeatureServiceProvider
 {
     #[Override]
-    public function boot(): void
+    protected function bootFeature(): void
     {
-        parent::boot();
-
         $this->app->make(Router::class)->pushMiddlewareToGroup('web', SetSecureHeaders::class);
     }
 }
