@@ -39,6 +39,19 @@ class ServiceProvider extends FeatureServiceProvider
         Nav::extend($this->registerNavigation(...));
     }
 
+    /**
+     * The root .gitignore ignores every build folder, so the control panel build goes to dist.
+     * The parent reads this in its constructor, before the config, so a disabled feature
+     * registers the build as well.
+     *
+     * @return array<string, mixed>
+     */
+    #[Override]
+    protected function options(): array
+    {
+        return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+    }
+
     private function registerPermissions(): void
     {
         Permission::group('shortlinks', 'Shortlinks', function (): void {

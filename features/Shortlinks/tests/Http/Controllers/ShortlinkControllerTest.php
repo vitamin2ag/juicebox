@@ -64,6 +64,7 @@ it('lists the shortlinks by slug with their short URLs', function (): void {
             ->component('shortlinks::Index')
             ->where('shortlinks', [
                 [
+                    'id' => 'sale',
                     'slug' => 'sale',
                     'destination' => 'https://www.example.com/angebot',
                     'description' => 'Flyer',
@@ -78,6 +79,7 @@ it('lists the shortlinks by slug with their short URLs', function (): void {
                     'qr_url' => ShortlinkFixtures::cpUrl('shortlinks.qr', 'sale'),
                 ],
                 [
+                    'id' => 'team',
                     'slug' => 'team',
                     'destination' => 'entry::team',
                     'description' => null,
@@ -197,7 +199,7 @@ it('shows the form to edit a shortlink with its values, a read-only slug and its
             ->where('blueprint.tabs.0.sections.0.fields.1.handle', 'slug')
             ->where('blueprint.tabs.0.sections.0.fields.1.visibility', 'read_only')
             ->where('blueprint.tabs.1.sections.0.fields.1.handle', 'qr_code')
-            ->where('blueprint.tabs.1.sections.0.fields.1.html', '<img src="data:image/svg+xml;base64,'.$svg.'" alt="QR code of '.url('s/sale').'"><p><a href="'.$download.'">Download QR code</a></p>')
+            ->where('blueprint.tabs.1.sections.0.fields.1.html', '<img src="data:image/svg+xml;base64,'.$svg.'" alt="QR code of '.url('s/sale').'"><p><a href="'.$download.'" class="underline">Download QR code</a></p>')
             ->where('values.slug', 'sale')
             ->where('values.destination', '/kontakt')
             ->where('values.description', 'Flyer')
