@@ -24,7 +24,7 @@
         "php": "^8.5",
         "statamic/cms": "^6.0",
         "edalzell/laravel-features": "^1.6.2",
-        "edalzell/statamic-features": "^1.0.1"
+        "edalzell/statamic-features": "dev-serializable-classes as 1.0.1"
     },
     "require-dev": {
         "orchestra/testbench": "^11.0",
@@ -119,5 +119,12 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "name": "statamic-features",
+            "type": "vcs",
+            "url": "https://github.com/marcorieser/statamic-features"
+        }
+    ]
 }

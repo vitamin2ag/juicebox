@@ -11,6 +11,7 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\FeatureServiceProvider;
@@ -50,14 +51,18 @@ class ServiceProvider extends FeatureServiceProvider
     }
 
     /**
-     * The root .gitignore ignores every build folder, so the control panel build goes to dist.
+     * The root .gitignore ignores every build folder, so the control panel build goes to dist. The Stache caches every
+     * redirect as a serialized object, which Laravel only unserializes when cache.serializable_classes lists its class.
      *
      * @return array<string, mixed>
      */
     #[Override]
     protected function options(): array
     {
-        return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+        return [
+            'statamic.serializable_classes' => [Redirect::class],
+            'statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+        ];
     }
 
     /**
