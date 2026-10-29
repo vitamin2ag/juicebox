@@ -57,7 +57,7 @@ class RedirectController extends CpController
     {
         $this->authorize('create redirects');
 
-        return $this->form('Create Redirect', route('statamic.cp.redirects.store'), 'POST');
+        return $this->form(__('Create Redirect'), route('statamic.cp.redirects.store'), 'POST');
     }
 
     /**
@@ -76,7 +76,7 @@ class RedirectController extends CpController
     {
         $this->authorize('edit redirects');
 
-        return $this->form('Edit Redirect', route('statamic.cp.redirects.update', $id), 'PATCH')->values($this->find($id)->fileData());
+        return $this->form(__('Edit Redirect'), route('statamic.cp.redirects.update', $id), 'PATCH')->values($this->find($id)->fileData());
     }
 
     public function update(string $id): EmptyResponse

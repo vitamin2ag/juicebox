@@ -33,3 +33,10 @@ it('accepts :dataset', function (string $source, Redirect $redirect): void {
     'a source of another site' => fn (): array => ['/alt', new Redirect(id: 'new', site: 'en')],
     'a source no redirect has' => fn (): array => ['/anders', new Redirect(id: 'new', site: 'de')],
 ]);
+
+it('words its rejection in the language of the application', function (): void {
+    app()->setLocale('de');
+    $validator = Validator::make(['source' => '/alt'], ['source' => [new UniqueSource(new Redirect(id: 'new', site: 'de'), resolve(RedirectRepository::class))]]);
+
+    expect($validator->errors()->get('source'))->toBe(['Für diese Quelle gibt es bereits eine Weiterleitung.']);
+});

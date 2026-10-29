@@ -31,7 +31,7 @@ class UniqueSource implements ValidationRule
             ->contains(fn (Redirect $other): bool => $other->source() === $value && $other->id() !== $this->redirect->id());
 
         if ($taken) {
-            $fail('This source already has a redirect.');
+            $fail('This source already has a redirect.')->translate();
         }
     }
 }
