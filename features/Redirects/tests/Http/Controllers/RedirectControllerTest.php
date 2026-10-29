@@ -263,3 +263,11 @@ it('forbids :dataset without its permission', function (string $method, string $
 
     expect(resolve(RedirectRepository::class)->find('existing'))->not->toBeNull();
 })->with('redirect actions');
+
+it('titles the forms in the language of the user', function (): void {
+    app()->setLocale('de');
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->get(RedirectFixtures::cpUrl('redirects.create'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('title', 'Weiterleitung erstellen'));
+});

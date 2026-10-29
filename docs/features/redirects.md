@@ -102,6 +102,10 @@ The first row names the columns, in any order; other columns are ignored. The co
 - Values that contain the delimiter or a line break are wrapped in double quotes. The file is UTF-8, with or without the byte order mark Excel writes.
 - Unlike rias, the import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number or a regex that does not compile instead of saving a broken redirect.
 
+## Translations
+
+The control panel and the messages are available in German (`de`, `de_CH`) and French (`fr`). To change a wording, set the key in the `lang/<locale>.json` of the project; it wins over the files of the addon.
+
 ## Configuration
 
 Publish the config file:

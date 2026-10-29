@@ -7,7 +7,6 @@ namespace Vitamin2\Juicebox\Features\Redirects\Console\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 #[Signature('statamic:juicebox:redirects:prune')]
@@ -17,7 +16,7 @@ class PruneDisabledRedirects extends Command
     public function handle(RedirectRepository $redirects): int
     {
         if (! config('juicebox.redirects.enabled')) {
-            $this->error('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.');
+            $this->error(__('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.'));
 
             return self::FAILURE;
         }
@@ -26,8 +25,8 @@ class PruneDisabledRedirects extends Command
         $disabled->each($redirects->delete(...));
 
         $this->info($disabled->isEmpty()
-            ? 'No disabled redirects to delete.'
-            : "Deleted {$disabled->count()} disabled ".Str::plural('redirect', $disabled->count()).'.');
+            ? __('No disabled redirects to delete.')
+            : trans_choice('Deleted :count disabled redirect.|Deleted :count disabled redirects.', $disabled->count()));
 
         return self::SUCCESS;
     }

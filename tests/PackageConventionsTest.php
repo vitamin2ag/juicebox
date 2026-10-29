@@ -26,6 +26,35 @@ dataset('features with config', fn (): array => array_filter(
     fn (array $feature): bool => file_exists(__DIR__.'/../features/'.$feature[0].'/config/'.Str::snake($feature[0]).'.php'),
 ));
 
+dataset('features with translations', fn (): array => array_filter(
+    juiceboxFeatures(),
+    fn (array $feature): bool => is_dir(__DIR__.'/../features/'.$feature[0].'/lang'),
+));
+
+dataset('translated locales', function (): array {
+    $locales = [];
+
+    foreach (array_keys(array_filter(juiceboxFeatures(), fn (array $feature): bool => is_dir(__DIR__.'/../features/'.$feature[0].'/lang'))) as $feature) {
+        foreach (['de', 'de_CH', 'fr'] as $locale) {
+            $locales["$feature $locale"] = [$feature, $locale];
+        }
+    }
+
+    return $locales;
+});
+
+/**
+ * @return list<array-key>
+ */
+function translationKeys(string $path): array
+{
+    expect($path)->toBeFile();
+
+    $translations = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+
+    return is_array($translations) ? array_keys($translations) : [];
+}
+
 it('has the provider where feature discovery looks for it', function (string $feature): void {
     expect(__DIR__."/../features/$feature/src/ServiceProvider.php")->toBeFile();
 })->with('features');
@@ -63,6 +92,21 @@ it('documents every config key and the publish command of every feature with con
         expect($doc)->toContain("`$key`");
     }
 })->with('features with config');
+
+it('translates every feature with a lang folder into de, de_CH and fr with the same keys', function (string $feature): void {
+    $german = translationKeys(__DIR__."/../features/$feature/lang/de.json");
+
+    expect($german)->not->toBeEmpty()
+        ->and(translationKeys(__DIR__."/../features/$feature/lang/de_CH.json"))->toEqualCanonicalizing($german)
+        ->and(translationKeys(__DIR__."/../features/$feature/lang/fr.json"))->toEqualCanonicalizing($german);
+})->with('features with translations');
+
+it('translates only what Statamic does not ship in :dataset', function (string $feature, string $locale): void {
+    $ours = translationKeys(__DIR__."/../features/$feature/lang/$locale.json");
+    $statamic = translationKeys(__DIR__."/../vendor/statamic/cms/lang/$locale.json");
+
+    expect(array_values(array_intersect($ours, $statamic)))->toBeEmpty();
+})->with('translated locales');
 
 it('declares what its tests mutate for every feature', function (string $feature): void {
     $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../features/$feature/tests", FilesystemIterator::SKIP_DOTS));
