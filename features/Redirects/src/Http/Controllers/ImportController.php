@@ -8,7 +8,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Statamic\Http\Controllers\CP\CpController;
@@ -41,6 +40,6 @@ class ImportController extends CpController
         $file = Collection::wrap($request->file('file'))->whereInstanceOf(UploadedFile::class)->firstOrFail();
         $result = $importer->import($file->path(), $request->string('delimiter')->value());
 
-        return redirect()->action([RedirectController::class, 'index'])->with('success', "Imported {$result->imported} ".Str::plural('redirect', $result->imported).", skipped {$result->skipped} ".Str::plural('row', $result->skipped).'.');
+        return redirect()->action([RedirectController::class, 'index'])->with('success', $result->summary());
     }
 }

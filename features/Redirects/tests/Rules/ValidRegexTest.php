@@ -33,3 +33,9 @@ it('accepts :dataset', function (array $data): void {
     'a source without a match type' => [['source' => '/kampagne/(']],
     'a regex source that is no string' => [['source' => ['/kampagne/('], 'match_type' => 'regex']],
 ]);
+
+it('words its rejection in the language of the application', function (): void {
+    app()->setLocale('fr');
+
+    expect(regexErrors(['source' => '/kampagne/(', 'match_type' => 'regex']))->toBe(["Cette source n'est pas une expression régulière valide."]);
+});

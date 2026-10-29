@@ -41,7 +41,7 @@ class ValidRegex implements DataAwareRule, ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (($this->data['match_type'] ?? null) === 'regex' && is_string($value) && $this->redirects->pattern($value) === null) {
-            $fail('This source is not a valid regex.');
+            $fail('This source is not a valid regex.')->translate();
         }
     }
 }

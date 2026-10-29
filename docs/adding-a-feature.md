@@ -53,16 +53,19 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
 4. Put classes in the folders listed under Layout so they register themselves; register the rest in `bootFeature()` (for example `pushMiddlewareToGroup`). Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
 5. If configurable, add `features/<Name>/config/<snake_name>.php`. Read env vars there only. Use `false` to switch a value off.
-6. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
-7. Add the Boost skill `resources/boost/skills/juicebox-<slug>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
-8. Document the feature in `docs/features/<slug>.md` and list it in the README `Features` section as `- [<Feature name>](docs/features/<slug>.md): <one-line summary>` **(enforced)**. For features with config the doc contains the publish command (`--tag=juicebox-<slug>-config`) and every config key in backticks **(enforced)**.
-9. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (100% required each; both need a coverage driver).
+6. Translate everything a user reads: labels, titles, flash and validation messages, command output. Use `__()` in PHP and Vue, `$fail('...')->translate()` in validation rules, and `trans_choice()` with a `:count` placeholder instead of `Str::plural()`. Statamic translates blueprint labels, navigation items and permission labels itself, but passes a string such as `PublishForm::title()` through untouched. Ship `features/<Name>/lang/{de,de_CH,fr}.json`, keyed by the English string, with the same keys in all three and only the keys Statamic does not already ship in `vendor/statamic/cms/lang` **(enforced)**. A feature without user-facing strings has no `lang` folder.
+
+7. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare the class under test with `mutates(<Class>::class)` **(enforced)**. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
+8. Add the Boost skill `resources/boost/skills/juicebox-<slug>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
+9. Document the feature in `docs/features/<slug>.md` and list it in the README `Features` section as `- [<Feature name>](docs/features/<slug>.md): <one-line summary>` **(enforced)**. For features with config the doc contains the publish command (`--tag=juicebox-<slug>-config`) and every config key in backticks **(enforced)**.
+10. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (100% required each; both need a coverage driver).
 
 ## Conventions
 
 - Every PHP file declares `strict_types=1`; use `#[Override]` when overriding parent members.
 - Read config with `config('juicebox.<snake_name>.<key>')`. Values are `mixed`; narrow them at the point of use (PHPStan runs at `max`; fix the type instead of using `@phpstan-ignore`, `assert()` or casts).
 - Name artisan commands `statamic:juicebox:<slug>:<action>`.
+- Translate every user-facing string and ship `de`, `de_CH` and `fr` for it; leave out what Statamic already ships (step 6).
 - Add only the files the behaviour needs.
 
 ## Worked example: `RemovePoweredBy`

@@ -8,7 +8,6 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use Vitamin2\Juicebox\Features\Redirects\Import\CsvImporter;
 
 #[Signature('statamic:juicebox:redirects:import {file : The CSV file to import} {--delimiter=, : The character between the columns}')]
@@ -18,7 +17,7 @@ class ImportRedirects extends Command
     public function handle(CsvImporter $importer): int
     {
         if (! config('juicebox.redirects.enabled')) {
-            $this->error('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.');
+            $this->error(__('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.'));
 
             return self::FAILURE;
         }
@@ -26,14 +25,14 @@ class ImportRedirects extends Command
         $file = $this->argument('file');
 
         if (! File::isFile($file)) {
-            $this->error("The file {$file} does not exist.");
+            $this->error(__('The file :file does not exist.', ['file' => $file]));
 
             return self::FAILURE;
         }
 
         $result = $importer->import($file, $this->option('delimiter') ?? ',');
 
-        $this->info("Imported {$result->imported} ".Str::plural('redirect', $result->imported).", skipped {$result->skipped} ".Str::plural('row', $result->skipped).'.');
+        $this->info($result->summary());
 
         return self::SUCCESS;
     }
