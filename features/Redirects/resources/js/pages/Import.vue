@@ -1,7 +1,7 @@
 <script setup>
 import { Form, Head } from '@statamic/cms/inertia';
-import { Button, CardPanel, Field, Header, Input } from '@statamic/cms/ui';
-import { ref } from 'vue';
+import { Button, CardPanel, Field, Header, Icon, Input } from '@statamic/cms/ui';
+import { ref, useTemplateRef } from 'vue';
 
 defineProps({
     submitUrl: { type: String, required: true },
@@ -9,6 +9,19 @@ defineProps({
 });
 
 const delimiter = ref(',');
+const file = useTemplateRef('file');
+const filename = ref(null);
+const dragging = ref(false);
+
+function chosen() {
+    filename.value = file.value.files[0]?.name ?? null;
+}
+
+function dropped(event) {
+    dragging.value = false;
+    file.value.files = event.dataTransfer.files;
+    chosen();
+}
 </script>
 
 <template>
@@ -28,7 +41,21 @@ const delimiter = ref(',');
                     :error="errors.file"
                     required
                 >
-                    <Input name="file" type="file" accept=".csv,text/csv" />
+                    <input ref="file" type="file" name="file" accept=".csv,text/csv" class="sr-only" @change="chosen" />
+                    <div
+                        class="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-8 text-center"
+                        :class="dragging ? 'border-blue-500 bg-blue-50' : 'border-gray-400'"
+                        @dragover.prevent="dragging = true"
+                        @dragleave="dragging = false"
+                        @drop.prevent="dropped"
+                    >
+                        <Icon name="upload" class="size-6 text-gray-500" />
+                        <p v-if="filename" class="font-medium" v-text="filename" />
+                        <div class="flex items-center gap-2 text-sm text-gray-700">
+                            <span v-text="__('Drag & drop here or')" />
+                            <Button type="button" size="sm" :text="__('choose a file')" @click="file.click()" />
+                        </div>
+                    </div>
                 </Field>
 
                 <Field
@@ -37,7 +64,9 @@ const delimiter = ref(',');
                     :error="errors.delimiter"
                     required
                 >
-                    <Input name="delimiter" v-model="delimiter" />
+                    <div class="w-24">
+                        <Input name="delimiter" v-model="delimiter" maxlength="1" />
+                    </div>
                 </Field>
             </div>
         </CardPanel>
