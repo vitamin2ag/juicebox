@@ -41,7 +41,7 @@ class RememberOldUri
 
     public function handle(EntrySaving|CollectionTreeSaving $event): void
     {
-        if (! config('juicebox.redirects.enabled') || ! config('juicebox.redirects.create_entry_redirects')) {
+        if (! config('juicebox.redirects.enabled')) {
             return;
         }
 

@@ -55,12 +55,16 @@ it('remembers nothing for :dataset', function (Entry $entry): void {
 
         return RedirectFixtures::page('alt');
     },
-    'an entry while entry redirects are off' => function (): Entry {
-        config(['juicebox.redirects.create_entry_redirects' => false]);
-
-        return RedirectFixtures::page('alt');
-    },
 ]);
+
+it('remembers the uri while entry redirects are off', function (): void {
+    config(['juicebox.redirects.create_entry_redirects' => false]);
+    $entry = RedirectFixtures::page('alt');
+
+    new RememberOldUri()->handle(new EntrySaving($entry));
+
+    expect(Cache::get('juicebox-redirects-old-uri:alt'))->toBe('/alt');
+});
 
 it('remembers the uris the entries a tree change moves had before', function (): void {
     $tree = RedirectFixtures::structure([

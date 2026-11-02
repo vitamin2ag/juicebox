@@ -35,8 +35,9 @@ class CreateRedirect
     private function redirect(Entry $entry): void
     {
         $uri = $entry->uri();
+        $oldUri = Cache::pull(RememberOldUri::key($entry));
 
-        if (! is_string($uri)) {
+        if (! is_string($uri) || $oldUri === $uri) {
             return;
         }
 
@@ -46,10 +47,23 @@ class CreateRedirect
             $this->disableConflict($site, $uri);
         }
 
-        $oldUri = Cache::pull(RememberOldUri::key($entry));
+        if (is_string($oldUri) && config('juicebox.redirects.create_entry_redirects')) {
+            $this->redirectFrom($site, $oldUri, $uri);
+        }
+    }
 
-        if (is_string($oldUri) && $oldUri !== $uri) {
+    /**
+     * A redirect from the old uri that is already stored is not added twice: a disabled one is reused,
+     * which keeps its id, order and description, and an enabled one is a deliberate redirect and stays.
+     */
+    private function redirectFrom(string $site, string $oldUri, string $uri): void
+    {
+        $stored = $this->redirects->findBySource($site, $oldUri);
+
+        if (! $stored instanceof Redirect) {
             $this->redirects->save(new Redirect(id: Str::uuid()->toString(), site: $site, source: $oldUri, destination: $uri));
+        } elseif (! $stored->enabled()) {
+            $this->redirects->save($stored->withValues($stored->source(), $uri, 301, $stored->matchType(), true, $stored->description()));
         }
     }
 

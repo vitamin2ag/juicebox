@@ -166,3 +166,22 @@ it('deletes a redirect and its file', function (): void {
     expect($directory.'de/0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01.yaml')->not->toBeFile()
         ->and($redirects->find('0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01'))->toBeNull();
 });
+
+it('finds the exact redirect of a site by its source, enabled or not', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'off', site: 'de', source: '/alt', destination: '/neu', enabled: false));
+
+    expect($redirects->findBySource('de', '/alt/')?->id())->toBe('off')
+        ->and($redirects->findBySource('en', '/alt'))->toBeNull()
+        ->and($redirects->findBySource('de', '/anders'))->toBeNull();
+});
+
+it('finds no :dataset redirect by source', function (Redirect $redirect): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save($redirect);
+
+    expect($redirects->findBySource('de', '/alt'))->toBeNull();
+})->with([
+    'regex' => fn (): Redirect => new Redirect(id: 'regex', site: 'de', source: '/alt', destination: '/neu', matchType: 'regex'),
+    'sourceless' => fn (): Redirect => new Redirect(id: 'none', site: 'de', destination: '/neu'),
+]);

@@ -79,6 +79,48 @@ it('creates an exact 301 redirect from the old to the new uri of :dataset', func
     'an entry of another site' => 'en',
 ]);
 
+it('reuses the disabled redirect from the old uri instead of adding one', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    RedirectFixtures::page('alt');
+    $redirects->save(new Redirect(id: 'reused', site: 'de', source: '/alt', destination: '/woanders', type: 302, enabled: false, description: 'Alt', order: 3));
+
+    RedirectFixtures::rename('alt', 'neu');
+
+    expect($redirects->all()->sole()->fileData())->toBe([
+        'id' => 'reused',
+        'enabled' => true,
+        'source' => '/alt',
+        'destination' => '/neu',
+        'type' => 301,
+        'match_type' => 'exact',
+        'description' => 'Alt',
+        'order' => 3,
+    ]);
+});
+
+it('leaves an enabled redirect from the old uri as it is and adds none', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    RedirectFixtures::page('alt');
+    $redirects->save(new Redirect(id: 'deliberate', site: 'de', source: '/alt', destination: '/woanders', type: 302));
+
+    RedirectFixtures::rename('alt', 'neu');
+
+    expect($redirects->all()->sole()->fileData())
+        ->toBe(new Redirect(id: 'deliberate', site: 'de', source: '/alt', destination: '/woanders', type: 302)->fileData());
+});
+
+it('keeps one redirect per source when an entry moves back and forth', function (): void {
+    RedirectFixtures::page('a');
+
+    RedirectFixtures::rename('a', 'b');
+    RedirectFixtures::rename('a', 'a');
+    RedirectFixtures::rename('a', 'b');
+
+    expect(savedRedirects())->toBe(['/a -> /b', '/b -> /a'])
+        ->and(resolve(RedirectRepository::class)->findBySource('de', '/a')?->enabled())->toBeTrue()
+        ->and(resolve(RedirectRepository::class)->findBySource('de', '/b')?->enabled())->toBeFalse();
+});
+
 it('creates no redirect for :dataset', function (Closure $save): void {
     $save();
 
@@ -185,6 +227,17 @@ it('leaves :dataset enabled', function (Closure $save): void {
     'a redirect from another uri' => function (): void {
         resolve(RedirectRepository::class)->save(new Redirect(id: 'other', site: 'de', source: '/anders', destination: '/woanders'));
         RedirectFixtures::page('neu');
+    },
+    'a redirect from the uri of an entry saved with the same uri' => function (): void {
+        RedirectFixtures::page('neu');
+        resolve(RedirectRepository::class)->save(new Redirect(id: 'other', site: 'de', source: '/neu', destination: '/woanders'));
+        RedirectFixtures::rename('neu', 'neu');
+    },
+    'a redirect from the uri of an entry saved with the same uri while entry redirects are off' => function (): void {
+        config(['juicebox.redirects.create_entry_redirects' => false]);
+        RedirectFixtures::page('neu');
+        resolve(RedirectRepository::class)->save(new Redirect(id: 'other', site: 'de', source: '/neu', destination: '/woanders'));
+        RedirectFixtures::rename('neu', 'neu');
     },
     'a redirect from the uri of an unpublished entry' => function (): void {
         resolve(RedirectRepository::class)->save(new Redirect(id: 'other', site: 'de', source: '/neu', destination: '/woanders'));

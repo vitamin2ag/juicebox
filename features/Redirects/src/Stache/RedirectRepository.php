@@ -56,6 +56,16 @@ class RedirectRepository
     }
 
     /**
+     * The exact redirect of a site that redirects from this source, enabled or not.
+     */
+    public function findBySource(string $site, string $source): ?Redirect
+    {
+        return $this->whereSite($site)->first(fn (Redirect $redirect): bool => $redirect->matchType() === 'exact'
+            && $redirect->source() !== null
+            && $this->normalise($redirect->source()) === $this->normalise($source));
+    }
+
+    /**
      * The pattern a regex source matches with, or null when it does not compile. Grepping
      * no subjects only compiles the pattern.
      */
