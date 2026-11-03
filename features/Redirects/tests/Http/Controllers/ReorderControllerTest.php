@@ -122,7 +122,7 @@ it('takes a page size without a page as the first page', function (): void {
     expect(orders())->toBe(['a' => 2, 'b' => 1, 'c' => 1]);
 });
 
-it('moves a redirect file that rias named after its order', function (): void {
+it('moves a redirect file with its order in front of the id', function (): void {
     $directory = RedirectFixtures::copyIntoStore();
     resolve(RedirectStore::class)->clear();
     $id = '5da06fa7-6162-4053-8fa6-8e7ae1bc2d06';

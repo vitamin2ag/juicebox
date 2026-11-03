@@ -12,7 +12,7 @@ use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 /**
- * As in rias, a source redirects once per site, which is also what the CSV import relies on.
+ * A source redirects once per site, which is also what the CSV import relies on.
  */
 class UniqueSource implements ValidationRule
 {

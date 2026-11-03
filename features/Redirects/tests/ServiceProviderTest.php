@@ -92,7 +92,7 @@ it('handles the 404s of the :dataset middleware group first', function (string $
     expect(data_get(resolve('router')->getMiddlewareGroups(), [$group, 0]))->toBe(HandleNotFound::class);
 })->with(['web', 'statamic.web']);
 
-it('registers the permissions of rias/statamic-redirect in a Redirects group', function (): void {
+it('registers the permissions in a Redirects group', function (): void {
     $permission = fn (string $value, string $label, array $children = []): array => [
         'value' => $value,
         'label' => $label,

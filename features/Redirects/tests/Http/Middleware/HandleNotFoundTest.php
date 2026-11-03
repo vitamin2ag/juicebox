@@ -112,7 +112,7 @@ it('finds a redirect of a site with an absolute url by :dataset', function (stri
     get('http://localhost/en/alt')->assertRedirect('/en/neu');
 })->with([
     'its path in the site' => '/alt',
-    'its full path, as rias needed it' => '/en/alt',
+    'its full path, with the site prefix' => '/en/alt',
 ]);
 
 it('falls back to the default site for an unknown domain', function (): void {

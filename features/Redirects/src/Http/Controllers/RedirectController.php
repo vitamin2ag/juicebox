@@ -40,7 +40,7 @@ class RedirectController extends CpController
     }
 
     /**
-     * As in rias, the list shows the site selected in the control panel. The listing asks for its rows as JSON.
+     * The list shows the site selected in the control panel. The listing asks for its rows as JSON.
      */
     public function index(FilteredRequest $request): Response|AnonymousResourceCollection
     {

@@ -184,7 +184,7 @@ it('shows the form to create a redirect with the blueprint defaults', function (
             ->where('submitMethod', 'POST'));
 });
 
-it('stores a redirect in the selected site in the format of rias', function (): void {
+it('stores a redirect in the selected site as a file', function (): void {
     config(['statamic.editions.pro' => true, 'statamic.system.multisite' => true]);
     Site::setSites([
         'default' => ['name' => 'Deutsch', 'url' => '/', 'locale' => 'de'],
@@ -275,7 +275,7 @@ it('shows the form to edit a redirect with its values', function (): void {
             ->where('submitMethod', 'PATCH'));
 });
 
-it('updates a rias redirect into one file with its id, site and order', function (): void {
+it('updates a redirect file with its order in front of the id into one file with its id, site and order', function (): void {
     $directory = RedirectFixtures::copyIntoStore();
 
     $this->actingAs(RedirectFixtures::superUser())

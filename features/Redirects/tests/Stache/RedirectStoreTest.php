@@ -12,7 +12,7 @@ beforeEach(function (): void {
     RedirectFixtures::isolate();
 });
 
-it('reads a redirect written by rias', function (): void {
+it('reads a redirect file and ignores the keys the feature does not use', function (): void {
     expect(RedirectFixtures::read('de/1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02.yaml')->fileData())->toBe([
         'id' => '1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02',
         'enabled' => true,
@@ -25,7 +25,7 @@ it('reads a redirect written by rias', function (): void {
     ]);
 });
 
-it('reads every other field rias writes', function (): void {
+it('reads a redirect file with every field', function (): void {
     expect(RedirectFixtures::read('en/2_5da06fa7-6162-4053-8fa6-8e7ae1bc2d06.yaml')->fileData())->toBe([
         'id' => '5da06fa7-6162-4053-8fa6-8e7ae1bc2d06',
         'enabled' => false,
@@ -66,7 +66,7 @@ it('reads :dataset as a permanent redirect', function (string $type): void {
     expect(RedirectFixtures::read('de/typed.yaml', $directory)->type())->toBe(301);
 })->with(['a type it does not offer' => '200', 'a type that is not a number' => 'permanent']);
 
-it('saves a rias redirect in its own format', function (): void {
+it('saves a redirect without the keys the feature does not use', function (): void {
     $directory = RedirectFixtures::copyIntoStore();
     $file = 'de/1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02.yaml';
 

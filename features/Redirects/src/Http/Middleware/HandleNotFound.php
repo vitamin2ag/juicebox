@@ -33,7 +33,7 @@ class HandleNotFound
         $url = $request->getSchemeAndHttpHost().$request->getRequestUri();
         $site = Sites::findByUrl($url) ?? Sites::default();
 
-        // rias compared the full path on sites with an absolute URL, so their sources may carry the site prefix.
+        // On a site with an absolute URL a source may carry the site prefix, so the full path is tried as well.
         // The request is percent-encoded, while a source is typed or imported as it reads.
         $redirect = $this->redirects->findByUrl(
             $site->handle(),
@@ -66,7 +66,7 @@ class HandleNotFound
     }
 
     /**
-     * As in rias, a destination gets the prefix of its site unless it starts with the prefix of a site.
+     * A destination gets the prefix of its site unless it starts with the prefix of a site.
      * A destination with a scheme or without one, like `mailto:` or `//host`, leads away from the sites and stays as it is.
      */
     private function withSitePrefix(Site $site, string $destination): string

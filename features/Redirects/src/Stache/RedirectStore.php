@@ -23,9 +23,8 @@ class RedirectStore extends BasicStore
     }
 
     /**
-     * Also reads the files rias/statamic-redirect wrote: the site comes from the folder,
-     * keys the feature does not use are dropped, and an empty or broken file becomes a
-     * disabled redirect without a source.
+     * The site comes from the folder, keys the feature does not use are dropped, and an
+     * empty or broken file becomes a disabled redirect without a source.
      *
      * @param  string  $path
      * @param  string|null  $contents

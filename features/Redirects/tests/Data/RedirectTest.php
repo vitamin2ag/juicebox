@@ -127,7 +127,7 @@ it('deletes the file it was read from when :dataset', function (string $file): v
     expect($directory.$file)->not->toBeFile();
 })->with([
     'it is named by its id' => 'de/0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01.yaml',
-    'rias put the order in front of its id' => 'en/2_5da06fa7-6162-4053-8fa6-8e7ae1bc2d06.yaml',
+    'the order is in front of its id' => 'en/2_5da06fa7-6162-4053-8fa6-8e7ae1bc2d06.yaml',
 ]);
 
 it('looks up an enabled redirect by its site and normalised source, or by its site for a regex', function (string $matchType, string $expected): void {

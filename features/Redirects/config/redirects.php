@@ -22,8 +22,7 @@ return [
     | Store
     |----------------------------------------------------------------------
     |
-    | Directory of the redirect YAML files, one folder per site. The default
-    | is where rias/statamic-redirect keeps them, so they keep working.
+    | Directory of the redirect YAML files, one folder per site.
     |
     | Accepted values: a directory relative to the project root
     |

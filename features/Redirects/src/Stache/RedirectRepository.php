@@ -66,7 +66,7 @@ class RedirectRepository
 
     /**
      * Exact redirects win over regex ones, and a lower order wins within each. Every URL is
-     * tried with and without its query string. Regex sources work as in rias: case-insensitive,
+     * tried with and without its query string. Regex sources are case-insensitive,
      * not anchored, and only a destination with `$1` takes the captures.
      */
     public function findByUrl(string $site, string ...$urls): ?Redirect
@@ -75,8 +75,8 @@ class RedirectRepository
     }
 
     /**
-     * The order that puts a new redirect behind those of its site. Redirects without an order, which
-     * come from rias, are tried before the numbered ones, so they stay in front of it.
+     * The order that puts a new redirect behind those of its site. Redirects without an order are tried
+     * before the numbered ones, so they stay in front of it.
      */
     public function nextOrder(string $site): int
     {

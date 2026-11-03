@@ -34,9 +34,9 @@ class ServiceProvider extends FeatureServiceProvider
     }
 
     /**
-     * rias/statamic-redirect registers the same store and handles the same requests, so the
-     * feature switches itself off until rias is removed. The routes, listeners and commands
-     * boot either way and check the same switch.
+     * The feature switches itself off while rias/statamic-redirect is installed, because that package
+     * registers the same store and handles the same requests. The routes, listeners and commands boot
+     * either way and check the same switch.
      */
     #[Override]
     protected function bootFeature(): void
@@ -80,9 +80,6 @@ class ServiceProvider extends FeatureServiceProvider
         RedirectType::register();
     }
 
-    /**
-     * The names are those of rias/statamic-redirect, so the roles that have them keep working.
-     */
     private function registerPermissions(): void
     {
         Permission::extend(function (): void {

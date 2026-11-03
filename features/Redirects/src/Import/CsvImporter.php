@@ -16,7 +16,7 @@ class CsvImporter
     public function __construct(private readonly RedirectRepository $redirects) {}
 
     /**
-     * Reads the columns of the rias/statamic-redirect import. A row replaces the redirect with its
+     * Reads a CSV file whose first row names the columns. A row replaces the redirect with its
      * source and site, keeping its id and order.
      *
      * A row is skipped when it has no source, type or match type, when its type is not one the Redirects
@@ -45,7 +45,7 @@ class CsvImporter
     }
 
     /**
-     * As in rias, a short row gets empty cells and a long one loses the cells without a column.
+     * A short row gets empty cells and a long one loses the cells without a column.
      *
      * @return Collection<int, Collection<string, string>>
      */
@@ -60,7 +60,7 @@ class CsvImporter
                 ->filter(fn (mixed $cell): bool => is_string($cell)),
         );
 
-        // Excel starts a UTF-8 file with a byte order mark, which the reader of rias drops.
+        // Excel starts a UTF-8 file with a byte order mark, which is dropped.
         $columns = ($lines->shift() ?? new Collection)
             ->map(fn (string $column): string => Str::chopStart($column, "\u{FEFF}"))
             ->flip();

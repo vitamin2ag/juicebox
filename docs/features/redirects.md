@@ -2,9 +2,9 @@
 
 Redirects requests that would otherwise return a 404 to a new URL.
 
-Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder. Files written by `rias/statamic-redirect` keep working as they are and get the format below the next time they are saved.
+Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder.
 
-While `rias/statamic-redirect` is installed, the feature switches itself off, as if `enabled` were `false`; remove rias to switch it on. A disabled feature handles no 404s, creates no entry redirects and adds nothing to the control panel, and its commands stop with an error.
+A disabled feature, with `enabled` set to `false`, handles no 404s, creates no entry redirects and adds nothing to the control panel, and its commands stop with an error.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -15,7 +15,7 @@ type: 301
 match_type: exact
 ```
 
-A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A new redirect, made in the control panel, by a CSV import or for a changed entry URI, gets the next `order` of its site, so it is tried after the others; a redirect that comes from rias without an `order` is tried before the numbered ones.
+A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A new redirect, made in the control panel, by a CSV import or for a changed entry URI, gets the next `order` of its site, so it is tried after the others; a redirect without an `order` is tried before the numbered ones.
 
 ## Matching
 
@@ -24,9 +24,9 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 - The site comes from the request URL (the default site when no site matches). Only the enabled redirects of that site count.
 - Exact redirects win over regex ones; within each, the lowest `order` wins.
 - An exact `source` matches with or without a leading or trailing slash, and with or without the query string of the request: `/alt` matches `/alt/` and `/alt?utm_source=newsletter`, while `/news?page=2` matches only that query.
-- A regex `source` works as in rias: case-insensitive and not anchored. A `destination` with `$1`, `$2`, ... takes the captures, so `/kampagne/(.*)` to `/aktion/$1` sends `/kampagne/sommer` to `/aktion/sommer`.
-- A regex `source` is matched between backticks with the `i` flag, so a backtick in it needs a backslash. A regex `source` that does not compile, for example in an old rias file, is skipped, so it never turns a 404 into an error.
-- A `source` is relative to its site: `/alt` in a site at `/en` matches `/en/alt`. Sources that carry the site prefix, as rias needed on sites with an absolute URL, keep working.
+- A regex `source` is case-insensitive and not anchored. A `destination` with `$1`, `$2`, ... takes the captures, so `/kampagne/(.*)` to `/aktion/$1` sends `/kampagne/sommer` to `/aktion/sommer`.
+- A regex `source` is matched between backticks with the `i` flag, so a backtick in it needs a backslash. A regex `source` that does not compile is skipped, so it never turns a 404 into an error.
+- A `source` is relative to its site: `/alt` in a site at `/en` matches `/en/alt`. On a site with an absolute URL, a `source` that carries the site prefix matches as well.
 
 ## Responses
 
@@ -43,7 +43,7 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 
 When the URI of a published entry changes, because its slug changes or because it moves to another parent in a structure, the feature saves an exact `301` redirect from the old to the new URI in the site of the entry. Moving a parent, or changing its slug, redirects its children as well, at every depth. A redirect from the old URI that is already stored is not added twice: a disabled one is enabled again and pointed at the new URI as a `301`, keeping its `id`, `order` and `description`, and an enabled one is left as it is. A save that keeps the URI, an unpublished entry and a new entry, including a new page placed in a structure, get no redirect.
 
-When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. rias deleted it; here it stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
+When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
 The children are looked at only when the `slug` of a parent changes or the parent moves. A route that builds the URI of a child from another field of its parent is not followed. A child that is not published, or whose URI does not change, gets no redirect. Each child redirect is a file, so renaming a parent with many children takes a moment longer to save.
 
@@ -51,8 +51,8 @@ The children are looked at only when the `slug` of a parent changes or the paren
 
 **Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import and to deleting the disabled redirects.
 
-- The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`, and rewrites a file rias named `<order>_<id>.yaml` as `<id>.yaml`.
-- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias, and so is a regex `source` that does not compile.
+- The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`.
+- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
 - The list loads its rows page by page as JSON, so it stays fast with thousands of redirects. Search matches the source, destination and description; the filters are enabled or disabled, match type and type (301, 302 or 410), and the columns sort the list.
@@ -62,8 +62,6 @@ The children are looked at only when the `slug` of a parent changes or the paren
 - To change the pages, edit `features/Redirects/resources/js` and rebuild as [Adding a feature](../adding-a-feature.md) describes, then commit `features/Redirects/resources/dist`.
 
 ### Permissions
-
-The permissions have the names of `rias/statamic-redirect`, so roles that have them keep working.
 
 | Permission | Allows |
 |---|---|
@@ -92,7 +90,7 @@ Imports the redirects of a CSV file and prints how many rows it imported and ski
 
 ### CSV format
 
-The first row names the columns, in any order; other columns are ignored. The columns are those of the `rias/statamic-redirect` import.
+The first row names the columns, in any order; other columns are ignored.
 
 | Column | Required | Value |
 |---|---|---|
@@ -107,7 +105,7 @@ The first row names the columns, in any order; other columns are ignored. The co
 - A row with the `source` and `site` of an existing redirect replaces it and keeps its `id` and `order`, so importing the same file again changes nothing. Of the rows with the same `source` and `site` in one file, the last one wins.
 - A row without a required value, with a `type` that is not a number, or with a regex `source` that does not compile, is skipped and counted. Empty lines are ignored.
 - Values that contain the delimiter or a line break are wrapped in double quotes. The file is UTF-8, with or without the byte order mark Excel writes.
-- Unlike rias, the import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number or a regex that does not compile instead of saving a broken redirect.
+- The import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number or a regex that does not compile instead of saving a broken redirect.
 
 ## Translations
 

@@ -186,7 +186,7 @@ class Redirect
     }
 
     /**
-     * rias puts the order in front of the id in the file name, so a file it wrote is not at path().
+     * Deletes the file the redirect was read from, which is not at path() when its name differs, as in `<order>_<id>.yaml`.
      */
     public function deleteFile(): void
     {
