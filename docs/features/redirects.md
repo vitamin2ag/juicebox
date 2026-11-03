@@ -59,7 +59,7 @@ The children are looked at only when the `slug` of a parent changes or the paren
 - Select rows in the list to delete, enable or disable several redirects at once, as for entries.
 - **Reorder** switches the list to drag handles for the regex redirects, and **Save Order** numbers them from 1 in the order shown. Only redirects whose `order` changes are written, since each redirect is a file. Exact redirects are not listed: a source is unique per site, so each is found directly and their `order` does not matter. Of several matching regex redirects, the lowest `order` wins.
 - The form is Statamic's publish form. The list and the import are Vue pages, built into `features/Redirects/resources/dist` and published to `public/vendor/redirects/dist`. `statamic:install`, which a Statamic site runs after `composer update`, publishes them; to publish them by hand, run `php artisan vendor:publish --tag=redirects --force`.
-- To change the pages, edit `features/Redirects/resources/js`, run `nvm use && npm ci && npm run build` in `features/Redirects` and commit `resources/dist`.
+- To change the pages, edit `features/Redirects/resources/js` and rebuild as [Adding a feature](../adding-a-feature.md) describes, then commit `features/Redirects/resources/dist`.
 
 ### Permissions
 

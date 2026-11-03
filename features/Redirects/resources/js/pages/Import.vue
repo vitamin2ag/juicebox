@@ -1,25 +1,29 @@
-<script setup>
+<script setup lang="ts">
 import { Form, Head } from '@statamic/cms/inertia';
 import { Button, CardPanel, Field, Header, Icon, Input } from '@statamic/cms/ui';
 import { ref, useTemplateRef } from 'vue';
 
-defineProps({
-    submitUrl: { type: String, required: true },
-    listingUrl: { type: String, required: true },
-});
+defineProps<{
+    submitUrl: string;
+    listingUrl: string;
+}>();
 
 const delimiter = ref(',');
-const file = useTemplateRef('file');
-const filename = ref(null);
+const file = useTemplateRef<HTMLInputElement>('file');
+const filename = ref<string | null>(null);
 const dragging = ref(false);
 
-function chosen() {
-    filename.value = file.value.files[0]?.name ?? null;
+function chosen(): void {
+    filename.value = file.value?.files?.[0]?.name ?? null;
 }
 
-function dropped(event) {
+function dropped(event: DragEvent): void {
     dragging.value = false;
-    file.value.files = event.dataTransfer.files;
+
+    if (file.value && event.dataTransfer) {
+        file.value.files = event.dataTransfer.files;
+    }
+
     chosen();
 }
 </script>
@@ -53,7 +57,7 @@ function dropped(event) {
                         <p v-if="filename" class="font-medium" v-text="filename" />
                         <div class="flex items-center gap-2 text-sm text-gray-700">
                             <span v-text="__('Drag & drop here or')" />
-                            <Button type="button" size="sm" :text="__('choose a file')" @click="file.click()" />
+                            <Button type="button" size="sm" :text="__('choose a file')" @click="file?.click()" />
                         </div>
                     </div>
                 </Field>

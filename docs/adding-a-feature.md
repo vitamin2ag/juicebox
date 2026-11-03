@@ -25,6 +25,9 @@ statamic-features registers the Statamic folders, one level deep, as Statamic do
 | `resources/blueprints`, `resources/fieldsets` | namespace `<slug>::`, imported as `<slug>::<handle>` |
 | `routes/web.php`, `routes/cp.php`, `routes/actions.php` | Statamic web, control panel and action routes (actions prefixed `/!/<slug>/`) |
 | `resources/cp/{js,css}` | control panel scripts and stylesheets, published to `public/vendor/<slug>/` |
+| `resources/js/cp.ts` | a built control panel page in TypeScript and Vue, published from `resources/dist` to `public/vendor/<slug>/dist`; register it with the provider option `statamic.vite` (see below) |
+
+A feature with control panel pages puts them in `resources/js` with the entry `resources/js/cp.ts`, and returns `['statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']]` from `options()`. There is one build for every feature, in the package root: `package.json`, `tsconfig.json`, `scripts/cp.mjs` and `types/`. `npm run build` writes each feature's `resources/dist`, which is committed because the package is installed without Node; `npm run typecheck` checks the TypeScript and the Vue templates; the `assets` job of the CI rebuilds and fails when a committed `dist` differs. Run `composer install` before `npm ci`: `@statamic/cms` is not on npm, so `package.json` links it from `vendor/statamic/cms`.
 
 Put each file where it is listed; other locations are not loaded. Command stubs go in `resources/stubs`. Two features cannot share a slug: the second throws.
 

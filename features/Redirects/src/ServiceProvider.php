@@ -61,7 +61,7 @@ class ServiceProvider extends FeatureServiceProvider
     #[Override]
     protected function options(): array
     {
-        return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+        return ['statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
     }
 
     private function registerStore(): void

@@ -19,3 +19,10 @@ phpunit.xml.dist export-ignore
 /stubs export-ignore
 /build export-ignore
 /.github export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/tsconfig.json export-ignore
+/scripts export-ignore
+/types export-ignore
+/.nvmrc export-ignore
+/.npmrc export-ignore

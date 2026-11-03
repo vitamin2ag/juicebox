@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Head, Link, router } from '@statamic/cms/inertia';
 import {
     Button,
@@ -12,37 +12,50 @@ import {
     Listing,
     StatusIndicator,
 } from '@statamic/cms/ui';
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 
-const props = defineProps({
-    hasRedirects: { type: Boolean, required: true },
-    filters: { type: Array, required: true },
-    listingUrl: { type: String, required: true },
-    createUrl: { type: String, required: true },
-    importUrl: { type: String, required: true },
-    pruneUrl: { type: String, required: true },
-    actionUrl: { type: String, required: true },
-    reorderUrl: { type: String, required: true },
-});
+interface Row {
+    id: string;
+    source: string;
+    enabled: boolean;
+    edit_url: string;
+}
 
-const listing = ref(null);
+interface Completed {
+    items: Row[];
+    parameters: { page: number; perPage: number | null };
+}
+
+const props = defineProps<{
+    hasRedirects: boolean;
+    filters: unknown[];
+    listingUrl: string;
+    createUrl: string;
+    importUrl: string;
+    pruneUrl: string;
+    actionUrl: string;
+    reorderUrl: string;
+}>();
+
+// Not named like the ref in the template, or Vue binds the ref to this variable by name.
+const listingRef = useTemplateRef<{ refresh(): void }>('listing');
 const pruning = ref(false);
 const reordering = ref(false);
 const saving = ref(false);
-const items = ref([]);
+const items = ref<Row[]>([]);
 const page = ref(1);
-const perPage = ref(null);
+const perPage = ref<number | null>(null);
 
 // An exact source is unique per site and found by that source, so only regex redirects depend on their order.
 const filtersForReordering = () => ({ redirect_match_type: { match_type: 'regex' } });
 
-function requestCompleted(request) {
+function requestCompleted(request: Completed): void {
     items.value = request.items;
     page.value = request.parameters.page;
     perPage.value = request.parameters.perPage;
 }
 
-function saveOrder() {
+function saveOrder(): void {
     saving.value = true;
 
     router.post(
@@ -56,13 +69,13 @@ function saveOrder() {
     );
 }
 
-function prune() {
+function prune(): void {
     router.post(
         props.pruneUrl,
         {},
         {
             // The listing loads its rows from its own URL, so the page props do not reach it. It is gone when no redirect is left.
-            onSuccess: () => listing.value?.refresh(),
+            onSuccess: () => listingRef.value?.refresh(),
             onFinish: () => (pruning.value = false),
         },
     );

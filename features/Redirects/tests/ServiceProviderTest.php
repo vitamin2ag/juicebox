@@ -42,7 +42,7 @@ it('registers the control panel build with Vite', function (): void {
     expect(Statamic::availableVites(request()))->toHaveKey('redirects', [
         'hotFile' => "{$feature}/resources/hot",
         'buildDirectory' => 'vendor/redirects/dist',
-        'input' => 'resources/js/cp.js',
+        'input' => 'resources/js/cp.ts',
     ]);
 });
 
