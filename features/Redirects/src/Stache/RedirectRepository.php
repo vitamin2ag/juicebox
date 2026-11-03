@@ -43,6 +43,19 @@ class RedirectRepository
     }
 
     /**
+     * The rows of the list for a site, with the fields of a redirect file, read from one index instead of every redirect.
+     *
+     * @return Collection<int, array<mixed>>
+     */
+    public function listing(string $site): Collection
+    {
+        return $this->index(RedirectStore::LISTING_INDEX)
+            ->filter(fn (mixed $row): bool => is_array($row) && ($row['site'] ?? null) === $site)
+            ->map(fn (mixed $row): array => Collection::wrap($row)->except('site')->all())
+            ->values();
+    }
+
+    /**
      * Exact redirects win over regex ones, and a lower order wins within each. Every URL is
      * tried with and without its query string. Regex sources work as in rias: case-insensitive,
      * not anchored, and only a destination with `$1` takes the captures.
@@ -135,15 +148,23 @@ class RedirectRepository
      */
     private function indexed(string ...$keys): Collection
     {
-        $index = Collection::wrap($this->store->index(RedirectStore::LOOKUP_INDEX))->whereInstanceOf(Index::class)->firstOrFail();
-
-        return Collection::wrap($index->items())
+        return $this->index(RedirectStore::LOOKUP_INDEX)
             ->filter(fn (mixed $key): bool => in_array($key, $keys, true))
             ->keys()
             ->map(fn (mixed $id): ?Redirect => is_string($id) ? $this->find($id) : null)
             ->filter()
             ->sortBy(fn (Redirect $redirect): ?int => $redirect->order())
             ->values();
+    }
+
+    /**
+     * @return Collection<int|string, mixed>
+     */
+    private function index(string $name): Collection
+    {
+        $index = Collection::wrap($this->store->index($name))->whereInstanceOf(Index::class)->firstOrFail();
+
+        return Collection::wrap($index->items());
     }
 
     private function withCaptures(Redirect $redirect, string $pattern, string $url): Redirect

@@ -14,6 +14,8 @@ class RedirectStore extends BasicStore
 {
     public const string LOOKUP_INDEX = 'lookup_key';
 
+    public const string LISTING_INDEX = 'listing_row';
+
     #[Override]
     public function key(): string
     {

@@ -87,6 +87,17 @@ class Redirect
         };
     }
 
+    /**
+     * The row of the list in the `listing_row` Stache index (Statamic finds it by this method name), so the
+     * list reads one index instead of every redirect.
+     *
+     * @return array<string, mixed>
+     */
+    public function listingRow(): array
+    {
+        return [...$this->fileData(), 'site' => $this->site];
+    }
+
     public static function exactKey(string $site, string $url): string
     {
         return "{$site}|exact|".self::normalise($url);

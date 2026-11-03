@@ -134,6 +134,27 @@ it('keeps the lookup in step with saved, disabled, moved and deleted redirects',
     expect($found('/moved/page'))->toBeNull();
 });
 
+it('lists the rows of one site and keeps them in step with saved, moved and deleted redirects', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $sources = fn (string $site): array => $redirects->listing($site)->pluck('source')->sort()->values()->all();
+    $first = new Redirect(id: 'first', site: 'listed', source: '/first', destination: '/neu', order: 1);
+
+    expect($sources('listed'))->toBeEmpty();
+
+    $redirects->save($first);
+    $redirects->save(new Redirect(id: 'second', site: 'listed', source: '/second', destination: '/neu', enabled: false));
+    $redirects->save(new Redirect(id: 'other', site: 'elsewhere', source: '/other', destination: '/neu'));
+    expect($sources('listed'))->toBe(['/first', '/second'])
+        ->and($sources('elsewhere'))->toBe(['/other'])
+        ->and($redirects->listing('listed')->firstWhere('source', '/first'))->toBe($first->fileData());
+
+    $redirects->save($first->withValues('/moved', '/neu', 301, 'exact', true, null));
+    expect($sources('listed'))->toBe(['/moved', '/second']);
+
+    $redirects->delete($first);
+    expect($sources('listed'))->toBe(['/second']);
+});
+
 it('never matches :dataset redirect without a source', function (string $matchType): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'sourceless', site: 'de', matchType: $matchType));

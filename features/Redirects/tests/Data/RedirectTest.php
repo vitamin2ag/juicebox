@@ -153,3 +153,9 @@ it('normalises a URL', function (string $url, string $expected): void {
     'drops the slashes before the query string' => ['/old/?a=1', '/old?a=1'],
     'keeps the slashes inside' => ['/a//b', '/a//b'],
 ]);
+
+it('has the fields of its file and its site as a row of the list', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'en', source: '/old', destination: '/new', type: 302, matchType: 'regex', enabled: false, description: 'Moved', order: 2);
+
+    expect($redirect->listingRow())->toBe([...$redirect->fileData(), 'site' => 'en']);
+});

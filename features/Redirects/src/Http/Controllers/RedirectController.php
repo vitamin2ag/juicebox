@@ -53,7 +53,7 @@ class RedirectController extends CpController
         }
 
         return Inertia::render('redirects::Index', [
-            'hasRedirects' => $this->redirects->whereSite($this->site())->isNotEmpty(),
+            'hasRedirects' => $this->redirects->listing($this->site())->isNotEmpty(),
             'filters' => Scope::filters('redirects'),
             'listingUrl' => cp_route('redirects.index'),
             'createUrl' => cp_route('redirects.create'),
@@ -151,7 +151,7 @@ class RedirectController extends CpController
     private function listing(FilteredRequest $request): AnonymousResourceCollection
     {
         $query = new ItemQueryBuilder;
-        $query->withItems(new DataCollection($this->redirects->whereSite($this->site())->all()));
+        $query->withItems(new DataCollection($this->redirects->listing($this->site())->all()));
         $search = $request->query('search');
         $sort = $request->query('sort');
 

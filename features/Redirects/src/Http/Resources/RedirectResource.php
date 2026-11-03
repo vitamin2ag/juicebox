@@ -8,21 +8,20 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 use Override;
-use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 /**
- * A row of the redirect list, built for the rows of one page only.
+ * A row of the redirect list, with its link, built for the rows of one page only.
  */
 class RedirectResource extends JsonResource
 {
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     #[Override]
     public function toArray(Request $request): array
     {
-        $redirect = Collection::wrap($this->resource)->whereInstanceOf(Redirect::class)->firstOrFail();
+        $row = Collection::wrap($this->resource)->all();
 
-        return [...$redirect->fileData(), 'edit_url' => cp_route('redirects.edit', $redirect->id())];
+        return [...$row, 'edit_url' => cp_route('redirects.edit', $row['id'])];
     }
 }
