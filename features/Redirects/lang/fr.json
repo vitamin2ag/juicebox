@@ -31,6 +31,7 @@
     "Match type": "Type de correspondance",
     "No disabled redirects to delete.": "Aucune redirection désactivée à supprimer.",
     "One character, usually `,` or `;`.": "Un caractère, généralement `,` ou `;`.",
+    "Only regex redirects are reordered, since an exact redirect is found by its source.": "Seules les redirections regex sont réordonnées, car une redirection exacte est trouvée par sa source.",
     "Permanent (301)": "Permanente (301)",
     "Redirect disabled|Redirects disabled": "Redirection désactivée|Redirections désactivées",
     "Redirect enabled|Redirects enabled": "Redirection activée|Redirections activées",

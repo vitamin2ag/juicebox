@@ -54,7 +54,7 @@ Changing the slug of a parent in a structure changes the URIs of its children wi
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
 - Select rows in the list to delete, enable or disable several redirects at once, as for entries.
-- **Reorder** switches the list to drag handles, and **Save Order** numbers the redirects from 1 in the order shown. Only redirects whose `order` changes are written, since each redirect is a file. The `order` decides which redirect wins when several match: exact redirects win over regex ones, and a lower `order` wins within each.
+- **Reorder** switches the list to drag handles for the regex redirects, and **Save Order** numbers them from 1 in the order shown. Only redirects whose `order` changes are written, since each redirect is a file. Exact redirects are not listed: a source is unique per site, so each is found directly and their `order` does not matter. Of several matching regex redirects, the lowest `order` wins.
 - The form is Statamic's publish form. The list and the import are Vue pages, built into `features/Redirects/resources/dist` and published to `public/vendor/redirects/dist`. `statamic:install`, which a Statamic site runs after `composer update`, publishes them; to publish them by hand, run `php artisan vendor:publish --tag=redirects --force`.
 - To change the pages, edit `features/Redirects/resources/js`, run `nvm use && npm ci && npm run build` in `features/Redirects` and commit `resources/dist`.
 

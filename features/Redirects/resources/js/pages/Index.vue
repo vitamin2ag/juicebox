@@ -12,7 +12,7 @@ import {
     Listing,
     StatusIndicator,
 } from '@statamic/cms/ui';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
     redirects: { type: Array, required: true },
@@ -35,7 +35,20 @@ const items = ref(props.redirects);
 const reordering = ref(false);
 const saving = ref(false);
 
-watch(() => props.redirects, (redirects) => (items.value = redirects));
+// An exact source is unique per site and found by that source, so only regex redirects depend on their order.
+const regexRedirects = computed(() =>
+    props.redirects
+        .filter((redirect) => redirect.match_type === 'regex')
+        // In the order they are tried in, where a redirect without an order comes first.
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+);
+
+watch(() => props.redirects, (redirects) => (items.value = reordering.value ? regexRedirects.value : redirects));
+
+function startReordering() {
+    items.value = regexRedirects.value;
+    reordering.value = true;
+}
 
 function cancelReordering() {
     items.value = props.redirects;
@@ -83,10 +96,14 @@ function prune() {
                         />
                     </DropdownMenu>
                 </Dropdown>
-                <Button v-if="can('edit redirects') && items.length > 1" :text="__('Reorder')" @click="reordering = true" />
+                <Button v-if="can('edit redirects') && regexRedirects.length > 1" :text="__('Reorder')" @click="startReordering" />
                 <Button v-if="can('create redirects')" :text="__('Create Redirect')" :href="createUrl" variant="primary" />
             </template>
         </Header>
+
+        <p v-if="reordering" class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            {{ __('Only regex redirects are reordered, since an exact redirect is found by its source.') }}
+        </p>
 
         <EmptyStateMenu v-if="!items.length" :heading="__('Redirects send visitors of a missing page to a new URL.')">
             <EmptyStateItem
