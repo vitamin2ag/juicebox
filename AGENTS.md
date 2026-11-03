@@ -5,6 +5,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Package Conventions
 
 - Use Laravel- and Statamic-native APIs and the existing service provider shape before adding abstractions.
+- Do not `continue`, `break` or `return` early inside a `foreach`: that is a search or a filter, so use `filter()`, `first()`, `contains()` or `lazy()` A loop that walks a whole set, or whose iterations depend on what the previous one changed, is fine.
 - Keep a feature provider's `bootFeature()` a short list of `$this->registerX()` calls. Each private method registers what its name says, with the facade call and its callback inside (`Permission::extend(...)`, `Nav::extend(...)`, `app()->booted(...)`), not in `bootFeature()`; `features/Redirects/src/ServiceProvider.php` is the example.
 - Add only the files and dependencies needed for the behavior being implemented.
 - Keep tests focused on observable behavior: response headers, merged config, publish tags, provider wiring.
