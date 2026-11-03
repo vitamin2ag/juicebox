@@ -67,16 +67,22 @@ class HandleNotFound
 
     /**
      * As in rias, a destination gets the prefix of its site unless it starts with the prefix of a site.
+     * A destination with a scheme or without one, like `mailto:` or `//host`, leads away from the sites and stays as it is.
      */
     private function withSitePrefix(Site $site, string $destination): string
     {
         $prefixes = Sites::all()->map($this->prefix(...))->filter();
 
-        if (URL::isAbsolute($destination) || $prefixes->contains(fn (string $prefix): bool => str_starts_with($destination.'/', $prefix.'/'))) {
+        if ($this->leavesTheSites($destination) || $prefixes->contains(fn (string $prefix): bool => str_starts_with($destination.'/', $prefix.'/'))) {
             return $destination;
         }
 
         return $this->prefix($site).'/'.ltrim($destination, '/');
+    }
+
+    private function leavesTheSites(string $destination): bool
+    {
+        return preg_match('#^(//|[a-z][a-z0-9+.-]*:)#i', $destination) === 1;
     }
 
     private function prefix(Site $site): string

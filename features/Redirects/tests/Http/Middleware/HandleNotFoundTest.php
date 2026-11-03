@@ -98,6 +98,8 @@ it('keeps :dataset as it is', function (string $destination): void {
     'a destination with a site prefix' => '/en/neu',
     'the home page of a site' => '/en',
     'an absolute destination' => 'https://example.org/neu',
+    'a destination without a scheme' => '//cdn.example.org/neu',
+    'a destination with another scheme' => 'mailto:info@example.org',
 ]);
 
 it('finds a redirect of a site with an absolute url by :dataset', function (string $source): void {
