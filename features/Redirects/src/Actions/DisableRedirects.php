@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects\Actions;
 
-use Illuminate\Support\Collection;
 use Override;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
@@ -39,16 +38,10 @@ class DisableRedirects extends RedirectAction
     #[Override]
     public function run(mixed $items, mixed $values): string
     {
-        $redirects = Collection::wrap($items)->whereInstanceOf(Redirect::class);
+        $redirects = $this->redirectsOf($items);
 
         $redirects->each(fn (Redirect $redirect) => $this->redirects()->save($redirect->withEnabled(false)));
 
         return trans_choice('Redirect disabled|Redirects disabled', $redirects->count());
-    }
-
-    #[Override]
-    protected function permission(): string
-    {
-        return 'edit redirects';
     }
 }

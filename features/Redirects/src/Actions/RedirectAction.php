@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Redirects\Actions;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Support\Collection;
 use Override;
 use Statamic\Actions\Action;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
@@ -18,7 +19,18 @@ abstract class RedirectAction extends Action
     /**
      * The permission a user needs to run the action on a redirect.
      */
-    abstract protected function permission(): string;
+    protected function permission(): string
+    {
+        return 'edit redirects';
+    }
+
+    /**
+     * @return Collection<int, Redirect>
+     */
+    protected function redirectsOf(mixed $items): Collection
+    {
+        return Collection::wrap($items)->whereInstanceOf(Redirect::class);
+    }
 
     #[Override]
     public function visibleTo(mixed $item): bool
