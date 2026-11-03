@@ -92,7 +92,7 @@ class CsvImporter
             matchType: $matchType,
             enabled: filter_var($row->get('enabled', '1'), FILTER_VALIDATE_BOOL),
             description: $this->value($row, 'description') ?? $replaced?->description(),
-            order: $replaced?->order(),
+            order: $replaced instanceof Redirect ? $replaced->order() : $this->redirects->nextOrder($site),
         );
     }
 

@@ -49,10 +49,10 @@ it('imports the rows of a CSV file', function (): void {
 
     expect($result)->toEqual(new ImportResult(imported: 4, skipped: 0))
         ->and(importedRedirects())->toBe([
-            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Moved', 'order' => null],
-            'de/leer' => ['enabled' => false, 'source' => '/leer', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => null],
-            'de/weg' => ['enabled' => true, 'source' => '/weg', 'destination' => null, 'type' => 410, 'match_type' => 'exact', 'description' => null, 'order' => null],
-            'en/kampagne/(.*)' => ['enabled' => false, 'source' => '/kampagne/(.*)', 'destination' => '/aktion/$1', 'type' => 302, 'match_type' => 'regex', 'description' => null, 'order' => null],
+            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Moved', 'order' => 1],
+            'de/leer' => ['enabled' => false, 'source' => '/leer', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => 3],
+            'de/weg' => ['enabled' => true, 'source' => '/weg', 'destination' => null, 'type' => 410, 'match_type' => 'exact', 'description' => null, 'order' => 2],
+            'en/kampagne/(.*)' => ['enabled' => false, 'source' => '/kampagne/(.*)', 'destination' => '/aktion/$1', 'type' => 302, 'match_type' => 'regex', 'description' => null, 'order' => 1],
         ])
         ->and(collect(importedIds())->every(fn (string $id): bool => Str::isUuid($id)))->toBeTrue();
 });
@@ -85,7 +85,7 @@ it('keeps the last of the rows with the same source and site', function (): void
 
     expect($result)->toEqual(new ImportResult(imported: 2, skipped: 0))
         ->and(importedRedirects())->toBe([
-            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/dann', 'type' => 302, 'match_type' => 'exact', 'description' => null, 'order' => null],
+            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/dann', 'type' => 302, 'match_type' => 'exact', 'description' => null, 'order' => 1],
         ])
         ->and(importedIds())->toHaveCount(1);
 });
@@ -110,7 +110,7 @@ it('enables a row without the enabled column in the current site', function (): 
     resolve(CsvImporter::class)->import(RedirectFixtures::csv('minimal.csv'));
 
     expect(importedRedirects())->toBe([
-        'en/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => null],
+        'en/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => 1],
     ]);
 });
 
@@ -119,9 +119,9 @@ it('reads a file with another delimiter as Excel saves it', function (): void {
 
     expect($result)->toEqual(new ImportResult(imported: 3, skipped: 0))
         ->and(importedRedirects())->toBe([
-            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Alt; neu', 'order' => null],
-            'de/kurz' => ['enabled' => true, 'source' => '/kurz', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => null],
-            'en/lang' => ['enabled' => true, 'source' => '/lang', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Lang', 'order' => null],
+            'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Alt; neu', 'order' => 1],
+            'de/kurz' => ['enabled' => true, 'source' => '/kurz', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => null, 'order' => 2],
+            'en/lang' => ['enabled' => true, 'source' => '/lang', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Lang', 'order' => 1],
         ]);
 });
 

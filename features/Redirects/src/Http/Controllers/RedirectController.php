@@ -69,7 +69,8 @@ class RedirectController extends CpController
     {
         $this->authorize('create redirects');
 
-        $redirect = $this->save(new Redirect(id: Str::uuid()->toString(), site: $this->site()));
+        $site = $this->site();
+        $redirect = $this->save(new Redirect(id: Str::uuid()->toString(), site: $site, order: $this->redirects->nextOrder($site)));
 
         return ['redirect' => cp_route('redirects.edit', $redirect->id())];
     }

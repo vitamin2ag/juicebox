@@ -56,6 +56,17 @@ class RedirectRepository
     }
 
     /**
+     * The order that puts a new redirect behind those of its site. Redirects without an order, which
+     * come from rias, are tried before the numbered ones, so they stay in front of it.
+     */
+    public function nextOrder(string $site): int
+    {
+        $highest = $this->whereSite($site)->max(fn (Redirect $redirect): ?int => $redirect->order());
+
+        return is_int($highest) ? $highest + 1 : 1;
+    }
+
+    /**
      * The exact redirect of a site that redirects from this source, enabled or not.
      */
     public function findBySource(string $site, string $source): ?Redirect

@@ -72,7 +72,7 @@ it('creates an exact 301 redirect from the old to the new uri of :dataset', func
             'type' => 301,
             'match_type' => 'exact',
             'description' => null,
-            'order' => null,
+            'order' => 1,
         ]);
 })->with([
     'an entry' => null,
@@ -119,6 +119,17 @@ it('keeps one redirect per source when an entry moves back and forth', function 
     expect(savedRedirects())->toBe(['/a -> /b', '/b -> /a'])
         ->and(resolve(RedirectRepository::class)->findBySource('de', '/a')?->enabled())->toBeTrue()
         ->and(resolve(RedirectRepository::class)->findBySource('de', '/b')?->enabled())->toBeFalse();
+});
+
+it('puts the redirect it creates behind the others of the site', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'first', site: 'de', source: '/erste', destination: '/neu', order: 4));
+    $redirects->save(new Redirect(id: 'english', site: 'en', source: '/first', destination: '/new', order: 9));
+    RedirectFixtures::page('alt');
+
+    RedirectFixtures::rename('alt', 'neu');
+
+    expect($redirects->findBySource('de', '/alt')?->order())->toBe(5);
 });
 
 it('creates no redirect for :dataset', function (Closure $save): void {

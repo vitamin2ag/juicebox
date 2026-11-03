@@ -185,3 +185,22 @@ it('finds no :dataset redirect by source', function (Redirect $redirect): void {
     'regex' => fn (): Redirect => new Redirect(id: 'regex', site: 'de', source: '/alt', destination: '/neu', matchType: 'regex'),
     'sourceless' => fn (): Redirect => new Redirect(id: 'none', site: 'de', destination: '/neu'),
 ]);
+
+it('numbers the next redirect of a site behind the highest order', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'one', site: 'de', source: '/eins', destination: '/neu', order: 2));
+    $redirects->save(new Redirect(id: 'two', site: 'de', source: '/zwei', destination: '/neu', order: 7));
+    $redirects->save(new Redirect(id: 'unordered', site: 'de', source: '/drei', destination: '/neu'));
+    $redirects->save(new Redirect(id: 'other', site: 'en', source: '/four', destination: '/new', order: 40));
+
+    expect($redirects->nextOrder('de'))->toBe(8)
+        ->and($redirects->nextOrder('en'))->toBe(41);
+});
+
+it('numbers the next redirect from 1 while no redirect of the site has an order', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'unordered', site: 'de', source: '/alt', destination: '/neu'));
+
+    expect($redirects->nextOrder('de'))->toBe(1)
+        ->and($redirects->nextOrder('fr'))->toBe(1);
+});

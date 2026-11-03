@@ -119,6 +119,7 @@ it('stores a redirect in the selected site in the format of rias', function (): 
         type: 301
         match_type: exact
         description: 'Alte Seite'
+        order: 1
 
         YAML);
 });
