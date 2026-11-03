@@ -53,6 +53,15 @@ it('redirects to the url of an entry', function (): void {
     get('/alt')->assertRedirect('/kontakt');
 });
 
+it('finds a redirect whose source is not percent-encoded', function (string $source, string $url): void {
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'one', site: 'de', source: $source, destination: '/neu'));
+
+    get($url)->assertRedirect('/neu');
+})->with([
+    'an umlaut' => ['/über-uns', '/%C3%BCber-uns'],
+    'a space' => ['/a b', '/a%20b'],
+]);
+
 it('keeps the 404 for :dataset', function (Redirect $redirect): void {
     resolve(RedirectRepository::class)->save($redirect);
 

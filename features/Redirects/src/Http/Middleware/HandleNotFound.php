@@ -34,7 +34,14 @@ class HandleNotFound
         $site = Sites::findByUrl($url) ?? Sites::default();
 
         // rias compared the full path on sites with an absolute URL, so their sources may carry the site prefix.
-        $redirect = $this->redirects->findByUrl($site->handle(), $site->relativePath($url), $request->getRequestUri());
+        // The request is percent-encoded, while a source is typed or imported as it reads.
+        $redirect = $this->redirects->findByUrl(
+            $site->handle(),
+            $site->relativePath($url),
+            $request->getRequestUri(),
+            rawurldecode($site->relativePath($url)),
+            rawurldecode($request->getRequestUri()),
+        );
 
         if (! $redirect instanceof Redirect) {
             return $response;
