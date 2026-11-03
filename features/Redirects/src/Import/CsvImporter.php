@@ -16,10 +16,11 @@ class CsvImporter
     public function __construct(private readonly RedirectRepository $redirects) {}
 
     /**
-     * Reads the columns of the rias/statamic-redirect import. A row replaces the redirect with
-     * its source and site, keeping its id and order, and a row without source, type or match
-     * type, without destination unless its type is 410, or with a regex source that does not
-     * compile, is skipped.
+     * Reads the columns of the rias/statamic-redirect import. A row replaces the redirect with its
+     * source and site, keeping its id and order.
+     *
+     * A row is skipped when it has no source, type or match type, when it has no destination and its
+     * type is not 410, or when its regex source does not compile.
      */
     public function import(string $path, string $delimiter = ','): ImportResult
     {

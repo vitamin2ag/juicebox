@@ -134,7 +134,7 @@ it('switches itself off while rias/statamic-redirect is installed', function ():
     Stache::stores()->forget('redirects');
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
-    new ReflectionMethod(ServiceProvider::class, 'bootFeature')->invoke(new ServiceProvider(app()));
+    new ServiceProvider(app())->boot();
 
     expect(config('juicebox.redirects.enabled'))->toBeFalse()
         ->and(Stache::stores()->has('redirects'))->toBeFalse()
@@ -149,6 +149,7 @@ it('lets the cache unserialize redirects', function (): void {
 it('adds redirects to what the cache unserializes when :dataset', function (mixed $configured, mixed $expected): void {
     config(['cache.serializable_classes' => $configured]);
 
+    // boot() would register everything again, including the navigation that this file mocks.
     new ReflectionMethod(ServiceProvider::class, 'registerSerializableClasses')->invoke(new ServiceProvider(app()));
 
     expect(config('cache.serializable_classes'))->toBe($expected);
