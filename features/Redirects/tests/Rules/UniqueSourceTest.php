@@ -40,3 +40,7 @@ it('words its rejection in the language of the application', function (): void {
 
     expect($validator->errors()->get('source'))->toBe(['Für diese Quelle gibt es bereits eine Weiterleitung.']);
 });
+
+it('rejects a source that only differs in its slashes', function (string $source): void {
+    expect(sourceIsUnique($source, new Redirect(id: 'new', site: 'de')))->toBeFalse();
+})->with(['a trailing slash' => '/alt/', 'no leading slash' => 'alt']);

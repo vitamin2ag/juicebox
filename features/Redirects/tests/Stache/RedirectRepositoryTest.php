@@ -36,11 +36,6 @@ it('finds nothing for an unknown id', function (): void {
     expect(resolve(RedirectRepository::class)->find('unknown'))->toBeNull();
 });
 
-it('lists the redirects of one site', function (): void {
-    expect(RedirectFixtures::ids(resolve(RedirectRepository::class)->whereSite('en')))
-        ->toBe(['5da06fa7-6162-4053-8fa6-8e7ae1bc2d06']);
-});
-
 it('deletes the disabled redirects of every site and counts them', function (): void {
     $redirects = resolve(RedirectRepository::class);
 

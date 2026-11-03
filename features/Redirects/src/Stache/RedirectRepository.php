@@ -30,16 +30,6 @@ class RedirectRepository
     }
 
     /**
-     * @return Collection<int, Redirect>
-     */
-    public function whereSite(string $site): Collection
-    {
-        return $this->all()
-            ->filter(fn (Redirect $redirect): bool => $redirect->site() === $site)
-            ->values();
-    }
-
-    /**
      * Deletes the disabled redirects of every site and returns how many it deleted.
      */
     public function deleteDisabled(): int

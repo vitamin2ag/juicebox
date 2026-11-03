@@ -27,8 +27,12 @@ class UniqueSource implements ValidationRule
     #[Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $taken = $this->redirects->whereSite($this->redirect->site())
-            ->contains(fn (Redirect $other): bool => $other->source() === $value && $other->id() !== $this->redirect->id());
+        $source = is_string($value) ? Redirect::normalise($value) : null;
+
+        $taken = $this->redirects->listing($this->redirect->site())
+            ->contains(fn (array $row): bool => is_string($row['source'] ?? null)
+                && Redirect::normalise($row['source']) === $source
+                && ($row['id'] ?? null) !== $this->redirect->id());
 
         if ($taken) {
             $fail('This source already has a redirect.')->translate();
