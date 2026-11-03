@@ -13,7 +13,7 @@ type: 301
 match_type: exact
 ```
 
-`description` is written when it is set. A new redirect, made in the control panel, by a CSV import or for a changed entry URI, gets the next `order` of its site, so it is tried after the others; a redirect that comes from rias without an `order` is tried before the numbered ones.
+A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A new redirect, made in the control panel, by a CSV import or for a changed entry URI, gets the next `order` of its site, so it is tried after the others; a redirect that comes from rias without an `order` is tried before the numbered ones.
 
 ## Matching
 

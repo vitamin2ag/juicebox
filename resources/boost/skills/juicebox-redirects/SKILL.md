@@ -11,7 +11,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to change, dis
 
 ## How it works
 
-- Redirects are YAML files in `content/redirects/<site>/<id>.yaml` with the keys `id`, `enabled`, `source`, `destination`, `type`, `match_type`, `description` and `order`; the site is the folder name.
+- Redirects are YAML files in `content/redirects/<site>/<id>.yaml` with the keys `id`, `enabled`, `source`, `destination`, `type`, `match_type`, `description` and `order`, left out when empty (a 410 has no `destination`); the site is the folder name.
 - Files written by `rias/statamic-redirect` work as they are; saving one rewrites it with the keys above.
 - While `rias/statamic-redirect` is installed, the feature switches itself off, as if `enabled` were `false`. Remove rias to switch it on; do not run both.
 - A disabled feature handles no 404s, creates no entry redirects and adds nothing to the control panel; its commands stop with an error.
