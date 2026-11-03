@@ -57,9 +57,13 @@ class DeleteRedirects extends RedirectAction
             ->whereInstanceOf(Redirect::class)
             ->each($this->redirects()->delete(...));
 
+        $ids = $redirects
+            ->map(fn (Redirect $redirect): string => $redirect->id())
+            ->values();
+
         return [
             'message' => trans_choice('Item deleted|Items deleted', $redirects->count()),
-            'callback' => ['removeFromSelections', $redirects->map(fn (Redirect $redirect): string => $redirect->id())->values()],
+            'callback' => ['removeFromSelections', $ids],
         ];
     }
 

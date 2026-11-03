@@ -77,7 +77,11 @@ class RedirectController extends CpController
         $this->authorize('create redirects');
 
         $site = $this->site();
-        $redirect = $this->save(new Redirect(id: Str::uuid()->toString(), site: $site, order: $this->redirects->nextOrder($site)));
+        $redirect = $this->save(new Redirect(
+            id: Str::uuid()->toString(),
+            site: $site,
+            order: $this->redirects->nextOrder($site),
+        ));
 
         return ['redirect' => cp_route('redirects.edit', $redirect->id())];
     }
@@ -165,7 +169,8 @@ class RedirectController extends CpController
             });
         }
 
-        $badges = $this->queryFilters($query, Collection::wrap($request->input('filters'))->all(), []);
+        $filters = Collection::wrap($request->input('filters'))->all();
+        $badges = $this->queryFilters($query, $filters, []);
 
         $query->orderBy(is_string($sort) ? $sort : 'source', $request->query('order') === 'desc' ? 'desc' : 'asc');
 

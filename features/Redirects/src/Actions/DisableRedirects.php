@@ -40,7 +40,11 @@ class DisableRedirects extends RedirectAction
     {
         $redirects = $this->redirectsOf($items);
 
-        $redirects->each(fn (Redirect $redirect) => $this->redirects()->save($redirect->withEnabled(false)));
+        $repository = $this->redirects();
+
+        $redirects->each(
+            fn (Redirect $redirect) => $repository->save($redirect->withEnabled(false)),
+        );
 
         return trans_choice('Redirect disabled|Redirects disabled', $redirects->count());
     }

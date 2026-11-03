@@ -56,7 +56,8 @@ class CsvImporter
         $file->setCsvControl($delimiter, escape: '');
 
         $lines = Collection::make($file)->map(
-            fn (mixed $line): Collection => Collection::wrap($line)->filter(fn (mixed $cell): bool => is_string($cell)),
+            fn (mixed $line): Collection => Collection::wrap($line)
+                ->filter(fn (mixed $cell): bool => is_string($cell)),
         );
 
         // Excel starts a UTF-8 file with a byte order mark, which the reader of rias drops.

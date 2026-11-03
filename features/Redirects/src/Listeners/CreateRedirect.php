@@ -78,9 +78,22 @@ class CreateRedirect
         $stored = $this->redirects->findBySource($site, $oldUri);
 
         if (! $stored instanceof Redirect) {
-            $this->redirects->save(new Redirect(id: Str::uuid()->toString(), site: $site, source: $oldUri, destination: $uri, order: $this->redirects->nextOrder($site)));
+            $this->redirects->save(new Redirect(
+                id: Str::uuid()->toString(),
+                site: $site,
+                source: $oldUri,
+                destination: $uri,
+                order: $this->redirects->nextOrder($site),
+            ));
         } elseif (! $stored->enabled()) {
-            $this->redirects->save($stored->withValues($stored->source(), $uri, 301, $stored->matchType(), true, $stored->description()));
+            $this->redirects->save($stored->withValues(
+                $stored->source(),
+                $uri,
+                301,
+                $stored->matchType(),
+                true,
+                $stored->description(),
+            ));
         }
     }
 

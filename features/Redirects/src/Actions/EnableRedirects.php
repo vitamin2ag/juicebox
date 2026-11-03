@@ -40,7 +40,11 @@ class EnableRedirects extends RedirectAction
     {
         $redirects = $this->redirectsOf($items);
 
-        $redirects->each(fn (Redirect $redirect) => $this->redirects()->save($redirect->withEnabled(true)));
+        $repository = $this->redirects();
+
+        $redirects->each(
+            fn (Redirect $redirect) => $repository->save($redirect->withEnabled(true)),
+        );
 
         return trans_choice('Redirect enabled|Redirects enabled', $redirects->count());
     }

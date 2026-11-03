@@ -18,8 +18,10 @@ class RedirectActionController extends ActionController
     #[Override]
     protected function getSelectedItems(mixed $items, mixed $context): Collection
     {
+        $repository = resolve(RedirectRepository::class);
+
         $redirects = Collection::wrap($items)
-            ->map(fn (mixed $id): mixed => is_string($id) ? resolve(RedirectRepository::class)->find($id) : null)
+            ->map(fn (mixed $id): mixed => is_string($id) ? $repository->find($id) : null)
             ->whereInstanceOf(Redirect::class)
             ->values();
 

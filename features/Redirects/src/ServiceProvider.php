@@ -26,7 +26,11 @@ class ServiceProvider extends FeatureServiceProvider
     {
         parent::register();
 
-        $this->app->singleton(RedirectStore::class, fn (): RedirectStore => new RedirectStore()->directory(base_path(config()->string('juicebox.redirects.store'))));
+        $this->app->singleton(
+            RedirectStore::class,
+            fn (): RedirectStore => new RedirectStore()
+                ->directory(base_path(config()->string('juicebox.redirects.store'))),
+        );
     }
 
     /**

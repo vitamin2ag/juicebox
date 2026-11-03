@@ -95,9 +95,10 @@ class RedirectRepository
     {
         $target = Redirect::normalise($source);
 
-        $row = $this->listing($site)->first(fn (array $row): bool => ($row['match_type'] ?? null) === 'exact'
-            && is_string($row['source'] ?? null)
-            && Redirect::normalise($row['source']) === $target);
+        $row = $this->listing($site)
+            ->first(fn (array $row): bool => ($row['match_type'] ?? null) === 'exact'
+                && is_string($row['source'] ?? null)
+                && Redirect::normalise($row['source']) === $target);
 
         $id = $row['id'] ?? null;
 
