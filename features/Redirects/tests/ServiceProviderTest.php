@@ -8,6 +8,7 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Statamic\Statamic;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
@@ -140,3 +141,20 @@ it('switches itself off while rias/statamic-redirect is installed', function ():
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
         ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
 });
+
+it('lets the cache unserialize redirects', function (): void {
+    expect(config('cache.serializable_classes'))->toContain(Redirect::class);
+});
+
+it('adds redirects to what the cache unserializes when :dataset', function (mixed $configured, mixed $expected): void {
+    config(['cache.serializable_classes' => $configured]);
+
+    new ReflectionMethod(ServiceProvider::class, 'registerSerializableClasses')->invoke(new ServiceProvider(app()));
+
+    expect(config('cache.serializable_classes'))->toBe($expected);
+})->with([
+    'nothing is allowed' => [false, [Redirect::class]],
+    'some classes are allowed' => [[Collection::class], [Collection::class, Redirect::class]],
+    'every class is allowed' => [true, true],
+    'no restriction is set' => [null, null],
+]);

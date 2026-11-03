@@ -31,6 +31,18 @@ abstract class TestCase extends AddonTestCase
         return [FeaturesServiceProvider::class, StatamicFeaturesServiceProvider::class, ...parent::getPackageProviders($app)];
     }
 
+    /**
+     * A Laravel 13 application restricts which classes the cache unserializes, but Testbench allows all of them;
+     * restrict them here too, so a class a feature forgot to allow fails in the tests and not in an application.
+     */
+    #[Override]
+    protected function getEnvironmentSetUp($app): void
+    {
+        parent::getEnvironmentSetUp($app);
+
+        $app['config']->set('cache.serializable_classes', false);
+    }
+
     #[Override]
     protected function setUp(): void
     {

@@ -11,6 +11,7 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\FeatureServiceProvider;
@@ -42,6 +43,7 @@ class ServiceProvider extends FeatureServiceProvider
         }
 
         Stache::registerStore($this->app->make(RedirectStore::class));
+        $this->registerSerializableClasses();
         Permission::extend($this->registerPermissions(...));
         Nav::extend($this->registerNavigation(...));
 
@@ -73,6 +75,22 @@ class ServiceProvider extends FeatureServiceProvider
                 ]),
             ]);
         });
+    }
+
+    /**
+     * The Stache caches every redirect as a serialized object, which Laravel only unserializes when
+     * cache.serializable_classes lists its class. Statamic's AddonServiceProvider does the same for
+     * an addon, but a feature cannot call it.
+     */
+    private function registerSerializableClasses(): void
+    {
+        $existing = config('cache.serializable_classes');
+
+        if ($existing === null || $existing === true) {
+            return;
+        }
+
+        config(['cache.serializable_classes' => [...(is_array($existing) ? $existing : []), Redirect::class]]);
     }
 
     private function registerNavigation(Navigation $nav): void
