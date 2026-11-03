@@ -8,7 +8,6 @@
     "CSV file": "CSV-Datei",
     "Delete disabled redirects": "Deaktivierte Weiterleitungen löschen",
     "Delete Redirects": "Weiterleitungen löschen",
-    "Deleted :count disabled redirect.|Deleted :count disabled redirects.": ":count deaktivierte Weiterleitung gelöscht.|:count deaktivierte Weiterleitungen gelöscht.",
     "Delimiter": "Trennzeichen",
     "Description": "Beschreibung",
     "Destination": "Ziel",
@@ -29,7 +28,6 @@
     "Import the redirects of a CSV file.": "Weiterleitungen aus einer CSV-Datei importieren.",
     "Imported :count redirect|Imported :count redirects": ":count Weiterleitung importiert|:count Weiterleitungen importiert",
     "Match type": "Abgleichstyp",
-    "No disabled redirects to delete.": "Keine deaktivierten Weiterleitungen zu löschen.",
     "One character, usually `,` or `;`.": "Ein Zeichen, meist `,` oder `;`.",
     "Only regex redirects are listed, in the order they are tried. The first match wins.": "Nur Regex-Weiterleitungen werden angezeigt, in der Reihenfolge, in der sie geprüft werden. Der erste Treffer gewinnt.",
     "Permanent (301)": "Permanent (301)",
@@ -50,5 +48,6 @@
     "This deletes the disabled redirects of every site.": "Dies löscht die deaktivierten Weiterleitungen aller Sites.",
     "This source already has a redirect.": "Für diese Quelle gibt es bereits eine Weiterleitung.",
     "This source is not a valid regex.": "Diese Quelle ist kein gültiger regulärer Ausdruck.",
-    "View Redirects": "Weiterleitungen ansehen"
+    "View Redirects": "Weiterleitungen ansehen",
+    "{0} No disabled redirects to delete.|{1} Deleted :count disabled redirect.|[2,*] Deleted :count disabled redirects.": "{0} Keine deaktivierten Weiterleitungen zu löschen.|{1} :count deaktivierte Weiterleitung gelöscht.|[2,*] :count deaktivierte Weiterleitungen gelöscht."
 }

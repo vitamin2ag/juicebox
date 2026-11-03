@@ -69,14 +69,14 @@ it('deletes the redirects and removes them from the selection', function (): voi
 it('enables the redirects', function (): void {
     $message = new EnableRedirects()->run(storedRedirects(), []);
 
-    expect(resolve(RedirectRepository::class)->whereEnabled(false))->toBeEmpty()
+    expect(resolve(RedirectRepository::class)->all()->reject(fn (Redirect $redirect): bool => $redirect->enabled()))->toBeEmpty()
         ->and($message)->toBe('Redirects enabled');
 });
 
 it('disables the redirects', function (): void {
     $message = new DisableRedirects()->run(storedRedirects(), []);
 
-    expect(resolve(RedirectRepository::class)->whereEnabled(true))->toBeEmpty()
+    expect(resolve(RedirectRepository::class)->all()->filter(fn (Redirect $redirect): bool => $redirect->enabled()))->toBeEmpty()
         ->and($message)->toBe('Redirects disabled');
 });
 

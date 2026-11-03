@@ -51,11 +51,13 @@ it('lists the redirects of one site', function (): void {
         ->toBe(['5da06fa7-6162-4053-8fa6-8e7ae1bc2d06']);
 });
 
-it('lists the redirects by whether they are enabled', function (): void {
+it('deletes the disabled redirects of every site and counts them', function (): void {
     $redirects = resolve(RedirectRepository::class);
 
-    expect(redirectIds($redirects->whereEnabled(false)))->toBe(['5da06fa7-6162-4053-8fa6-8e7ae1bc2d06', 'broken', 'empty'])
-        ->and(redirectIds($redirects->whereEnabled(true)))->toHaveCount(5);
+    expect($redirects->deleteDisabled())->toBe(3)
+        ->and(redirectIds($redirects->all()))->toHaveCount(5)
+        ->and($redirects->all()->every(fn (Redirect $redirect): bool => $redirect->enabled()))->toBeTrue()
+        ->and($redirects->deleteDisabled())->toBe(0);
 });
 
 it('saves a redirect into its site folder', function (): void {

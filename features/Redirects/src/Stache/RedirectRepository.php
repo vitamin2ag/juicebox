@@ -34,11 +34,14 @@ class RedirectRepository
     }
 
     /**
-     * @return Collection<int, Redirect>
+     * Deletes the disabled redirects of every site and returns how many it deleted.
      */
-    public function whereEnabled(bool $enabled): Collection
+    public function deleteDisabled(): int
     {
-        return $this->all()->filter(fn (Redirect $redirect): bool => $redirect->enabled() === $enabled)->values();
+        $disabled = $this->all()->reject(fn (Redirect $redirect): bool => $redirect->enabled());
+        $disabled->each($this->delete(...));
+
+        return $disabled->count();
     }
 
     /**

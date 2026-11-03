@@ -21,12 +21,10 @@ class PruneDisabledRedirects extends Command
             return self::FAILURE;
         }
 
-        $disabled = $redirects->whereEnabled(false);
-        $disabled->each($redirects->delete(...));
-
-        $this->info($disabled->isEmpty()
-            ? __('No disabled redirects to delete.')
-            : trans_choice('Deleted :count disabled redirect.|Deleted :count disabled redirects.', $disabled->count()));
+        $this->info(trans_choice(
+            '{0} No disabled redirects to delete.|{1} Deleted :count disabled redirect.|[2,*] Deleted :count disabled redirects.',
+            $redirects->deleteDisabled(),
+        ));
 
         return self::SUCCESS;
     }

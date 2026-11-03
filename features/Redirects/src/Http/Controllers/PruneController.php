@@ -14,11 +14,9 @@ class PruneController extends CpController
     {
         $this->authorize('delete redirects');
 
-        $disabled = $redirects->whereEnabled(false);
-        $disabled->each($redirects->delete(...));
-
-        return redirect()->action([RedirectController::class, 'index'])->with('success', $disabled->isEmpty()
-            ? __('No disabled redirects to delete.')
-            : trans_choice('Deleted :count disabled redirect.|Deleted :count disabled redirects.', $disabled->count()));
+        return redirect()->action([RedirectController::class, 'index'])->with('success', trans_choice(
+            '{0} No disabled redirects to delete.|{1} Deleted :count disabled redirect.|[2,*] Deleted :count disabled redirects.',
+            $redirects->deleteDisabled(),
+        ));
     }
 }
