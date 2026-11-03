@@ -113,23 +113,28 @@ class RedirectRepository
      */
     private function findRegex(string $site, array $urls): ?Redirect
     {
-        $urls = array_map(Redirect::normalise(...), $urls);
+        $urls = collect($urls)->map(Redirect::normalise(...));
 
-        foreach ($this->indexed(Redirect::regexKey($site)) as $redirect) {
-            $pattern = Redirect::pattern($redirect->source());
+        return $this->indexed(Redirect::regexKey($site))
+            ->lazy()
+            ->map(fn (Redirect $redirect): ?Redirect => $this->matchRegex($redirect, $urls))
+            ->first(fn (?Redirect $match): bool => $match instanceof Redirect);
+    }
 
-            if ($pattern === null) {
-                continue;
-            }
+    /**
+     * @param  Collection<int, string>  $urls
+     */
+    private function matchRegex(Redirect $redirect, Collection $urls): ?Redirect
+    {
+        $pattern = Redirect::pattern($redirect->source());
 
-            foreach ($urls as $url) {
-                if (preg_match($pattern, $url) === 1) {
-                    return $this->withCaptures($redirect, $pattern, $url);
-                }
-            }
+        if ($pattern === null) {
+            return null;
         }
 
-        return null;
+        $url = $urls->first(fn (string $url): bool => preg_match($pattern, $url) === 1);
+
+        return $url === null ? null : $this->withCaptures($redirect, $pattern, $url);
     }
 
     /**
