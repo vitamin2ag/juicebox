@@ -50,6 +50,7 @@ class RedirectController extends CpController
             'createUrl' => cp_route('redirects.create'),
             'importUrl' => cp_route('redirects.import'),
             'pruneUrl' => cp_route('redirects.prune'),
+            'actionUrl' => cp_route('redirects.actions.run'),
         ]);
     }
 

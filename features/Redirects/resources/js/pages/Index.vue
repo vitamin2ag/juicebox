@@ -19,6 +19,7 @@ const props = defineProps({
     createUrl: { type: String, required: true },
     importUrl: { type: String, required: true },
     pruneUrl: { type: String, required: true },
+    actionUrl: { type: String, required: true },
 });
 
 const columns = [
@@ -72,7 +73,15 @@ function prune() {
             />
         </EmptyStateMenu>
 
-        <Listing v-else :items="redirects" :columns="columns" :allow-customizing-columns="false" @refreshing="router.reload()">
+        <Listing
+            v-else
+            :items="redirects"
+            :columns="columns"
+            :allow-customizing-columns="false"
+            :allow-bulk-actions="can('edit redirects') || can('delete redirects')"
+            :action-url="actionUrl"
+            @refreshing="router.reload()"
+        >
             <template #cell-source="{ row: redirect }">
                 <Link v-if="can('edit redirects')" :href="redirect.edit_url" class="title-index-field">
                     <StatusIndicator :status="redirect.enabled ? 'published' : 'hidden'" />

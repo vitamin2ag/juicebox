@@ -53,6 +53,7 @@ Changing the slug of a parent in a structure changes the URIs of its children wi
 - `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, as in rias, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
+- Select rows in the list to delete, enable or disable several redirects at once, as for entries.
 - The form is Statamic's publish form. The list and the import are Vue pages, built into `features/Redirects/resources/dist` and published to `public/vendor/redirects/dist`. `statamic:install`, which a Statamic site runs after `composer update`, publishes them; to publish them by hand, run `php artisan vendor:publish --tag=redirects --force`.
 - To change the pages, edit `features/Redirects/resources/js`, run `nvm use && npm ci && npm run build` in `features/Redirects` and commit `resources/dist`.
 
@@ -63,9 +64,9 @@ The permissions have the names of `rias/statamic-redirect`, so roles that have t
 | Permission | Allows |
 |---|---|
 | `view redirects` | The list and the navigation item. |
-| `edit redirects` | Editing a redirect. |
+| `edit redirects` | Editing a redirect and enabling or disabling redirects in bulk. |
 | `create redirects` | Creating redirects and importing a CSV file. |
-| `delete redirects` | Deleting a redirect and deleting the disabled redirects. |
+| `delete redirects` | Deleting a redirect or a selection of redirects, and deleting the disabled redirects. |
 
 `create redirects` and `delete redirects` sit under `edit redirects`, and that under `view redirects`, so the role editor grants a child only together with its parent.
 
