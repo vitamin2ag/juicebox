@@ -109,6 +109,31 @@ it('only finds the enabled redirects of the site', function (): void {
         ->and($redirects->findByUrl('en', '/alt')?->id())->toBe('english');
 });
 
+it('keeps the lookup in step with saved, disabled, moved and deleted redirects', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirect = new Redirect(id: 'synced', site: 'de', source: '/synced', destination: '/neu');
+    $found = fn (string $url): ?string => $redirects->findByUrl('de', $url)?->id();
+
+    expect($found('/synced'))->toBeNull();
+
+    $redirects->save($redirect);
+    expect($found('/synced'))->toBe('synced');
+
+    $redirects->save($redirect->withEnabled(false));
+    expect($found('/synced'))->toBeNull();
+
+    $redirects->save($redirect->withValues('/moved', '/neu', 301, 'exact', true, null));
+    expect($found('/synced'))->toBeNull()
+        ->and($found('/moved'))->toBe('synced');
+
+    $redirects->save($redirect->withValues('/moved/(.*)', '/neu', 301, 'regex', true, null));
+    expect($found('/moved'))->toBeNull()
+        ->and($found('/moved/page'))->toBe('synced');
+
+    $redirects->delete($redirect);
+    expect($found('/moved/page'))->toBeNull();
+});
+
 it('never matches :dataset redirect without a source', function (string $matchType): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'sourceless', site: 'de', matchType: $matchType));

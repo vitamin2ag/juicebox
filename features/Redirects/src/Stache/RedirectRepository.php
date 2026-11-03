@@ -6,6 +6,7 @@ namespace Vitamin2\Juicebox\Features\Redirects\Stache;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Statamic\Stache\Indexes\Index;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 class RedirectRepository
@@ -48,11 +49,7 @@ class RedirectRepository
      */
     public function findByUrl(string $site, string ...$urls): ?Redirect
     {
-        $redirects = $this->whereSite($site)
-            ->filter(fn (Redirect $redirect): bool => $redirect->enabled())
-            ->sortBy(fn (Redirect $redirect): ?int => $redirect->order());
-
-        return $this->findExact($redirects, $urls) ?? $this->findRegex($redirects, $urls);
+        return $this->findExact($site, $urls) ?? $this->findRegex($site, $urls);
     }
 
     /**
@@ -73,14 +70,14 @@ class RedirectRepository
     {
         return $this->whereSite($site)->first(fn (Redirect $redirect): bool => $redirect->matchType() === 'exact'
             && $redirect->source() !== null
-            && $this->normalise($redirect->source()) === $this->normalise($source));
+            && Redirect::normalise($redirect->source()) === Redirect::normalise($source));
     }
 
     /**
-     * The pattern a regex source matches with, or null when it does not compile. Grepping
-     * no subjects only compiles the pattern.
+     * The pattern a regex source matches with, or null when it does not compile, as an empty
+     * source does not. Grepping no subjects only compiles the pattern.
      */
-    public function pattern(string $source): ?string
+    public function pattern(?string $source): ?string
     {
         $pattern = "`{$source}`i";
 
@@ -98,31 +95,23 @@ class RedirectRepository
     }
 
     /**
-     * @param  Collection<int, Redirect>  $redirects
      * @param  array<string>  $urls
      */
-    private function findExact(Collection $redirects, array $urls): ?Redirect
+    private function findExact(string $site, array $urls): ?Redirect
     {
-        $candidates = collect($urls)->flatMap(fn (string $url): array => [$this->normalise($url), $this->normalise(Str::before($url, '?'))]);
+        $keys = collect($urls)->flatMap(fn (string $url): array => [Redirect::exactKey($site, $url), Redirect::exactKey($site, Str::before($url, '?'))]);
 
-        return $redirects->first(fn (Redirect $redirect): bool => $redirect->matchType() === 'exact'
-            && $redirect->source() !== null
-            && $candidates->containsStrict($this->normalise($redirect->source())));
+        return $this->indexed(...$keys)->first();
     }
 
     /**
-     * @param  Collection<int, Redirect>  $redirects
      * @param  array<string>  $urls
      */
-    private function findRegex(Collection $redirects, array $urls): ?Redirect
+    private function findRegex(string $site, array $urls): ?Redirect
     {
-        $urls = array_map($this->normalise(...), $urls);
+        $urls = array_map(Redirect::normalise(...), $urls);
 
-        foreach ($redirects as $redirect) {
-            if ($redirect->matchType() !== 'regex' || $redirect->source() === null) {
-                continue;
-            }
-
+        foreach ($this->indexed(Redirect::regexKey($site)) as $redirect) {
             $pattern = $this->pattern($redirect->source());
 
             if ($pattern === null) {
@@ -139,6 +128,24 @@ class RedirectRepository
         return null;
     }
 
+    /**
+     * The enabled redirects whose lookup key matches, lowest order first.
+     *
+     * @return Collection<int, Redirect>
+     */
+    private function indexed(string ...$keys): Collection
+    {
+        $index = Collection::wrap($this->store->index(RedirectStore::LOOKUP_INDEX))->whereInstanceOf(Index::class)->firstOrFail();
+
+        return Collection::wrap($index->items())
+            ->filter(fn (mixed $key): bool => in_array($key, $keys, true))
+            ->keys()
+            ->map(fn (mixed $id): ?Redirect => is_string($id) ? $this->find($id) : null)
+            ->filter()
+            ->sortBy(fn (Redirect $redirect): ?int => $redirect->order())
+            ->values();
+    }
+
     private function withCaptures(Redirect $redirect, string $pattern, string $url): Redirect
     {
         $destination = $redirect->destination();
@@ -148,13 +155,5 @@ class RedirectRepository
         }
 
         return $redirect->withDestination(preg_replace($pattern, $destination, $url));
-    }
-
-    /**
-     * Drops the slashes before the query string and at the end, and starts the URL with one.
-     */
-    private function normalise(string $url): string
-    {
-        return Str::of($url)->replaceMatches('#/+(?=\?|$)#', '')->start('/')->value();
     }
 }

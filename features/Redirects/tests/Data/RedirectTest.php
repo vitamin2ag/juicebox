@@ -129,3 +129,27 @@ it('deletes the file it was read from when :dataset', function (string $file): v
     'it is named by its id' => 'de/0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01.yaml',
     'rias put the order in front of its id' => 'en/2_5da06fa7-6162-4053-8fa6-8e7ae1bc2d06.yaml',
 ]);
+
+it('looks up an enabled redirect by its site and normalised source, or by its site for a regex', function (string $matchType, string $expected): void {
+    expect(new Redirect(id: 'one', site: 'en', source: '/old/', matchType: $matchType)->lookupKey())->toBe($expected);
+})->with([
+    'exact' => ['exact', 'en|exact|/old'],
+    'regex' => ['regex', 'en|regex'],
+]);
+
+it('has no lookup key when it can not match', function (Redirect $redirect): void {
+    expect($redirect->lookupKey())->toBeNull();
+})->with([
+    'disabled' => fn (): Redirect => new Redirect(id: 'one', site: 'en', source: '/old', enabled: false),
+    'without source' => fn (): Redirect => new Redirect(id: 'one', site: 'en'),
+    'another match type' => fn (): Redirect => new Redirect(id: 'one', site: 'en', source: '/old', matchType: 'other'),
+]);
+
+it('normalises a URL', function (string $url, string $expected): void {
+    expect(Redirect::normalise($url))->toBe($expected);
+})->with([
+    'adds the leading slash' => ['old', '/old'],
+    'drops the trailing slashes' => ['/old//', '/old'],
+    'drops the slashes before the query string' => ['/old/?a=1', '/old?a=1'],
+    'keeps the slashes inside' => ['/a//b', '/a//b'],
+]);

@@ -12,6 +12,8 @@ use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 class RedirectStore extends BasicStore
 {
+    public const string LOOKUP_INDEX = 'lookup_key';
+
     #[Override]
     public function key(): string
     {

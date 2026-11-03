@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Redirects\Data;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Statamic\Data\ExistsAsFile;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
@@ -67,6 +68,41 @@ class Redirect
     public function order(): ?int
     {
         return $this->order;
+    }
+
+    /**
+     * The key of the `lookup_key` Stache index (Statamic finds it by this method name), which is
+     * null for a redirect that can not match, so a 404 reads one index instead of every redirect.
+     */
+    public function lookupKey(): ?string
+    {
+        if (! $this->enabled || $this->source === null) {
+            return null;
+        }
+
+        return match ($this->matchType) {
+            'exact' => self::exactKey($this->site, $this->source),
+            'regex' => self::regexKey($this->site),
+            default => null,
+        };
+    }
+
+    public static function exactKey(string $site, string $url): string
+    {
+        return "{$site}|exact|".self::normalise($url);
+    }
+
+    public static function regexKey(string $site): string
+    {
+        return "{$site}|regex";
+    }
+
+    /**
+     * Drops the slashes before the query string and at the end, and starts the URL with one.
+     */
+    public static function normalise(string $url): string
+    {
+        return Str::of($url)->replaceMatches('#/+(?=\?|$)#', '')->start('/')->value();
     }
 
     public function withDestination(?string $destination): self
