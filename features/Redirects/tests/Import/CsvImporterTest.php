@@ -8,6 +8,7 @@ use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Import\CsvImporter;
 use Vitamin2\Juicebox\Features\Redirects\Import\ImportResult;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
+use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(CsvImporter::class, ImportResult::class);
@@ -55,6 +56,16 @@ it('imports the rows of a CSV file', function (): void {
             'en/kampagne/(.*)' => ['enabled' => false, 'source' => '/kampagne/(.*)', 'destination' => '/aktion/$1', 'type' => 302, 'match_type' => 'regex', 'description' => null, 'order' => 1],
         ])
         ->and(collect(importedIds())->every(fn (string $id): bool => Str::isUuid($id)))->toBeTrue();
+});
+
+it('asks the repository for the next order once per site', function (): void {
+    $repository = Mockery::mock(RedirectRepository::class, [resolve(RedirectStore::class)])->makePartial();
+    $repository->shouldReceive('nextOrder')->twice()->passthru();
+    $this->instance(RedirectRepository::class, $repository);
+
+    resolve(CsvImporter::class)->import(RedirectFixtures::csv('redirects.csv'));
+
+    expect(importedRedirects())->toHaveCount(4);
 });
 
 it('overwrites the redirect with the source and site of a row', function (): void {

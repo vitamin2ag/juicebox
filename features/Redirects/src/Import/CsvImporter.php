@@ -27,10 +27,11 @@ class CsvImporter
     {
         $rows = $this->rows($path, $delimiter);
         $existing = $this->redirects->all()->keyBy(fn (Redirect $redirect): string => $this->key($redirect->site(), $redirect->source()));
+        $orders = new Collection;
         $imported = 0;
 
         foreach ($rows as $row) {
-            $redirect = $this->redirect($row, $existing);
+            $redirect = $this->redirect($row, $existing, $orders);
 
             if ($redirect instanceof Redirect) {
                 $this->redirects->save($redirect);
@@ -64,8 +65,9 @@ class CsvImporter
     /**
      * @param  Collection<string, string>  $row
      * @param  Collection<string, Redirect>  $existing
+     * @param  Collection<string, int>  $orders
      */
-    private function redirect(Collection $row, Collection $existing): ?Redirect
+    private function redirect(Collection $row, Collection $existing, Collection $orders): ?Redirect
     {
         $source = $this->value($row, 'source');
         $destination = $this->value($row, 'destination');
@@ -92,7 +94,7 @@ class CsvImporter
             matchType: $matchType,
             enabled: filter_var($row->get('enabled', '1'), FILTER_VALIDATE_BOOL),
             description: $this->value($row, 'description') ?? $replaced?->description(),
-            order: $replaced instanceof Redirect ? $replaced->order() : $this->redirects->nextOrder($site),
+            order: $replaced instanceof Redirect ? $replaced->order() : $this->nextOrder($site, $orders),
         );
     }
 
@@ -104,6 +106,19 @@ class CsvImporter
         $value = $row->get($column, '');
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * Asks the repository once per site, which loads every redirect of it, and counts on from there.
+     *
+     * @param  Collection<string, int>  $orders
+     */
+    private function nextOrder(string $site, Collection $orders): int
+    {
+        $order = $orders->get($site) ?? $this->redirects->nextOrder($site);
+        $orders->put($site, $order + 1);
+
+        return $order;
     }
 
     private function key(string $site, ?string $source): string
