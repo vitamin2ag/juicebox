@@ -37,9 +37,13 @@ class ImportController extends CpController
             'delimiter' => ['required', 'string', 'size:1'],
         ]);
 
-        $file = Collection::wrap($request->file('file'))->whereInstanceOf(UploadedFile::class)->firstOrFail();
+        $file = Collection::wrap($request->file('file'))
+            ->whereInstanceOf(UploadedFile::class)
+            ->firstOrFail();
         $result = $importer->import($file->path(), $request->string('delimiter')->value());
 
-        return redirect()->action([RedirectController::class, 'index'])->with('success', $result->summary());
+        return redirect()
+            ->action([RedirectController::class, 'index'])
+            ->with('success', $result->summary());
     }
 }

@@ -37,6 +37,8 @@ class ReorderController extends CpController
                 }
             });
 
-        return redirect()->action([RedirectController::class, 'index'])->with('success', __('Redirects successfully reordered'));
+        return redirect()
+            ->action([RedirectController::class, 'index'])
+            ->with('success', __('Redirects successfully reordered'));
     }
 }

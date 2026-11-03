@@ -86,7 +86,8 @@ class RedirectController extends CpController
     {
         $this->authorize('edit redirects');
 
-        return $this->form(__('Edit Redirect'), route('statamic.cp.redirects.update', $id), 'PATCH')->values($this->find($id)->fileData());
+        return $this->form(__('Edit Redirect'), route('statamic.cp.redirects.update', $id), 'PATCH')
+            ->values($this->find($id)->fileData());
     }
 
     public function update(string $id): EmptyResponse
@@ -113,7 +114,10 @@ class RedirectController extends CpController
      */
     private function form(string $title, string $submitUrl, string $method): PublishForm
     {
-        return PublishForm::make($this->blueprint())->icon('arrow-up-right')->title($title)->submittingTo($submitUrl, $method);
+        return PublishForm::make($this->blueprint())
+            ->icon('arrow-up-right')
+            ->title($title)
+            ->submittingTo($submitUrl, $method);
     }
 
     private function save(Redirect $redirect): Redirect
@@ -167,7 +171,9 @@ class RedirectController extends CpController
 
         $redirects = $query->paginate(Statamic::cpPerPage($request->query('perPage')));
 
-        return RedirectResource::collection($redirects)->additional(['meta' => ['activeFilterBadges' => $badges, 'columns' => $this->columns()]]);
+        return RedirectResource::collection($redirects)->additional([
+            'meta' => ['activeFilterBadges' => $badges, 'columns' => $this->columns()],
+        ]);
     }
 
     /**

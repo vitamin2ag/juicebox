@@ -25,7 +25,8 @@ class CsvImporter
     public function import(string $path, string $delimiter = ','): ImportResult
     {
         $rows = $this->rows($path, $delimiter);
-        $existing = $this->redirects->all()->keyBy(fn (Redirect $redirect): string => $this->key($redirect->site(), $redirect->source()));
+        $existing = $this->redirects->all()
+            ->keyBy(fn (Redirect $redirect): string => $this->key($redirect->site(), $redirect->source()));
         $orders = new Collection;
         $imported = 0;
 
@@ -53,10 +54,14 @@ class CsvImporter
         $file->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
         $file->setCsvControl($delimiter, escape: '');
 
-        $lines = Collection::make($file)->map(fn (mixed $line): Collection => Collection::wrap($line)->filter(fn (mixed $cell): bool => is_string($cell)));
+        $lines = Collection::make($file)->map(
+            fn (mixed $line): Collection => Collection::wrap($line)->filter(fn (mixed $cell): bool => is_string($cell)),
+        );
 
         // Excel starts a UTF-8 file with a byte order mark, which the reader of rias drops.
-        $columns = ($lines->shift() ?? new Collection)->map(fn (string $column): string => Str::chopStart($column, "\u{FEFF}"))->flip();
+        $columns = ($lines->shift() ?? new Collection)
+            ->map(fn (string $column): string => Str::chopStart($column, "\u{FEFF}"))
+            ->flip();
 
         return $lines->map(fn (Collection $cells): Collection => $columns->map(fn (int $index): string => $cells->get($index, '')));
     }

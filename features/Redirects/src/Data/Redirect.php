@@ -129,7 +129,10 @@ class Redirect
      */
     public static function normalise(string $url): string
     {
-        return Str::of($url)->replaceMatches('#/+(?=\?|$)#', '')->start('/')->value();
+        return Str::of($url)
+            ->replaceMatches('#/+(?=\?|$)#', '')
+            ->start('/')
+            ->value();
     }
 
     public function withDestination(?string $destination): self

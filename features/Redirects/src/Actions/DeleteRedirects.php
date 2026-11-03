@@ -53,7 +53,9 @@ class DeleteRedirects extends RedirectAction
     #[Override]
     public function run(mixed $items, mixed $values): array
     {
-        $redirects = Collection::wrap($items)->whereInstanceOf(Redirect::class)->each($this->redirects()->delete(...));
+        $redirects = Collection::wrap($items)
+            ->whereInstanceOf(Redirect::class)
+            ->each($this->redirects()->delete(...));
 
         return [
             'message' => trans_choice('Item deleted|Items deleted', $redirects->count()),
