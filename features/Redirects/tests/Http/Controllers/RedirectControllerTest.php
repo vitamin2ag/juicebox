@@ -56,7 +56,6 @@ it('lists the redirects of the selected site by source', function (): void {
                     'description' => 'Alt',
                     'order' => 3,
                     'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'a'),
-                    'delete_url' => RedirectFixtures::cpUrl('redirects.destroy', 'a'),
                 ],
                 [
                     'id' => 'b',
@@ -68,7 +67,6 @@ it('lists the redirects of the selected site by source', function (): void {
                     'description' => null,
                     'order' => null,
                     'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'b'),
-                    'delete_url' => RedirectFixtures::cpUrl('redirects.destroy', 'b'),
                 ],
             ])
             ->where('createUrl', RedirectFixtures::cpUrl('redirects.create'))

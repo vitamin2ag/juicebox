@@ -126,8 +126,6 @@ function prune() {
                     <StatusIndicator :status="redirect.enabled ? 'published' : 'hidden'" />
                     <span v-text="redirect.source" />
                 </span>
-
-                <resource-deleter :ref="`deleter_${redirect.id}`" :resource="redirect" :resource-title="redirect.source" reload />
             </template>
             <template #cell-destination="{ value }">
                 <span v-if="value" v-text="value" />
@@ -135,13 +133,6 @@ function prune() {
             </template>
             <template #prepended-row-actions="{ row: redirect }">
                 <DropdownItem v-if="can('edit redirects')" :text="__('Edit')" icon="edit" :href="redirect.edit_url" />
-                <DropdownItem
-                    v-if="can('delete redirects')"
-                    :text="__('Delete')"
-                    icon="trash"
-                    variant="destructive"
-                    @click="$refs[`deleter_${redirect.id}`].confirm()"
-                />
             </template>
         </Listing>
 

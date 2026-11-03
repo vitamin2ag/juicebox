@@ -44,7 +44,6 @@ class RedirectController extends CpController
                 ->map(fn (Redirect $redirect): array => [
                     ...$redirect->fileData(),
                     'edit_url' => cp_route('redirects.edit', $redirect->id()),
-                    'delete_url' => cp_route('redirects.destroy', $redirect->id()),
                 ])
                 ->values(),
             'createUrl' => cp_route('redirects.create'),
