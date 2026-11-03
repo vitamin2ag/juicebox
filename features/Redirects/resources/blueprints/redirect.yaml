@@ -48,7 +48,7 @@ tabs:
               type: textarea
               display: Description
               instructions: 'For internal use only.'
-              validate: 'nullable|string'
+              validate: string
   sidebar:
     display: Sidebar
     sections:
