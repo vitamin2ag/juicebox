@@ -45,14 +45,12 @@ class ServiceProvider extends FeatureServiceProvider
             return;
         }
 
-        Stache::registerStore($this->app->make(RedirectStore::class));
+        $this->registerStore();
         $this->registerSerializableClasses();
         $this->registerFilters();
-        Permission::extend($this->registerPermissions(...));
-        Nav::extend($this->registerNavigation(...));
-
-        // Statamic creates the statamic.web group in a booted callback of its own, which #[BootAfter] does not wait for, and prepending skips a group that does not exist yet.
-        $this->app->booted($this->prependMiddleware(...));
+        $this->registerPermissions();
+        $this->registerNavigation();
+        $this->registerMiddleware();
     }
 
     /**
@@ -64,6 +62,11 @@ class ServiceProvider extends FeatureServiceProvider
     protected function options(): array
     {
         return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+    }
+
+    private function registerStore(): void
+    {
+        Stache::registerStore($this->app->make(RedirectStore::class));
     }
 
     private function registerFilters(): void
@@ -78,13 +81,15 @@ class ServiceProvider extends FeatureServiceProvider
      */
     private function registerPermissions(): void
     {
-        Permission::group('redirects', 'Redirects', function (): void {
-            Permission::register('view redirects')->label('View Redirects')->children([
-                Permission::make('edit redirects')->label('Edit Redirects')->children([
-                    Permission::make('create redirects')->label('Create Redirects'),
-                    Permission::make('delete redirects')->label('Delete Redirects'),
-                ]),
-            ]);
+        Permission::extend(function (): void {
+            Permission::group('redirects', 'Redirects', function (): void {
+                Permission::register('view redirects')->label('View Redirects')->children([
+                    Permission::make('edit redirects')->label('Edit Redirects')->children([
+                        Permission::make('create redirects')->label('Create Redirects'),
+                        Permission::make('delete redirects')->label('Delete Redirects'),
+                    ]),
+                ]);
+            });
         });
     }
 
@@ -104,19 +109,26 @@ class ServiceProvider extends FeatureServiceProvider
         config(['cache.serializable_classes' => [...(is_array($existing) ? $existing : []), Redirect::class]]);
     }
 
-    private function registerNavigation(Navigation $nav): void
+    private function registerNavigation(): void
     {
-        $item = $nav->create('Redirects');
-        $item->section('Tools');
-        $item->route('redirects.index');
-        $item->icon('arrow-up-right');
-        $item->can('view redirects');
+        Nav::extend(function (Navigation $nav): void {
+            $item = $nav->create('Redirects');
+            $item->section('Tools');
+            $item->route('redirects.index');
+            $item->icon('arrow-up-right');
+            $item->can('view redirects');
+        });
     }
 
-    private function prependMiddleware(): void
+    /**
+     * Statamic creates the statamic.web group in a booted callback of its own, which #[BootAfter] does not wait for, and prepending skips a group that does not exist yet.
+     */
+    private function registerMiddleware(): void
     {
-        $router = $this->app->make(Router::class);
-        $router->prependMiddlewareToGroup('web', HandleNotFound::class);
-        $router->prependMiddlewareToGroup('statamic.web', HandleNotFound::class);
+        $this->app->booted(function (): void {
+            $router = $this->app->make(Router::class);
+            $router->prependMiddlewareToGroup('web', HandleNotFound::class);
+            $router->prependMiddlewareToGroup('statamic.web', HandleNotFound::class);
+        });
     }
 }
