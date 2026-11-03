@@ -5,9 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
-use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\ImportController;
-use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(ImportController::class);
@@ -19,18 +17,6 @@ beforeEach(function (): void {
 function uploadedCsv(string $fixture): UploadedFile
 {
     return UploadedFile::fake()->createWithContent('redirects.csv', File::get(RedirectFixtures::csv($fixture)));
-}
-
-/**
- * @return array<int, string>
- */
-function uploadedSources(): array
-{
-    return resolve(RedirectRepository::class)->all()
-        ->map(fn (Redirect $redirect): string => "{$redirect->site()}{$redirect->source()}")
-        ->sort()
-        ->values()
-        ->all();
 }
 
 it('shows the import form', function (): void {
@@ -49,7 +35,7 @@ it('imports an uploaded CSV file and reports the skipped rows', function (): voi
         ->assertRedirect(RedirectFixtures::cpUrl('redirects.index'))
         ->assertSessionHas('success', 'Imported 1 redirect, skipped 5 rows.');
 
-    expect(uploadedSources())->toBe(['de/gueltig']);
+    expect(RedirectFixtures::sources())->toBe(['de/gueltig']);
 });
 
 it('reads the uploaded file with the delimiter it gets', function (): void {
@@ -57,7 +43,7 @@ it('reads the uploaded file with the delimiter it gets', function (): void {
         ->post(RedirectFixtures::cpUrl('redirects.import.store'), ['file' => uploadedCsv('excel.csv'), 'delimiter' => ';'])
         ->assertSessionHas('success', 'Imported 3 redirects, skipped 0 rows.');
 
-    expect(uploadedSources())->toBe(['de/alt', 'default/kurz', 'en/lang']);
+    expect(RedirectFixtures::sources())->toBe(['de/alt', 'default/kurz', 'en/lang']);
 });
 
 it('rejects an upload with :dataset', function (array $data, string $error): void {
@@ -65,7 +51,7 @@ it('rejects an upload with :dataset', function (array $data, string $error): voi
         ->post(RedirectFixtures::cpUrl('redirects.import.store'), $data)
         ->assertSessionHasErrors($error);
 
-    expect(uploadedSources())->toBeEmpty();
+    expect(RedirectFixtures::sources())->toBeEmpty();
 })->with([
     'no file' => fn (): array => [['delimiter' => ','], 'file'],
     'text instead of a file' => fn (): array => [['file' => 'redirects.csv', 'delimiter' => ','], 'file'],
@@ -88,7 +74,7 @@ it('forbids the :dataset without the create redirects permission', function (str
         ->json($method, RedirectFixtures::cpUrl($route), ['file' => uploadedCsv('redirects.csv'), 'delimiter' => ','])
         ->assertForbidden();
 
-    expect(uploadedSources())->toBeEmpty();
+    expect(RedirectFixtures::sources())->toBeEmpty();
 })->with([
     'form' => ['get', 'redirects.import'],
     'import' => ['post', 'redirects.import.store'],

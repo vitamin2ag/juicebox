@@ -14,25 +14,13 @@ beforeEach(function (): void {
     RedirectFixtures::isolate();
 });
 
-/**
- * @return array<int, string>
- */
-function keptRedirects(): array
-{
-    return resolve(RedirectRepository::class)->all()
-        ->map(fn (Redirect $redirect): string => $redirect->id())
-        ->sort()
-        ->values()
-        ->all();
-}
-
 it('deletes the disabled redirects of every site', function (): void {
     RedirectFixtures::copyIntoStore();
 
     Artisan::call('statamic:juicebox:redirects:prune');
 
     expect(Artisan::output())->toBe("Deleted 3 disabled redirects.\n")
-        ->and(keptRedirects())->toBe([
+        ->and(RedirectFixtures::ids())->toBe([
             '0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01',
             '1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02',
             '2a7d3c74-3e3f-4d20-9c73-5b4dbe8f9a03',
@@ -49,7 +37,7 @@ it('deletes one disabled redirect', function (): void {
     Artisan::call('statamic:juicebox:redirects:prune');
 
     expect(Artisan::output())->toBe("Deleted 1 disabled redirect.\n")
-        ->and(keptRedirects())->toBe(['enabled']);
+        ->and(RedirectFixtures::ids())->toBe(['enabled']);
 });
 
 it('deletes nothing while the feature is disabled', function (): void {
@@ -60,7 +48,7 @@ it('deletes nothing while the feature is disabled', function (): void {
 
     expect($status)->toBe(1)
         ->and(Artisan::output())->toBe("Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.\n")
-        ->and(keptRedirects())->toHaveCount(8);
+        ->and(RedirectFixtures::ids())->toHaveCount(8);
 });
 
 it('says so when no redirect is disabled', function (): void {
@@ -69,5 +57,5 @@ it('says so when no redirect is disabled', function (): void {
     Artisan::call('statamic:juicebox:redirects:prune');
 
     expect(Artisan::output())->toBe("No disabled redirects to delete.\n")
-        ->and(keptRedirects())->toBe(['enabled']);
+        ->and(RedirectFixtures::ids())->toBe(['enabled']);
 });

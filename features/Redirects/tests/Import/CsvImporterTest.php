@@ -33,18 +33,6 @@ function importedRedirects(): array
         ->all();
 }
 
-/**
- * @return array<int, string>
- */
-function importedIds(): array
-{
-    return resolve(RedirectRepository::class)->all()
-        ->map(fn (Redirect $redirect): string => $redirect->id())
-        ->sort()
-        ->values()
-        ->all();
-}
-
 it('imports the rows of a CSV file', function (): void {
     $result = resolve(CsvImporter::class)->import(RedirectFixtures::csv('redirects.csv'));
 
@@ -55,7 +43,7 @@ it('imports the rows of a CSV file', function (): void {
             'de/weg' => ['enabled' => true, 'source' => '/weg', 'destination' => null, 'type' => 410, 'match_type' => 'exact', 'description' => null, 'order' => 2],
             'en/kampagne/(.*)' => ['enabled' => false, 'source' => '/kampagne/(.*)', 'destination' => '/aktion/$1', 'type' => 302, 'match_type' => 'regex', 'description' => null, 'order' => 1],
         ])
-        ->and(collect(importedIds())->every(fn (string $id): bool => Str::isUuid($id)))->toBeTrue();
+        ->and(collect(RedirectFixtures::ids())->every(fn (string $id): bool => Str::isUuid($id)))->toBeTrue();
 });
 
 it('asks the repository for the next order once per site', function (): void {
@@ -79,16 +67,16 @@ it('overwrites the redirect with the source and site of a row', function (): voi
     expect($redirects->find('alt')?->fileData())->toBe(['id' => 'alt', 'enabled' => true, 'source' => '/alt', 'destination' => '/neu', 'type' => 301, 'match_type' => 'exact', 'description' => 'Moved', 'order' => 3])
         ->and($redirects->find('weg')?->fileData())->toBe(['id' => 'weg', 'enabled' => true, 'source' => '/weg', 'destination' => null, 'type' => 410, 'match_type' => 'exact', 'description' => 'Bleibt', 'order' => null])
         ->and($redirects->find('english')?->destination())->toBe('/before')
-        ->and(importedIds())->toHaveCount(5);
+        ->and(RedirectFixtures::ids())->toHaveCount(5);
 });
 
 it('imports the same file twice without duplicating its redirects', function (): void {
     $importer = resolve(CsvImporter::class);
     $importer->import(RedirectFixtures::csv('redirects.csv'));
-    $ids = importedIds();
+    $ids = RedirectFixtures::ids();
 
     expect($importer->import(RedirectFixtures::csv('redirects.csv')))->toEqual(new ImportResult(imported: 4, skipped: 0))
-        ->and(importedIds())->toBe($ids);
+        ->and(RedirectFixtures::ids())->toBe($ids);
 });
 
 it('keeps the last of the rows with the same source and site', function (): void {
@@ -98,7 +86,7 @@ it('keeps the last of the rows with the same source and site', function (): void
         ->and(importedRedirects())->toBe([
             'de/alt' => ['enabled' => true, 'source' => '/alt', 'destination' => '/dann', 'type' => 302, 'match_type' => 'exact', 'description' => null, 'order' => 1],
         ])
-        ->and(importedIds())->toHaveCount(1);
+        ->and(RedirectFixtures::ids())->toHaveCount(1);
 });
 
 it('skips the rows without source, type, match type or destination', function (): void {
@@ -138,5 +126,5 @@ it('reads a file with another delimiter as Excel saves it', function (): void {
 
 it('imports nothing from an empty file', function (): void {
     expect(resolve(CsvImporter::class)->import(RedirectFixtures::csv('empty.csv')))->toEqual(new ImportResult(imported: 0, skipped: 0))
-        ->and(importedIds())->toBeEmpty();
+        ->and(RedirectFixtures::ids())->toBeEmpty();
 });

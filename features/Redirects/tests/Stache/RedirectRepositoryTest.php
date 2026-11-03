@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Collection;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
@@ -15,17 +14,8 @@ beforeEach(function (): void {
     RedirectFixtures::copyIntoStore();
 });
 
-/**
- * @param  Collection<int, Redirect>  $redirects
- * @return array<int, string>
- */
-function redirectIds(Collection $redirects): array
-{
-    return $redirects->map(fn (Redirect $redirect): string => $redirect->id())->sort()->values()->all();
-}
-
 it('lists every redirect in the store', function (): void {
-    expect(redirectIds(resolve(RedirectRepository::class)->all()))->toBe([
+    expect(RedirectFixtures::ids())->toBe([
         '0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01',
         '1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02',
         '2a7d3c74-3e3f-4d20-9c73-5b4dbe8f9a03',
@@ -47,7 +37,7 @@ it('finds nothing for an unknown id', function (): void {
 });
 
 it('lists the redirects of one site', function (): void {
-    expect(redirectIds(resolve(RedirectRepository::class)->whereSite('en')))
+    expect(RedirectFixtures::ids(resolve(RedirectRepository::class)->whereSite('en')))
         ->toBe(['5da06fa7-6162-4053-8fa6-8e7ae1bc2d06']);
 });
 
@@ -55,7 +45,7 @@ it('deletes the disabled redirects of every site and counts them', function (): 
     $redirects = resolve(RedirectRepository::class);
 
     expect($redirects->deleteDisabled())->toBe(3)
-        ->and(redirectIds($redirects->all()))->toHaveCount(5)
+        ->and(RedirectFixtures::ids($redirects->all()))->toHaveCount(5)
         ->and($redirects->all()->every(fn (Redirect $redirect): bool => $redirect->enabled()))->toBeTrue()
         ->and($redirects->deleteDisabled())->toBe(0);
 });

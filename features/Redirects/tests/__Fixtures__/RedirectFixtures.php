@@ -20,6 +20,7 @@ use Statamic\Structures\CollectionTree;
 use Statamic\Testing\Concerns\FakesRoles;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
+use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
 class RedirectFixtures
@@ -66,6 +67,35 @@ class RedirectFixtures
     /**
      * Statamic's cp_route() declares no return type, so the tests build control panel URLs with route().
      */
+    /**
+     * The ids of the given redirects, or of every stored one, sorted.
+     *
+     * @param  Items<int, Redirect>|null  $redirects
+     * @return array<int, string>
+     */
+    public static function ids(?Items $redirects = null): array
+    {
+        return ($redirects ?? resolve(RedirectRepository::class)->all())
+            ->map(fn (Redirect $redirect): string => $redirect->id())
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The site and source of every stored redirect, sorted.
+     *
+     * @return array<int, string>
+     */
+    public static function sources(): array
+    {
+        return resolve(RedirectRepository::class)->all()
+            ->map(fn (Redirect $redirect): string => "{$redirect->site()}{$redirect->source()}")
+            ->sort()
+            ->values()
+            ->all();
+    }
+
     public static function cpUrl(string $name, mixed $parameters = []): string
     {
         return route("statamic.cp.{$name}", $parameters);

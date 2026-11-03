@@ -13,18 +13,6 @@ beforeEach(function (): void {
     RedirectFixtures::isolate();
 });
 
-/**
- * @return array<int, string>
- */
-function redirectsLeftAfterPrune(): array
-{
-    return resolve(RedirectRepository::class)->all()
-        ->map(fn (Redirect $redirect): string => $redirect->id())
-        ->sort()
-        ->values()
-        ->all();
-}
-
 it('deletes the disabled redirects of every site', function (): void {
     RedirectFixtures::copyIntoStore();
 
@@ -33,7 +21,7 @@ it('deletes the disabled redirects of every site', function (): void {
         ->assertRedirect(RedirectFixtures::cpUrl('redirects.index'))
         ->assertSessionHas('success', 'Deleted 3 disabled redirects.');
 
-    expect(redirectsLeftAfterPrune())->toBe([
+    expect(RedirectFixtures::ids())->toBe([
         '0e5b1a52-1c1d-4b0e-9a51-3f2b9c6d7e01',
         '1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02',
         '2a7d3c74-3e3f-4d20-9c73-5b4dbe8f9a03',
@@ -51,7 +39,7 @@ it('deletes one disabled redirect', function (): void {
         ->post(RedirectFixtures::cpUrl('redirects.prune'))
         ->assertSessionHas('success', 'Deleted 1 disabled redirect.');
 
-    expect(redirectsLeftAfterPrune())->toBe(['enabled']);
+    expect(RedirectFixtures::ids())->toBe(['enabled']);
 });
 
 it('says so when no redirect is disabled', function (): void {
@@ -61,7 +49,7 @@ it('says so when no redirect is disabled', function (): void {
         ->post(RedirectFixtures::cpUrl('redirects.prune'))
         ->assertSessionHas('success', 'No disabled redirects to delete.');
 
-    expect(redirectsLeftAfterPrune())->toBe(['enabled']);
+    expect(RedirectFixtures::ids())->toBe(['enabled']);
 });
 
 it('deletes with the delete redirects permission', function (): void {
@@ -77,5 +65,5 @@ it('forbids deleting without the delete redirects permission', function (): void
         ->postJson(RedirectFixtures::cpUrl('redirects.prune'))
         ->assertForbidden();
 
-    expect(redirectsLeftAfterPrune())->toBe(['disabled']);
+    expect(RedirectFixtures::ids())->toBe(['disabled']);
 });
