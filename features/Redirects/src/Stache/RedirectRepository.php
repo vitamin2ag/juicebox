@@ -88,17 +88,6 @@ class RedirectRepository
             && Redirect::normalise($redirect->source()) === Redirect::normalise($source));
     }
 
-    /**
-     * The pattern a regex source matches with, or null when it does not compile, as an empty
-     * source does not. Grepping no subjects only compiles the pattern.
-     */
-    public function pattern(?string $source): ?string
-    {
-        $pattern = "`{$source}`i";
-
-        return @preg_grep($pattern, []) === false ? null : $pattern;
-    }
-
     public function save(Redirect $redirect): void
     {
         $this->store->save($redirect);
@@ -127,7 +116,7 @@ class RedirectRepository
         $urls = array_map(Redirect::normalise(...), $urls);
 
         foreach ($this->indexed(Redirect::regexKey($site)) as $redirect) {
-            $pattern = $this->pattern($redirect->source());
+            $pattern = Redirect::pattern($redirect->source());
 
             if ($pattern === null) {
                 continue;

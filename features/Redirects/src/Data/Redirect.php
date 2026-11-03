@@ -98,6 +98,22 @@ class Redirect
         return [...$this->fileData(), 'site' => $this->site];
     }
 
+    /**
+     * The pattern a regex source matches with, or null when there is no source or it does not compile.
+     * An empty pattern compiles and matches every URL, so it is refused. Grepping no subjects only
+     * compiles the pattern.
+     */
+    public static function pattern(?string $source): ?string
+    {
+        if ($source === null || $source === '') {
+            return null;
+        }
+
+        $pattern = "`{$source}`i";
+
+        return @preg_grep($pattern, []) === false ? null : $pattern;
+    }
+
     public static function exactKey(string $site, string $url): string
     {
         return "{$site}|exact|".self::normalise($url);

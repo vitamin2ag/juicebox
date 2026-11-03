@@ -159,3 +159,14 @@ it('has the fields of its file and its site as a row of the list', function (): 
 
     expect($redirect->listingRow())->toBe([...$redirect->fileData(), 'site' => 'en']);
 });
+
+it('compiles a regex source into a case-insensitive pattern, or gives none', function (?string $source, ?string $expected): void {
+    expect(Redirect::pattern($source))->toBe($expected);
+})->with([
+    'a group' => ['/kampagne/(.*)', '`/kampagne/(.*)`i'],
+    'an open group' => ['/kampagne/(', null],
+    'the delimiter' => ['/kampagne`x', null],
+    'a trailing backslash' => ['/kampagne\\', null],
+    'an empty source' => ['', null],
+    'no source' => [null, null],
+]);

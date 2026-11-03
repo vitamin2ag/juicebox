@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Validator;
 use Vitamin2\Juicebox\Features\Redirects\Rules\ValidRegex;
-use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 mutates(ValidRegex::class);
 
@@ -14,7 +13,7 @@ mutates(ValidRegex::class);
  */
 function regexErrors(array $data): array
 {
-    return Validator::make($data, ['source' => [new ValidRegex(resolve(RedirectRepository::class))]])->errors()->get('source');
+    return Validator::make($data, ['source' => [new ValidRegex]])->errors()->get('source');
 }
 
 it('rejects a regex source that does not compile, with :dataset', function (string $source): void {

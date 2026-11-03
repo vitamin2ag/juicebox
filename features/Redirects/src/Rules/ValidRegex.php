@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Translation\PotentiallyTranslatedString;
 use Override;
-use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 /**
  * A regex source that does not compile would turn every 404 of its site into an error.
@@ -20,8 +20,6 @@ class ValidRegex implements DataAwareRule, ValidationRule
      * @var array<array-key, mixed>
      */
     private array $data = [];
-
-    public function __construct(private readonly RedirectRepository $redirects) {}
 
     /**
      * @param  array<array-key, mixed>  $data
@@ -40,7 +38,7 @@ class ValidRegex implements DataAwareRule, ValidationRule
     #[Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (($this->data['match_type'] ?? null) === 'regex' && is_string($value) && $this->redirects->pattern($value) === null) {
+        if (($this->data['match_type'] ?? null) === 'regex' && is_string($value) && Redirect::pattern($value) === null) {
             $fail('This source is not a valid regex.')->translate();
         }
     }

@@ -76,7 +76,7 @@ class CsvImporter
             return null;
         }
 
-        if ($matchType === 'regex' && $this->redirects->pattern($source) === null) {
+        if ($matchType === 'regex' && Redirect::pattern($source) === null) {
             return null;
         }
 

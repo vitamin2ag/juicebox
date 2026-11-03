@@ -119,7 +119,7 @@ class RedirectController extends CpController
     private function save(Redirect $redirect): Redirect
     {
         $fields = $this->blueprint()->fields()->addValues($this->request->all());
-        $fields->validate(['source' => [new UniqueSource($redirect, $this->redirects), new ValidRegex($this->redirects)]]);
+        $fields->validate(['source' => [new UniqueSource($redirect, $this->redirects), new ValidRegex]]);
         $values = new Fluent($fields->process()->values()->all());
 
         $redirect = $redirect->withValues(
