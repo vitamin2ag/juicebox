@@ -146,13 +146,13 @@ class RedirectRepository
      */
     private function matchRegex(Redirect $redirect, Collection $urls): ?Redirect
     {
-        $pattern = Redirect::pattern($redirect->source());
+        $pattern = Redirect::rawPattern($redirect->source());
 
         if ($pattern === null) {
             return null;
         }
 
-        $url = $urls->first(fn (string $url): bool => preg_match($pattern, $url) === 1);
+        $url = $urls->first(fn (string $url): bool => @preg_match($pattern, $url) === 1);
 
         return $url === null ? null : $this->withCaptures($redirect, $pattern, $url);
     }

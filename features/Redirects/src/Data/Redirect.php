@@ -105,13 +105,18 @@ class Redirect
      */
     public static function pattern(?string $source): ?string
     {
-        if ($source === null || $source === '') {
-            return null;
-        }
+        $pattern = self::rawPattern($source);
 
-        $pattern = "`{$source}`i";
+        return $pattern === null || @preg_grep($pattern, []) === false ? null : $pattern;
+    }
 
-        return @preg_grep($pattern, []) === false ? null : $pattern;
+    /**
+     * The pattern of pattern() without the check that it compiles, for matching, where preg_match
+     * compiles it anyway and does not match when it fails.
+     */
+    public static function rawPattern(?string $source): ?string
+    {
+        return $source === null || $source === '' ? null : "`{$source}`i";
     }
 
     /**

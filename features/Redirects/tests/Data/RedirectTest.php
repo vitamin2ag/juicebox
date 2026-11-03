@@ -170,3 +170,12 @@ it('compiles a regex source into a case-insensitive pattern, or gives none', fun
     'an empty source' => ['', null],
     'no source' => [null, null],
 ]);
+
+it('builds the pattern of a regex source without checking that it compiles', function (?string $source, ?string $expected): void {
+    expect(Redirect::rawPattern($source))->toBe($expected);
+})->with([
+    'a group' => ['/kampagne/(.*)', '`/kampagne/(.*)`i'],
+    'an open group' => ['/kampagne/(', '`/kampagne/(`i'],
+    'an empty source' => ['', null],
+    'no source' => [null, null],
+]);

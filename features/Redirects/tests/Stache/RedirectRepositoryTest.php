@@ -173,6 +173,13 @@ it('skips a regex redirect whose source does not compile', function (): void {
     expect($redirects->findByUrl('de', '/alt/seite')?->id())->toBe('valid');
 });
 
+it('skips a regex redirect with an empty source instead of matching every url', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'empty', site: 'de', source: '', destination: '/empty', matchType: 'regex', order: 1));
+
+    expect($redirects->findByUrl('de', '/alt/seite'))->toBeNull();
+});
+
 it('fills the regex captures of :dataset into the destination', function (string $url): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'regex', site: 'de', source: '/kampagne/(.*)', destination: '/aktion/$1', matchType: 'regex'));
