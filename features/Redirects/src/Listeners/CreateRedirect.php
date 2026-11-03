@@ -85,14 +85,14 @@ class CreateRedirect
     }
 
     /**
-     * The redirect findByUrl() returns has the regex captures in its destination, so the stored one is disabled.
+     * A regex redirect only runs on a 404, so it never conflicts with an entry: only the exact redirect
+     * from the uri is disabled.
      */
     private function disableConflict(string $site, string $uri): void
     {
-        $id = $this->redirects->findByUrl($site, $uri)?->id();
-        $stored = $id === null ? null : $this->redirects->find($id);
+        $stored = $this->redirects->findBySource($site, $uri);
 
-        if ($stored instanceof Redirect) {
+        if ($stored instanceof Redirect && $stored->enabled()) {
             $this->redirects->save($stored->withEnabled(false));
         }
     }

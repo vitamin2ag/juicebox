@@ -227,6 +227,15 @@ it('creates a redirect for every entry :dataset', function (Closure $move, array
     ],
 ]);
 
+it('keeps a regex redirect that matches the uri of a new entry', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'regex', site: 'de', source: '^/ne', destination: '/woanders', matchType: 'regex'));
+
+    RedirectFixtures::page('neu');
+
+    expect($redirects->find('regex')?->enabled())->toBeTrue();
+});
+
 it('disables an enabled redirect from the uri a tree change moves an entry to', function (): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'conflict', site: 'de', source: '/angebot/team', destination: '/woanders'));
@@ -277,16 +286,6 @@ it('forgets the children it remembered, so the next save of the parent creates n
     RedirectFixtures::rename('ueber-uns', 'about');
 
     expect($redirects->all()->count())->toBe($count);
-});
-
-it('keeps the destination of a regex redirect it disables', function (): void {
-    $redirects = resolve(RedirectRepository::class);
-    $redirects->save(new Redirect(id: 'conflict', site: 'de', source: '/kampagne-(.*)', destination: '/aktion/$1', matchType: 'regex'));
-
-    RedirectFixtures::page('kampagne-sommer');
-
-    expect($redirects->find('conflict')?->enabled())->toBeFalse()
-        ->and($redirects->find('conflict')?->destination())->toBe('/aktion/$1');
 });
 
 it('leaves :dataset enabled', function (Closure $save): void {
