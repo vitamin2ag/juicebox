@@ -33,7 +33,9 @@ abstract class TestCase extends AddonTestCase
 
     /**
      * A Laravel 13 application restricts which classes the cache unserializes, but Testbench allows all of them;
-     * restrict them here too, so a class a feature forgot to allow fails in the tests and not in an application.
+     * restrict them here too, so the allow-list a feature adds shows up in the config. The array store keeps
+     * objects as they are and never unserializes, so nothing fails here when a class is missing: the Redirects
+     * ServiceProviderTest checks the list itself, and it fails if this line is removed or the provider does not add the class.
      */
     #[Override]
     protected function getEnvironmentSetUp($app): void
