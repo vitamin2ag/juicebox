@@ -17,12 +17,16 @@ class RedirectRepository
      */
     public function all(): Collection
     {
-        return Collection::wrap($this->store->getItemsFromFiles())->whereInstanceOf(Redirect::class)->values();
+        return Collection::wrap($this->store->getItemsFromFiles())
+            ->whereInstanceOf(Redirect::class)
+            ->values();
     }
 
     public function find(string $id): ?Redirect
     {
-        return Collection::wrap($this->store->getItem($id))->whereInstanceOf(Redirect::class)->first();
+        return Collection::wrap($this->store->getItem($id))
+            ->whereInstanceOf(Redirect::class)
+            ->first();
     }
 
     /**
@@ -30,7 +34,9 @@ class RedirectRepository
      */
     public function whereSite(string $site): Collection
     {
-        return $this->all()->filter(fn (Redirect $redirect): bool => $redirect->site() === $site)->values();
+        return $this->all()
+            ->filter(fn (Redirect $redirect): bool => $redirect->site() === $site)
+            ->values();
     }
 
     /**
@@ -73,7 +79,10 @@ class RedirectRepository
      */
     public function nextOrder(string $site): int
     {
-        $highest = $this->whereSite($site)->max(fn (Redirect $redirect): ?int => $redirect->order());
+        $highest = $this->listing($site)
+            ->pluck('order')
+            ->filter(fn (mixed $order): bool => is_int($order))
+            ->max();
 
         return is_int($highest) ? $highest + 1 : 1;
     }
@@ -83,9 +92,15 @@ class RedirectRepository
      */
     public function findBySource(string $site, string $source): ?Redirect
     {
-        return $this->whereSite($site)->first(fn (Redirect $redirect): bool => $redirect->matchType() === 'exact'
-            && $redirect->source() !== null
-            && Redirect::normalise($redirect->source()) === Redirect::normalise($source));
+        $target = Redirect::normalise($source);
+
+        $row = $this->listing($site)->first(fn (array $row): bool => ($row['match_type'] ?? null) === 'exact'
+            && is_string($row['source'] ?? null)
+            && Redirect::normalise($row['source']) === $target);
+
+        $id = $row['id'] ?? null;
+
+        return is_string($id) ? $this->find($id) : null;
     }
 
     public function save(Redirect $redirect): void
@@ -103,7 +118,10 @@ class RedirectRepository
      */
     private function findExact(string $site, array $urls): ?Redirect
     {
-        $keys = collect($urls)->flatMap(fn (string $url): array => [Redirect::exactKey($site, $url), Redirect::exactKey($site, Str::before($url, '?'))]);
+        $keys = collect($urls)->flatMap(fn (string $url): array => [
+            Redirect::exactKey($site, $url),
+            Redirect::exactKey($site, Str::before($url, '?')),
+        ]);
 
         return $this->indexed(...$keys)->first();
     }
