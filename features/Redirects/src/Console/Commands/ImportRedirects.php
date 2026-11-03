@@ -8,6 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Statamic\Console\RunsInPlease;
 use Vitamin2\Juicebox\Features\Redirects\Console\Concerns\ChecksEnabled;
 use Vitamin2\Juicebox\Features\Redirects\Import\CsvImporter;
 
@@ -16,6 +17,7 @@ use Vitamin2\Juicebox\Features\Redirects\Import\CsvImporter;
 class ImportRedirects extends Command
 {
     use ChecksEnabled;
+    use RunsInPlease;
 
     public function handle(CsvImporter $importer): int
     {

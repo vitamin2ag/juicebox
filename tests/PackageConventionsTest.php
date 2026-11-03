@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
+use Statamic\Console\RunsInPlease;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
 /**
@@ -20,6 +21,12 @@ function juiceboxFeatures(): array
 }
 
 dataset('features', juiceboxFeatures(...));
+
+dataset('feature commands', fn (): array => collect(juiceboxFeatures())
+    ->flatMap(fn (array $feature): array => collect(glob(__DIR__.'/../features/'.$feature[0].'/src/Console/Commands/*.php') ?: [])
+        ->mapWithKeys(fn (string $file): array => [$feature[0].' '.basename($file, '.php') => ['Vitamin2\\Juicebox\\Features\\'.$feature[0].'\\Console\\Commands\\'.basename($file, '.php')]])
+        ->all())
+    ->all());
 
 dataset('features with config', fn (): array => array_filter(
     juiceboxFeatures(),
@@ -70,6 +77,10 @@ it('extends the feature base provider in every feature', function (string $featu
     expect("Vitamin2\\Juicebox\\Features\\$feature\\ServiceProvider")
         ->toExtend(FeatureServiceProvider::class);
 })->with('features');
+
+it('runs every command of a feature in please', function (string $command): void {
+    expect($command)->toUseTrait(RunsInPlease::class);
+})->with('feature commands');
 
 it('ships a Boost skill for every feature', function (string $feature): void {
     expect(__DIR__.'/../resources/boost/skills/juicebox-'.Str::kebab($feature).'/SKILL.md')->toBeFile();

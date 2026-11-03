@@ -76,14 +76,16 @@ The permissions have the names of `rias/statamic-redirect`, so roles that have t
 
 ## Commands
 
+Run the commands with `php please`. They also work as `php artisan statamic:juicebox:redirects:<action>`.
+
 ``` bash
-php artisan statamic:juicebox:redirects:prune
+php please juicebox:redirects:prune
 ```
 
 Deletes every redirect with `enabled: false`, in every site, and prints how many it deleted. Empty or broken redirect files are read as disabled redirects, so it deletes them as well.
 
 ``` bash
-php artisan statamic:juicebox:redirects:import redirects.csv --delimiter=";"
+php please juicebox:redirects:import redirects.csv --delimiter=";"
 ```
 
 Imports the redirects of a CSV file and prints how many rows it imported and skipped. `--delimiter` defaults to `,`.

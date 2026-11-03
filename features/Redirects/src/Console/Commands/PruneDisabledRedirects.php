@@ -7,6 +7,7 @@ namespace Vitamin2\Juicebox\Features\Redirects\Console\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Statamic\Console\RunsInPlease;
 use Vitamin2\Juicebox\Features\Redirects\Console\Concerns\ChecksEnabled;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
@@ -15,6 +16,7 @@ use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 class PruneDisabledRedirects extends Command
 {
     use ChecksEnabled;
+    use RunsInPlease;
 
     public function handle(RedirectRepository $redirects): int
     {
