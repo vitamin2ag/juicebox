@@ -38,6 +38,8 @@ class Site {}
  */
 class Entry {}
 
+
+
 namespace Statamic\Entries;
 
 class Entry
@@ -59,6 +61,9 @@ class Entry
 
     /** @return string|null */
     public function absoluteUrl() {}
+
+    /** @return \Statamic\Structures\Page|null */
+    public function page() {}
 }
 
 namespace Statamic\Stache\Stores;
@@ -112,6 +117,15 @@ class CollectionTree
 {
     /** @return CollectionTreeDiff */
     public function diff() {}
+}
+
+class Page
+{
+    /** @return string */
+    public function id() {}
+
+    /** @return \Illuminate\Support\Collection<int, Page> */
+    public function flattenedPages() {}
 }
 
 class CollectionTreeDiff

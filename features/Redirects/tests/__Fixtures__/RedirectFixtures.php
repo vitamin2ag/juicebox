@@ -212,11 +212,20 @@ class RedirectFixtures
     }
 
     /**
+     * A saved entry as a request reads it: its own copy. The array cache hands out the saved object itself,
+     * and the find() in save() would reset the dirty state of that object.
+     */
+    public static function copyOf(string $id): Entry
+    {
+        return clone Items::wrap(Entries::find($id))->whereInstanceOf(Entry::class)->firstOrFail();
+    }
+
+    /**
      * Gives a saved entry another slug the way the control panel does: read it, change it, save it.
      */
     public static function rename(string $id, string $slug): void
     {
-        $entry = Items::wrap(Entries::find($id))->whereInstanceOf(Entry::class)->firstOrFail();
+        $entry = self::copyOf($id);
         $entry->slug($slug);
         $entry->save();
     }

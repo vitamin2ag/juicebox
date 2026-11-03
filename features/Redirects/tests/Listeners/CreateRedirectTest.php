@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
+use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Listeners\CreateRedirect;
@@ -45,6 +46,14 @@ function moveInPages(array $tree): void
     ]);
     $pages->tree($tree);
     $pages->save();
+}
+
+function structureWithDeepChildren(): void
+{
+    RedirectFixtures::structure([
+        ['entry' => 'ueber-uns', 'children' => [['entry' => 'team', 'children' => [['entry' => 'chef']]]]],
+        ['entry' => 'angebot'],
+    ]);
 }
 
 it('handles every saved entry once', function (): void {
@@ -150,6 +159,10 @@ it('creates no redirect for :dataset', function (Closure $save): void {
         RedirectFixtures::page('alt');
         RedirectFixtures::rename('alt', 'neu');
     },
+    'a parent saved with the same slug' => function (): void {
+        structureWithDeepChildren();
+        RedirectFixtures::rename('ueber-uns', 'ueber-uns');
+    },
     'a child entry the tree just added' => function (): void {
         RedirectFixtures::structure([['entry' => 'ueber-uns', 'children' => [['entry' => 'team']]]]);
     },
@@ -199,6 +212,13 @@ it('creates a redirect for every entry :dataset', function (Closure $move, array
         },
         ['/ueber-uns/team -> /angebot/team'],
     ],
+    'a parent slug change reaches its children and grandchildren' => [
+        function (): void {
+            structureWithDeepChildren();
+            RedirectFixtures::rename('ueber-uns', 'about');
+        },
+        ['/ueber-uns -> /about', '/ueber-uns/team -> /about/team', '/ueber-uns/team/chef -> /about/team/chef'],
+    ],
     'a tree change moves with its parent' => [
         function (): void {
             moveInPages([['entry' => 'angebot', 'children' => [['entry' => 'ueber-uns', 'children' => [['entry' => 'team']]]]]]);
@@ -214,6 +234,49 @@ it('disables an enabled redirect from the uri a tree change moves an entry to', 
     moveInPages([['entry' => 'ueber-uns'], ['entry' => 'angebot', 'children' => [['entry' => 'team']]]]);
 
     expect($redirects->find('conflict')?->enabled())->toBeFalse();
+});
+
+it('leaves an unpublished child alone when its parent gets another slug', function (): void {
+    structureWithDeepChildren();
+    $team = Entries::find('team');
+    $team?->published(false);
+    $team?->save();
+
+    RedirectFixtures::rename('ueber-uns', 'about');
+
+    expect(savedRedirects())->toBe(['/ueber-uns -> /about', '/ueber-uns/team/chef -> /about/team/chef']);
+});
+
+it('disables an enabled redirect from the uri a parent slug change moves a child to', function (): void {
+    structureWithDeepChildren();
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'conflict', site: 'de', source: '/about/team', destination: '/woanders', order: 3));
+
+    RedirectFixtures::rename('ueber-uns', 'about');
+
+    expect($redirects->find('conflict')?->enabled())->toBeFalse()
+        ->and(savedRedirects())->toContain('/ueber-uns/team -> /about/team');
+});
+
+it('leaves an enabled redirect from the uri of a child alone when its parent is saved with the same slug', function (): void {
+    structureWithDeepChildren();
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'kept', site: 'de', source: '/ueber-uns/team', destination: '/woanders', order: 3));
+
+    RedirectFixtures::rename('ueber-uns', 'ueber-uns');
+
+    expect($redirects->find('kept')?->enabled())->toBeTrue();
+});
+
+it('forgets the children it remembered, so the next save of the parent creates nothing', function (): void {
+    structureWithDeepChildren();
+    RedirectFixtures::rename('ueber-uns', 'about');
+    $redirects = resolve(RedirectRepository::class);
+    $count = $redirects->all()->count();
+
+    RedirectFixtures::rename('ueber-uns', 'about');
+
+    expect($redirects->all()->count())->toBe($count);
 });
 
 it('keeps the destination of a regex redirect it disables', function (): void {

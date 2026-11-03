@@ -57,6 +57,31 @@ it('remembers nothing for :dataset', function (Entry $entry): void {
     },
 ]);
 
+it('remembers the uris of the entries below one whose slug changes, and marks it', function (): void {
+    RedirectFixtures::structure([['entry' => 'ueber-uns', 'children' => [['entry' => 'team', 'children' => [['entry' => 'chef']]]]], ['entry' => 'angebot']]);
+    $entry = RedirectFixtures::copyOf('ueber-uns');
+    $entry->slug('about');
+
+    new RememberOldUri()->handle(new EntrySaving($entry));
+
+    expect(Cache::get('juicebox-redirects-old-uri:ueber-uns'))->toBe('/ueber-uns')
+        ->and(Cache::get('juicebox-redirects-old-uri:team'))->toBe('/ueber-uns/team')
+        ->and(Cache::get('juicebox-redirects-old-uri:chef'))->toBe('/ueber-uns/team/chef')
+        ->and(Cache::get('juicebox-redirects-old-uri:angebot'))->toBeNull()
+        ->and(Cache::get('juicebox-redirects-old-descendants:ueber-uns'))->toBeTrue();
+});
+
+it('remembers nothing of the entries below one whose slug stays', function (): void {
+    RedirectFixtures::structure([['entry' => 'ueber-uns', 'children' => [['entry' => 'team']]]]);
+    $entry = RedirectFixtures::copyOf('ueber-uns');
+
+    new RememberOldUri()->handle(new EntrySaving($entry));
+
+    expect(Cache::get('juicebox-redirects-old-uri:ueber-uns'))->toBe('/ueber-uns')
+        ->and(Cache::get('juicebox-redirects-old-uri:team'))->toBeNull()
+        ->and(Cache::get('juicebox-redirects-old-descendants:ueber-uns'))->toBeNull();
+});
+
 it('remembers the uri while entry redirects are off', function (): void {
     config(['juicebox.redirects.create_entry_redirects' => false]);
     $entry = RedirectFixtures::page('alt');

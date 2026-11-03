@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects\Listeners;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Statamic\Entries\Entry;
@@ -24,10 +25,28 @@ class CreateRedirect
         }
 
         $entries = $event instanceof EntrySaved
-            ? collect([$event->entry])
-            : RememberOldUri::movedIds($event->tree)->map(fn (mixed $id): ?Entry => Entries::find($id));
+            ? $this->descendants($event->entry)->prepend($event->entry)
+            : RememberOldUri::movedIds($event->tree)
+                ->map(fn (mixed $id): ?Entry => Entries::find($id));
 
         $entries->filter()->each($this->redirect(...));
+    }
+
+    /**
+     * The entries below one whose slug changed, if RememberOldUri marked it. Statamic has updated their uris by now.
+     *
+     * @return Collection<int, Entry>
+     */
+    private function descendants(Entry $entry): Collection
+    {
+        if (! Cache::pull(RememberOldUri::descendantsKey($entry))) {
+            return new Collection;
+        }
+
+        return RememberOldUri::descendantIds($entry)
+            ->map(fn (string $id): ?Entry => Entries::find($id))
+            ->filter()
+            ->values();
     }
 
     private function redirect(Entry $entry): void
