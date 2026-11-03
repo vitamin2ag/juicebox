@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
+use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\ImportController;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
@@ -12,6 +13,11 @@ mutates(ImportController::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
+    Site::setSites([
+        'default' => ['url' => '/default/', 'locale' => 'en_US'],
+        'de' => ['url' => '/', 'locale' => 'de_CH'],
+        'en' => ['url' => '/en/', 'locale' => 'en_US'],
+    ]);
 });
 
 function uploadedCsv(string $fixture): UploadedFile
@@ -43,7 +49,7 @@ it('reads the uploaded file with the delimiter it gets', function (): void {
         ->post(RedirectFixtures::cpUrl('redirects.import.store'), ['file' => uploadedCsv('excel.csv'), 'delimiter' => ';'])
         ->assertSessionHas('success', 'Imported 3 redirects, skipped 0 rows.');
 
-    expect(RedirectFixtures::sources())->toBe(['de/alt', 'default/kurz', 'en/lang']);
+    expect(RedirectFixtures::sources())->toBe(['de/alt', 'de/kurz', 'en/lang']);
 });
 
 it('rejects an upload with :dataset', function (array $data, string $error): void {

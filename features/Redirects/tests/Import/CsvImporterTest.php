@@ -128,3 +128,10 @@ it('imports nothing from an empty file', function (): void {
     expect(resolve(CsvImporter::class)->import(RedirectFixtures::csv('empty.csv')))->toEqual(new ImportResult(imported: 0, skipped: 0))
         ->and(RedirectFixtures::ids())->toBeEmpty();
 });
+
+it('skips the rows with a type the redirects do not offer or a site that does not exist', function (): void {
+    $result = resolve(CsvImporter::class)->import(RedirectFixtures::csv('unsafe.csv'));
+
+    expect($result)->toEqual(new ImportResult(imported: 1, skipped: 4))
+        ->and(array_keys(importedRedirects()))->toBe(['de/gueltig']);
+});

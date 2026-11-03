@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
+use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Console\Commands\ImportRedirects;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
@@ -10,6 +11,11 @@ mutates(ImportRedirects::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
+    Site::setSites([
+        'default' => ['url' => '/default/', 'locale' => 'en_US'],
+        'de' => ['url' => '/', 'locale' => 'de_CH'],
+        'en' => ['url' => '/en/', 'locale' => 'en_US'],
+    ]);
 });
 
 it('imports the redirects of a CSV file', function (): void {
@@ -24,7 +30,7 @@ it('reads a file with the delimiter it gets', function (): void {
     Artisan::call('statamic:juicebox:redirects:import', ['file' => RedirectFixtures::csv('excel.csv'), '--delimiter' => ';']);
 
     expect(Artisan::output())->toBe("Imported 3 redirects, skipped 0 rows.\n")
-        ->and(RedirectFixtures::sources())->toBe(['de/alt', 'default/kurz', 'en/lang']);
+        ->and(RedirectFixtures::sources())->toBe(['de/alt', 'de/kurz', 'en/lang']);
 });
 
 it('imports nothing while the feature is disabled', function (): void {

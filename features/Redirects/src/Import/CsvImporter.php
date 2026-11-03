@@ -19,8 +19,9 @@ class CsvImporter
      * Reads the columns of the rias/statamic-redirect import. A row replaces the redirect with its
      * source and site, keeping its id and order.
      *
-     * A row is skipped when it has no source, type or match type, when it has no destination and its
-     * type is not 410, or when its regex source does not compile.
+     * A row is skipped when it has no source, type or match type, when its type is not one the Redirects
+     * accept, when its site does not exist, when it has no destination and its type is not 410, or when
+     * its regex source does not compile.
      */
     public function import(string $path, string $delimiter = ','): ImportResult
     {
@@ -78,7 +79,7 @@ class CsvImporter
         $type = filter_var($row->get('type'), FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
         $matchType = $this->value($row, 'match_type');
 
-        if ($source === null || $type === null || $matchType === null || ($destination === null && $type !== 410)) {
+        if ($source === null || ! in_array($type, $this->types(), true) || $matchType === null || ($destination === null && $type !== 410)) {
             return null;
         }
 
@@ -87,6 +88,11 @@ class CsvImporter
         }
 
         $site = $this->value($row, 'site') ?? Sites::current()->handle();
+
+        if (! Sites::all()->has($site)) {
+            return null;
+        }
+
         $replaced = $existing->get($this->key($site, $source));
 
         return new Redirect(
@@ -128,5 +134,15 @@ class CsvImporter
     private function key(string $site, ?string $source): string
     {
         return "{$site}|{$source}";
+    }
+
+    /**
+     * The types the blueprint of a redirect offers.
+     *
+     * @return array<int, int>
+     */
+    private function types(): array
+    {
+        return [301, 302, 410];
     }
 }
