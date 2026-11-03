@@ -34,13 +34,14 @@ class RedirectStore extends BasicStore
     public function makeItemFromFile(mixed $path, mixed $contents): Redirect
     {
         $data = $this->parse($contents);
+        $type = filter_var($data['type'] ?? null, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
 
         $redirect = new Redirect(
             id: $this->string($data, 'id') ?? basename($path, '.yaml'),
             site: basename(dirname($path)),
             source: $this->string($data, 'source'),
             destination: $this->string($data, 'destination'),
-            type: filter_var($data['type'] ?? null, FILTER_VALIDATE_INT, ['options' => ['default' => 301]]),
+            type: in_array($type, Redirect::types(), true) ? $type : 301,
             matchType: $this->string($data, 'match_type') ?? 'exact',
             enabled: filter_var($data['enabled'] ?? false, FILTER_VALIDATE_BOOL),
             description: $this->string($data, 'description'),

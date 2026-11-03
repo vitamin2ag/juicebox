@@ -79,7 +79,7 @@ class CsvImporter
         $type = filter_var($row->get('type'), FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
         $matchType = $this->value($row, 'match_type');
 
-        if ($source === null || ! in_array($type, $this->types(), true) || $matchType === null || ($destination === null && $type !== 410)) {
+        if ($source === null || ! in_array($type, Redirect::types(), true) || $matchType === null || ($destination === null && $type !== 410)) {
             return null;
         }
 
@@ -134,15 +134,5 @@ class CsvImporter
     private function key(string $site, ?string $source): string
     {
         return "{$site}|{$source}";
-    }
-
-    /**
-     * The types the blueprint of a redirect offers.
-     *
-     * @return array<int, int>
-     */
-    private function types(): array
-    {
-        return [301, 302, 410];
     }
 }

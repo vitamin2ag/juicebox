@@ -114,6 +114,16 @@ class Redirect
         return @preg_grep($pattern, []) === false ? null : $pattern;
     }
 
+    /**
+     * The types the blueprint of a redirect offers.
+     *
+     * @return array<int, int>
+     */
+    public static function types(): array
+    {
+        return [301, 302, 410];
+    }
+
     public static function exactKey(string $site, string $url): string
     {
         return "{$site}|exact|".self::normalise($url);

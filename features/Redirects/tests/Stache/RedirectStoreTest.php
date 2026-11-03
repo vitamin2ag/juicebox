@@ -59,6 +59,13 @@ it('reads :dataset as a disabled redirect without a source', function (string $f
     ]);
 })->with(['an empty file' => 'empty', 'a broken file' => 'broken']);
 
+it('reads :dataset as a permanent redirect', function (string $type): void {
+    $directory = RedirectFixtures::copyIntoStore();
+    File::put($directory.'de/typed.yaml', "source: /alt\ndestination: /neu\ntype: $type\n");
+
+    expect(RedirectFixtures::read('de/typed.yaml', $directory)->type())->toBe(301);
+})->with(['a type it does not offer' => '200', 'a type that is not a number' => 'permanent']);
+
 it('saves a rias redirect in its own format', function (): void {
     $directory = RedirectFixtures::copyIntoStore();
     $file = 'de/1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02.yaml';
