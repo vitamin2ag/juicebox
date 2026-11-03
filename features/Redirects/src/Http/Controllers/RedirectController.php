@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Redirects\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response as EmptyResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Fluent;
@@ -12,40 +13,49 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Statamic\CP\PublishForm;
+use Statamic\Data\DataCollection;
 use Statamic\Facades\Blueprint as Blueprints;
+use Statamic\Facades\Scope;
 use Statamic\Facades\Site as Sites;
 use Statamic\Fields\Blueprint;
 use Statamic\Fields\Fields;
 use Statamic\Http\Controllers\CP\CpController;
+use Statamic\Http\Requests\FilteredRequest;
+use Statamic\Query\ItemQueryBuilder;
+use Statamic\Query\Scopes\Filters\Concerns\QueriesFilters;
 use Statamic\Sites\Site;
+use Statamic\Statamic;
 use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\Http\Resources\RedirectResource;
 use Vitamin2\Juicebox\Features\Redirects\Rules\UniqueSource;
 use Vitamin2\Juicebox\Features\Redirects\Rules\ValidRegex;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 class RedirectController extends CpController
 {
+    use QueriesFilters;
+
     public function __construct(Request $request, private readonly RedirectRepository $redirects)
     {
         parent::__construct($request);
     }
 
     /**
-     * As in rias, the list shows the site selected in the control panel.
+     * As in rias, the list shows the site selected in the control panel. The listing asks for its rows as JSON.
      */
-    public function index(): Response
+    public function index(FilteredRequest $request): Response|AnonymousResourceCollection
     {
         $this->authorize('view redirects');
 
+        if ($request->wantsJson()) {
+            return $this->listing($request);
+        }
+
         return Inertia::render('redirects::Index', [
-            'redirects' => $this->redirects->whereSite($this->site())
-                ->sortBy(fn (Redirect $redirect): ?string => $redirect->source())
-                ->map(fn (Redirect $redirect): array => [
-                    ...$redirect->fileData(),
-                    'edit_url' => cp_route('redirects.edit', $redirect->id()),
-                ])
-                ->values(),
+            'hasRedirects' => $this->redirects->whereSite($this->site())->isNotEmpty(),
+            'filters' => Scope::filters('redirects'),
+            'listingUrl' => cp_route('redirects.index'),
             'createUrl' => cp_route('redirects.create'),
             'importUrl' => cp_route('redirects.import'),
             'pruneUrl' => cp_route('redirects.prune'),
@@ -136,6 +146,40 @@ class RedirectController extends CpController
     private function blueprint(): Blueprint
     {
         return Blueprints::find('redirects::redirect') ?? throw new UnexpectedValueException('The redirect blueprint is missing.');
+    }
+
+    private function listing(FilteredRequest $request): AnonymousResourceCollection
+    {
+        $query = new ItemQueryBuilder;
+        $query->withItems(new DataCollection($this->redirects->whereSite($this->site())->all()));
+        $search = $request->query('search');
+        $sort = $request->query('sort');
+
+        if (is_string($search)) {
+            $query->where(function (ItemQueryBuilder $nested) use ($search): void {
+                $nested->where('source', 'like', "%{$search}%");
+                $nested->orWhere('destination', 'like', "%{$search}%");
+                $nested->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $badges = $this->queryFilters($query, Collection::wrap($request->input('filters'))->all(), []);
+
+        $query->orderBy(is_string($sort) ? $sort : 'source', $request->query('order') === 'desc' ? 'desc' : 'asc');
+
+        $redirects = $query->paginate(Statamic::cpPerPage($request->query('perPage')));
+
+        return RedirectResource::collection($redirects)->additional(['meta' => ['activeFilterBadges' => $badges, 'columns' => $this->columns()]]);
+    }
+
+    /**
+     * @return Collection<int, array{field: string, label: string, visible: bool, sortable: bool}>
+     */
+    private function columns(): Collection
+    {
+        return collect(['source' => __('Source'), 'destination' => __('Destination'), 'type' => __('Type'), 'match_type' => __('Match type')])
+            ->map(fn (string $label, string $field): array => ['field' => $field, 'label' => $label, 'visible' => true, 'sortable' => true])
+            ->values();
     }
 
     private function site(): string

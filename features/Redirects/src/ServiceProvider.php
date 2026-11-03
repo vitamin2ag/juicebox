@@ -12,6 +12,9 @@ use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectEnabled;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectMatchType;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectType;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\FeatureServiceProvider;
@@ -44,6 +47,9 @@ class ServiceProvider extends FeatureServiceProvider
 
         Stache::registerStore($this->app->make(RedirectStore::class));
         $this->registerSerializableClasses();
+        RedirectEnabled::register();
+        RedirectMatchType::register();
+        RedirectType::register();
         Permission::extend($this->registerPermissions(...));
         Nav::extend($this->registerNavigation(...));
 

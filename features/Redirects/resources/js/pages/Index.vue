@@ -12,10 +12,12 @@ import {
     Listing,
     StatusIndicator,
 } from '@statamic/cms/ui';
-import { computed, ref, watch } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
-    redirects: { type: Array, required: true },
+    hasRedirects: { type: Boolean, required: true },
+    filters: { type: Array, required: true },
+    listingUrl: { type: String, required: true },
     createUrl: { type: String, required: true },
     importUrl: { type: String, required: true },
     pruneUrl: { type: String, required: true },
@@ -23,36 +25,21 @@ const props = defineProps({
     reorderUrl: { type: String, required: true },
 });
 
-const columns = [
-    { field: 'source', label: __('Source'), visible: true, sortable: true },
-    { field: 'destination', label: __('Destination'), visible: true, sortable: true },
-    { field: 'type', label: __('Type'), visible: true, sortable: true },
-    { field: 'match_type', label: __('Match type'), visible: true, sortable: true },
-];
-
+const listing = ref(null);
 const pruning = ref(false);
-const items = ref(props.redirects);
 const reordering = ref(false);
 const saving = ref(false);
+const items = ref([]);
+const page = ref(1);
+const perPage = ref(null);
 
 // An exact source is unique per site and found by that source, so only regex redirects depend on their order.
-const regexRedirects = computed(() =>
-    props.redirects
-        .filter((redirect) => redirect.match_type === 'regex')
-        // In the order they are tried in, where a redirect without an order comes first.
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-);
+const filtersForReordering = () => ({ redirect_match_type: { match_type: 'regex' } });
 
-watch(() => props.redirects, (redirects) => (items.value = reordering.value ? regexRedirects.value : redirects));
-
-function startReordering() {
-    items.value = regexRedirects.value;
-    reordering.value = true;
-}
-
-function cancelReordering() {
-    items.value = props.redirects;
-    reordering.value = false;
+function requestCompleted(request) {
+    items.value = request.items;
+    page.value = request.parameters.page;
+    perPage.value = request.parameters.perPage;
 }
 
 function saveOrder() {
@@ -60,7 +47,7 @@ function saveOrder() {
 
     router.post(
         props.reorderUrl,
-        { ids: items.value.map((redirect) => redirect.id) },
+        { ids: items.value.map((redirect) => redirect.id), page: page.value, perPage: perPage.value },
         {
             preserveScroll: true,
             onSuccess: () => (reordering.value = false),
@@ -70,7 +57,15 @@ function saveOrder() {
 }
 
 function prune() {
-    router.post(props.pruneUrl, {}, { onFinish: () => (pruning.value = false) });
+    router.post(
+        props.pruneUrl,
+        {},
+        {
+            // The listing loads its rows from its own URL, so the page props do not reach it. It is gone when no redirect is left.
+            onSuccess: () => listing.value?.refresh(),
+            onFinish: () => (pruning.value = false),
+        },
+    );
 }
 </script>
 
@@ -80,7 +75,7 @@ function prune() {
     <div class="max-w-page mx-auto">
         <Header :title="__('Redirects')" icon="arrow-up-right">
             <template v-if="reordering">
-                <Button :text="__('Cancel')" @click="cancelReordering" />
+                <Button :text="__('Cancel')" @click="reordering = false" />
                 <Button variant="primary" :text="__('Save Order')" :disabled="saving" @click="saveOrder" />
             </template>
             <template v-else>
@@ -96,16 +91,16 @@ function prune() {
                         />
                     </DropdownMenu>
                 </Dropdown>
-                <Button v-if="can('edit redirects') && regexRedirects.length > 1" :text="__('Reorder')" @click="startReordering" />
+                <Button v-if="can('edit redirects') && hasRedirects" :text="__('Reorder')" @click="reordering = true" />
                 <Button v-if="can('create redirects')" :text="__('Create Redirect')" :href="createUrl" variant="primary" />
             </template>
         </Header>
 
         <p v-if="reordering" class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Only regex redirects are reordered, since an exact redirect is found by its source.') }}
+            {{ __('Only regex redirects are listed, in the order they are tried. The first match wins.') }}
         </p>
 
-        <EmptyStateMenu v-if="!items.length" :heading="__('Redirects send visitors of a missing page to a new URL.')">
+        <EmptyStateMenu v-if="!hasRedirects" :heading="__('Redirects send visitors of a missing page to a new URL.')">
             <EmptyStateItem
                 v-if="can('create redirects')"
                 :href="createUrl"
@@ -124,15 +119,20 @@ function prune() {
 
         <Listing
             v-else
-            :items="items"
-            :columns="columns"
+            ref="listing"
+            :url="listingUrl"
+            :filters="filters"
+            :filters-for-reordering="filtersForReordering"
             :allow-customizing-columns="false"
+            :allow-presets="false"
+            :allow-select-all-matching="false"
+            push-query
             :allow-bulk-actions="can('edit redirects') || can('delete redirects')"
             :action-url="actionUrl"
             :reorderable="reordering"
             :sortable="!reordering"
             @reordered="items = $event"
-            @refreshing="router.reload()"
+            @request-completed="requestCompleted"
         >
             <template #cell-source="{ row: redirect }">
                 <Link v-if="can('edit redirects')" :href="redirect.edit_url" class="title-index-field">

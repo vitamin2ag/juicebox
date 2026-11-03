@@ -34,46 +34,136 @@ function redirectForm(array $values = []): array
     ];
 }
 
-it('lists the redirects of the selected site by source', function (): void {
+/**
+ * @param  array<mixed>  $query
+ * @return array<mixed>
+ */
+function listedSources(array $query = []): array
+{
+    return test()->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index', $query))
+        ->assertOk()
+        ->collect('data.*.source')
+        ->all();
+}
+
+function seedListing(): void
+{
     $redirects = resolve(RedirectRepository::class);
-    $redirects->save(new Redirect(id: 'b', site: 'default', source: '/b', destination: '/neu'));
+    $redirects->save(new Redirect(id: 'b', site: 'default', source: '/b', destination: '/neu', order: 2));
     $redirects->save(new Redirect(id: 'a', site: 'default', source: '/a', type: 410, matchType: 'regex', enabled: false, description: 'Alt', order: 3));
-    $redirects->save(new Redirect(id: 'other-site', site: 'en', source: '/c', destination: '/new'));
+    $redirects->save(new Redirect(id: 'c', site: 'default', source: '/c', destination: '/zeit', type: 302, description: 'Kampagne', order: 1));
+    $redirects->save(new Redirect(id: 'other-site', site: 'en', source: '/d', destination: '/new'));
+}
+
+it('opens the list with the filters and the urls of the listing', function (): void {
+    seedListing();
 
     $this->actingAs(RedirectFixtures::superUser())
         ->get(RedirectFixtures::cpUrl('redirects.index'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->component('redirects::Index')
-            ->where('redirects', [
-                [
-                    'id' => 'a',
-                    'enabled' => false,
-                    'source' => '/a',
-                    'destination' => null,
-                    'type' => 410,
-                    'match_type' => 'regex',
-                    'description' => 'Alt',
-                    'order' => 3,
-                    'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'a'),
-                ],
-                [
-                    'id' => 'b',
-                    'enabled' => true,
-                    'source' => '/b',
-                    'destination' => '/neu',
-                    'type' => 301,
-                    'match_type' => 'exact',
-                    'description' => null,
-                    'order' => null,
-                    'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'b'),
-                ],
-            ])
+            ->where('hasRedirects', true)
+            ->has('filters', 3)
+            ->where('filters.0.handle', 'redirect_enabled')
+            ->where('listingUrl', RedirectFixtures::cpUrl('redirects.index'))
             ->where('createUrl', RedirectFixtures::cpUrl('redirects.create'))
             ->where('importUrl', RedirectFixtures::cpUrl('redirects.import'))
             ->where('pruneUrl', RedirectFixtures::cpUrl('redirects.prune'))
             ->where('actionUrl', RedirectFixtures::cpUrl('redirects.actions.run'))
             ->where('reorderUrl', RedirectFixtures::cpUrl('redirects.reorder')));
+});
+
+it('tells the list when the selected site has no redirects', function (): void {
+    seedListing();
+    Site::setSites(['default' => ['url' => '/', 'locale' => 'en_US'], 'fr' => ['url' => '/fr/', 'locale' => 'fr_FR']]);
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->withSession(['statamic.cp.selected-site' => 'fr'])
+        ->get(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('hasRedirects', false));
+});
+
+it('lists the redirects of the selected site as JSON with their fields', function (): void {
+    seedListing();
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index', ['sort' => 'order']))
+        ->assertOk()
+        ->assertJsonPath('data.0', [
+            'id' => 'c',
+            'enabled' => true,
+            'source' => '/c',
+            'destination' => '/zeit',
+            'type' => 302,
+            'match_type' => 'exact',
+            'description' => 'Kampagne',
+            'order' => 1,
+            'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'c'),
+        ])
+        ->assertJsonPath('meta.total', 3)
+        ->assertJsonPath('meta.activeFilterBadges', [])
+        ->assertJsonPath('meta.columns', [
+            ['field' => 'source', 'label' => 'Source', 'visible' => true, 'sortable' => true],
+            ['field' => 'destination', 'label' => 'Destination', 'visible' => true, 'sortable' => true],
+            ['field' => 'type', 'label' => 'Type', 'visible' => true, 'sortable' => true],
+            ['field' => 'match_type', 'label' => 'Match type', 'visible' => true, 'sortable' => true],
+        ]);
+});
+
+it('sorts the list by source unless asked otherwise', function (array $query, array $expected): void {
+    seedListing();
+
+    expect(listedSources($query))->toBe($expected);
+})->with([
+    'default' => [[], ['/a', '/b', '/c']],
+    'by order' => [['sort' => 'order'], ['/c', '/b', '/a']],
+    'descending' => [['sort' => 'source', 'order' => 'desc'], ['/c', '/b', '/a']],
+    'by type' => [['sort' => 'type', 'order' => 'desc'], ['/a', '/c', '/b']],
+    'by destination' => [['sort' => 'destination'], ['/b', '/c', '/a']],
+    'by match type' => [['sort' => 'match_type', 'order' => 'desc'], ['/a', '/b', '/c']],
+]);
+
+it('searches the source, destination and description', function (string $search, array $expected): void {
+    seedListing();
+
+    expect(listedSources(['search' => $search]))->toBe($expected);
+})->with([
+    'source' => ['/b', ['/b']],
+    'destination' => ['zeit', ['/c']],
+    'description' => ['kampagne', ['/c']],
+    'nothing' => ['gibt-es-nicht', []],
+    'empty' => ['', ['/a', '/b', '/c']],
+]);
+
+it('filters the list', function (array $filters, array $expected, array $badges): void {
+    seedListing();
+
+    $response = $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index', ['filters' => base64_encode(json_encode($filters, JSON_THROW_ON_ERROR))]))
+        ->assertOk();
+
+    expect($response->json('data.*.source'))->toBe($expected)
+        ->and($response->json('meta.activeFilterBadges'))->toBe($badges);
+})->with([
+    'enabled' => [['redirect_enabled' => ['enabled' => '1']], ['/b', '/c'], ['redirect_enabled' => 'Enabled']],
+    'disabled' => [['redirect_enabled' => ['enabled' => '0']], ['/a'], ['redirect_enabled' => 'Disabled']],
+    'regex' => [['redirect_match_type' => ['match_type' => 'regex']], ['/a'], ['redirect_match_type' => 'Regex match']],
+    'exact' => [['redirect_match_type' => ['match_type' => 'exact']], ['/b', '/c'], ['redirect_match_type' => 'Exact match']],
+    'type' => [['redirect_type' => ['type' => '302']], ['/c'], ['redirect_type' => 'Temporary (302)']],
+    'several' => [['redirect_enabled' => ['enabled' => '1'], 'redirect_type' => ['type' => '301']], ['/b'], ['redirect_enabled' => 'Enabled', 'redirect_type' => 'Permanent (301)']],
+]);
+
+it('pages the list', function (): void {
+    seedListing();
+
+    $response = $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index', ['perPage' => 2, 'page' => 2]))
+        ->assertOk();
+
+    expect($response->json('data.*.source'))->toBe(['/c'])
+        ->and($response->json('meta.last_page'))->toBe(2);
 });
 
 it('shows the form to create a redirect with the blueprint defaults', function (): void {

@@ -31,7 +31,7 @@
     "Match type": "Abgleichstyp",
     "No disabled redirects to delete.": "Keine deaktivierten Weiterleitungen zu löschen.",
     "One character, usually `,` or `;`.": "Ein Zeichen, meist `,` oder `;`.",
-    "Only regex redirects are reordered, since an exact redirect is found by its source.": "Nur Regex-Weiterleitungen werden neu sortiert, da eine exakte Weiterleitung über ihre Quelle gefunden wird.",
+    "Only regex redirects are listed, in the order they are tried. The first match wins.": "Nur Regex-Weiterleitungen werden angezeigt, in der Reihenfolge, in der sie geprüft werden. Der erste Treffer gewinnt.",
     "Permanent (301)": "Permanent (301)",
     "Redirect disabled|Redirects disabled": "Weiterleitung deaktiviert|Weiterleitungen deaktiviert",
     "Redirect enabled|Redirects enabled": "Weiterleitung aktiviert|Weiterleitungen aktiviert",

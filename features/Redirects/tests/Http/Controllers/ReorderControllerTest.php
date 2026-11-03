@@ -39,6 +39,14 @@ it('numbers the redirects in the order they come in, from 1', function (): void 
     expect(orders())->toBe(['a' => 2, 'b' => 3, 'c' => 1]);
 });
 
+it('numbers the redirects of a later page behind those of the pages before it', function (): void {
+    $this->actingAs(RedirectFixtures::superUser())
+        ->post(RedirectFixtures::cpUrl('redirects.reorder'), ['ids' => ['b', 'a'], 'page' => 3, 'perPage' => 2])
+        ->assertRedirect();
+
+    expect(orders())->toBe(['a' => 6, 'b' => 5, 'c' => 1]);
+});
+
 it('skips ids that are no redirect without leaving a gap', function (): void {
     $this->actingAs(RedirectFixtures::superUser())
         ->post(RedirectFixtures::cpUrl('redirects.reorder'), ['ids' => ['b', 'unknown', 'a']])
@@ -85,6 +93,34 @@ it('rejects :dataset', function (array $data): void {
     'no ids' => [[]],
     'ids that are no list' => [['ids' => 'a']],
 ]);
+
+it('rejects :dataset as page or page size', function (string $field, mixed $value): void {
+    $this->actingAs(RedirectFixtures::superUser())
+        ->post(RedirectFixtures::cpUrl('redirects.reorder'), ['ids' => ['a'], $field => $value])
+        ->assertSessionHasErrors($field);
+
+    expect(orders())->toBe(['a' => null, 'b' => 9, 'c' => 1]);
+})->with([
+    'page 0' => ['page', 0],
+    'page size 0' => ['perPage', 0],
+    'text' => ['page', 'two'],
+]);
+
+it('takes no page and no page size as the first page', function (): void {
+    $this->actingAs(RedirectFixtures::superUser())
+        ->post(RedirectFixtures::cpUrl('redirects.reorder'), ['ids' => ['b', 'a'], 'page' => null, 'perPage' => null])
+        ->assertSessionHasNoErrors();
+
+    expect(orders())->toBe(['a' => 2, 'b' => 1, 'c' => 1]);
+});
+
+it('takes a page size without a page as the first page', function (): void {
+    $this->actingAs(RedirectFixtures::superUser())
+        ->post(RedirectFixtures::cpUrl('redirects.reorder'), ['ids' => ['b', 'a'], 'perPage' => 2])
+        ->assertSessionHasNoErrors();
+
+    expect(orders())->toBe(['a' => 2, 'b' => 1, 'c' => 1]);
+});
 
 it('moves a redirect file that rias named after its order', function (): void {
     $directory = RedirectFixtures::copyIntoStore();
