@@ -7,17 +7,18 @@ namespace Vitamin2\Juicebox\Features\Redirects\Console\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Vitamin2\Juicebox\Features\Redirects\Console\Concerns\ChecksEnabled;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
 #[Signature('statamic:juicebox:redirects:prune')]
 #[Description('Delete the disabled redirects of every site')]
 class PruneDisabledRedirects extends Command
 {
+    use ChecksEnabled;
+
     public function handle(RedirectRepository $redirects): int
     {
-        if (! config('juicebox.redirects.enabled')) {
-            $this->error(__('Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.'));
-
+        if ($this->disabled()) {
             return self::FAILURE;
         }
 
