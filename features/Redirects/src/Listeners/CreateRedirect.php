@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Redirects\Listeners;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Statamic\Entries\Entry;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntrySaved;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Entry as Entries;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
@@ -39,7 +39,7 @@ class CreateRedirect
      */
     private function descendants(Entry $entry): Collection
     {
-        if (! Cache::pull(RememberOldUri::descendantsKey($entry))) {
+        if (! Blink::pull(RememberOldUri::descendantsKey($entry))) {
             return new Collection;
         }
 
@@ -52,7 +52,7 @@ class CreateRedirect
     private function redirect(Entry $entry): void
     {
         $uri = $entry->uri();
-        $oldUri = Cache::pull(RememberOldUri::key($entry));
+        $oldUri = Blink::pull(RememberOldUri::key($entry));
 
         if (! is_string($uri) || $oldUri === $uri) {
             return;

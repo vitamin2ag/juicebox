@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Redirects\Listeners;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Statamic\Entries\Entry;
 use Statamic\Events\CollectionTreeSaving;
 use Statamic\Events\EntrySaving;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Structures\CollectionTree;
 use Statamic\Structures\Page;
@@ -16,6 +16,7 @@ use UnexpectedValueException;
 
 /**
  * Saving runs while the Stache still holds the old URI; CreateRedirect reads it back once the entry or tree is saved.
+ * Both run in one request, so the URIs wait in Blink, which lives as long as the request and needs no cache driver.
  */
 class RememberOldUri
 {
@@ -77,7 +78,7 @@ class RememberOldUri
         $ids = Entries::find($entry->id()) !== null && $entry->isDirty('slug') ? self::descendantIds($entry) : new Collection;
 
         if ($ids->isNotEmpty()) {
-            Cache::put(self::descendantsKey($entry), true, now()->addMinute());
+            Blink::put(self::descendantsKey($entry), true);
         }
 
         return $ids;
@@ -88,7 +89,7 @@ class RememberOldUri
         $entry = Entries::find($id);
 
         if ($entry?->published()) {
-            Cache::put(self::key($entry), $entry->uri(), now()->addMinute());
+            Blink::put(self::key($entry), $entry->uri());
         }
     }
 }
