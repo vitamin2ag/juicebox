@@ -11,7 +11,6 @@ use Statamic\Entries\Entry;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntrySaved;
 use Statamic\Facades\Entry as Entries;
-use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
@@ -41,7 +40,7 @@ class CreateRedirect
             return;
         }
 
-        $site = $this->string($entry->locale());
+        $site = $entry->locale();
 
         if ($entry->published()) {
             $this->disableConflict($site, $uri);
@@ -78,13 +77,5 @@ class CreateRedirect
         if ($stored instanceof Redirect) {
             $this->redirects->save($stored->withEnabled(false));
         }
-    }
-
-    /**
-     * Statamic's entry methods return strings but declare no type.
-     */
-    private function string(mixed $value): string
-    {
-        return is_string($value) ? $value : throw new UnexpectedValueException('Statamic returned no string.');
     }
 }

@@ -14,7 +14,6 @@ use Statamic\Facades\Site as Sites;
 use Statamic\Facades\URL;
 use Statamic\Sites\Site;
 use Symfony\Component\HttpFoundation\Response;
-use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
@@ -34,10 +33,10 @@ class HandleNotFound
         }
 
         $url = $request->getSchemeAndHttpHost().$request->getRequestUri();
-        $site = Collection::wrap(Sites::findByUrl($url) ?? Sites::default())->whereInstanceOf(Site::class)->firstOrFail();
+        $site = Sites::findByUrl($url) ?? Sites::default();
 
         // rias compared the full path on sites with an absolute URL, so their sources may carry the site prefix.
-        $redirect = $this->redirects->findByUrl($this->string($site->handle()), $this->string($site->relativePath($url)), $request->getRequestUri());
+        $redirect = $this->redirects->findByUrl($site->handle(), $site->relativePath($url), $request->getRequestUri());
 
         if (! $redirect instanceof Redirect) {
             return $response;
@@ -79,14 +78,6 @@ class HandleNotFound
 
     private function prefix(Site $site): string
     {
-        return rtrim(URL::makeRelative($this->string($site->url())), '/');
-    }
-
-    /**
-     * Statamic's site methods return strings but declare no type.
-     */
-    private function string(mixed $value): string
-    {
-        return is_string($value) ? $value : throw new UnexpectedValueException('Statamic returned no string.');
+        return rtrim(URL::makeRelative($site->url()), '/');
     }
 }

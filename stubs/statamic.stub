@@ -1,0 +1,44 @@
+<?php
+
+/*
+ * Types that Statamic does not declare, for PHPStan only (phpstan.neon.dist, stubFiles). Add what a feature
+ * needs here instead of checking the value at runtime.
+ */
+
+namespace Statamic\Sites;
+
+class Site
+{
+    /** @return string */
+    public function handle() {}
+
+    /** @return string */
+    public function url() {}
+
+    /**
+     * @param  string  $url
+     * @return string
+     */
+    public function relativePath($url) {}
+}
+
+namespace Statamic\Facades;
+
+/**
+ * @method static \Statamic\Sites\Site current()
+ * @method static \Statamic\Sites\Site selected()
+ * @method static \Statamic\Sites\Site default()
+ * @method static \Statamic\Sites\Site|null findByUrl(string $url)
+ */
+class Site {}
+
+namespace Statamic\Entries;
+
+class Entry
+{
+    /**
+     * @param  string|null  $locale
+     * @return ($locale is null ? string : $this)
+     */
+    public function locale($locale = null) {}
+}

@@ -8,8 +8,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use SplFileObject;
 use Statamic\Facades\Site as Sites;
-use Statamic\Sites\Site;
-use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
@@ -82,7 +80,7 @@ class CsvImporter
             return null;
         }
 
-        $site = $this->value($row, 'site') ?? $this->string(Collection::wrap(Sites::current())->whereInstanceOf(Site::class)->firstOrFail()->handle());
+        $site = $this->value($row, 'site') ?? Sites::current()->handle();
         $replaced = $existing->get($this->key($site, $source));
 
         return new Redirect(
@@ -124,13 +122,5 @@ class CsvImporter
     private function key(string $site, ?string $source): string
     {
         return "{$site}|{$source}";
-    }
-
-    /**
-     * Statamic's site methods return strings but declare no type.
-     */
-    private function string(mixed $value): string
-    {
-        return is_string($value) ? $value : throw new UnexpectedValueException('Statamic returned no string.');
     }
 }

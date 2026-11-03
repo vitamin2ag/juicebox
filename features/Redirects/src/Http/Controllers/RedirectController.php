@@ -23,7 +23,6 @@ use Statamic\Http\Controllers\CP\CpController;
 use Statamic\Http\Requests\FilteredRequest;
 use Statamic\Query\ItemQueryBuilder;
 use Statamic\Query\Scopes\Filters\Concerns\QueriesFilters;
-use Statamic\Sites\Site;
 use Statamic\Statamic;
 use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
@@ -184,9 +183,7 @@ class RedirectController extends CpController
 
     private function site(): string
     {
-        $handle = Collection::wrap(Sites::selected())->whereInstanceOf(Site::class)->firstOrFail()->handle();
-
-        return is_string($handle) ? $handle : throw new UnexpectedValueException('Statamic returned no string.');
+        return Sites::selected()->handle();
     }
 
     /**
