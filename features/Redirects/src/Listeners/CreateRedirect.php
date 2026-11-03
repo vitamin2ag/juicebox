@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects\Listeners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Statamic\Entries\Entry;
@@ -25,10 +24,10 @@ class CreateRedirect
         }
 
         $entries = $event instanceof EntrySaved
-            ? Collection::wrap($event->entry)
-            : RememberOldUri::movedIds($event->tree)->map(fn (mixed $id): mixed => Entries::find($id));
+            ? collect([$event->entry])
+            : RememberOldUri::movedIds($event->tree)->map(fn (mixed $id): ?Entry => Entries::find($id));
 
-        $entries->whereInstanceOf(Entry::class)->each($this->redirect(...));
+        $entries->filter()->each($this->redirect(...));
     }
 
     private function redirect(Entry $entry): void

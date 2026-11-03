@@ -18,7 +18,6 @@ use Statamic\Facades\Blueprint as Blueprints;
 use Statamic\Facades\Scope;
 use Statamic\Facades\Site as Sites;
 use Statamic\Fields\Blueprint;
-use Statamic\Fields\Fields;
 use Statamic\Http\Controllers\CP\CpController;
 use Statamic\Http\Requests\FilteredRequest;
 use Statamic\Query\ItemQueryBuilder;
@@ -119,9 +118,9 @@ class RedirectController extends CpController
 
     private function save(Redirect $redirect): Redirect
     {
-        $fields = $this->fields($this->blueprint()->fields()->addValues($this->request->all()));
+        $fields = $this->blueprint()->fields()->addValues($this->request->all());
         $fields->validate(['source' => [new UniqueSource($redirect, $this->redirects), new ValidRegex($this->redirects)]]);
-        $values = new Fluent(Collection::wrap($this->fields($fields->process())->values())->all());
+        $values = new Fluent($fields->process()->values()->all());
 
         $redirect = $redirect->withValues(
             source: $values->string('source')->value(),
@@ -184,14 +183,6 @@ class RedirectController extends CpController
     private function site(): string
     {
         return Sites::selected()->handle();
-    }
-
-    /**
-     * Statamic's field methods return Fields but declare no type.
-     */
-    private function fields(mixed $fields): Fields
-    {
-        return Collection::wrap($fields)->whereInstanceOf(Fields::class)->firstOrFail();
     }
 
     /**

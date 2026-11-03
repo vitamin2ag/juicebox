@@ -11,7 +11,6 @@ use Statamic\Events\CollectionTreeSaving;
 use Statamic\Events\EntrySaving;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Structures\CollectionTree;
-use Statamic\Structures\CollectionTreeDiff;
 use UnexpectedValueException;
 
 /**
@@ -30,13 +29,11 @@ class RememberOldUri
      * Only a new parent changes the URI of an entry and its children; an entry the tree just
      * added was never at its old URI for long, so it gets no redirect.
      *
-     * @return Collection<array-key, mixed>
+     * @return Collection<int, string>
      */
-    public static function movedIds(mixed $tree): Collection
+    public static function movedIds(CollectionTree $tree): Collection
     {
-        $tree = Collection::wrap($tree)->whereInstanceOf(CollectionTree::class)->firstOrFail();
-
-        return Collection::wrap(Collection::wrap($tree->diff())->whereInstanceOf(CollectionTreeDiff::class)->firstOrFail()->ancestryChanged());
+        return Collection::wrap($tree->diff()->ancestryChanged());
     }
 
     public function handle(EntrySaving|CollectionTreeSaving $event): void
@@ -46,7 +43,7 @@ class RememberOldUri
         }
 
         $ids = $event instanceof EntrySaving
-            ? Collection::wrap($event->entry)->whereInstanceOf(Entry::class)->map(fn (Entry $entry): mixed => $entry->id())
+            ? Collection::wrap($event->entry->id())
             : self::movedIds($event->tree);
 
         $ids->each($this->remember(...));
@@ -54,7 +51,7 @@ class RememberOldUri
 
     private function remember(mixed $id): void
     {
-        $entry = Collection::wrap(Entries::find($id))->whereInstanceOf(Entry::class)->first();
+        $entry = Entries::find($id);
 
         if ($entry?->published()) {
             Cache::put(self::key($entry), $entry->uri(), now()->addMinute());

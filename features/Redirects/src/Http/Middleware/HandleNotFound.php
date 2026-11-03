@@ -6,9 +6,7 @@ namespace Vitamin2\Juicebox\Features\Redirects\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Statamic\Entries\Entry;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site as Sites;
 use Statamic\Facades\URL;
@@ -57,9 +55,7 @@ class HandleNotFound
             return $destination;
         }
 
-        $url = Collection::wrap(Entries::find(Str::after($destination, 'entry::')))->whereInstanceOf(Entry::class)->first()?->absoluteUrl();
-
-        return is_string($url) ? $url : null;
+        return Entries::find(Str::after($destination, 'entry::'))?->absoluteUrl();
     }
 
     /**
@@ -67,7 +63,7 @@ class HandleNotFound
      */
     private function withSitePrefix(Site $site, string $destination): string
     {
-        $prefixes = Collection::wrap(Sites::all())->whereInstanceOf(Site::class)->map($this->prefix(...))->filter();
+        $prefixes = Sites::all()->map($this->prefix(...))->filter();
 
         if (URL::isAbsolute($destination) || $prefixes->contains(fn (string $prefix): bool => str_starts_with($destination.'/', $prefix.'/'))) {
             return $destination;

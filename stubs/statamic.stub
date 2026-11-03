@@ -29,8 +29,14 @@ namespace Statamic\Facades;
  * @method static \Statamic\Sites\Site selected()
  * @method static \Statamic\Sites\Site default()
  * @method static \Statamic\Sites\Site|null findByUrl(string $url)
+ * @method static \Illuminate\Support\Collection<string, \Statamic\Sites\Site> all()
  */
 class Site {}
+
+/**
+ * @method static \Statamic\Entries\Entry|null find($id)
+ */
+class Entry {}
 
 namespace Statamic\Entries;
 
@@ -41,4 +47,92 @@ class Entry
      * @return ($locale is null ? string : $this)
      */
     public function locale($locale = null) {}
+
+    /**
+     * @param  string|null  $id
+     * @return ($id is null ? string|null : $this)
+     */
+    public function id($id = null) {}
+
+    /** @return string|null */
+    public function uri() {}
+
+    /** @return string|null */
+    public function absoluteUrl() {}
+}
+
+namespace Statamic\Stache\Stores;
+
+abstract class Store
+{
+    /**
+     * @param  string  $name
+     * @return \Statamic\Stache\Indexes\Index
+     */
+    public function index($name) {}
+}
+
+namespace Statamic\Stache\Indexes;
+
+abstract class Index
+{
+    /** @return \Illuminate\Support\Collection<int|string, mixed> */
+    public function items() {}
+}
+
+namespace Statamic\Events;
+
+class EntrySaving
+{
+    /** @param \Statamic\Entries\Entry $entry */
+    public function __construct(public $entry) {}
+}
+
+class EntrySaved
+{
+    /** @param \Statamic\Entries\Entry $entry */
+    public function __construct(public $entry) {}
+}
+
+class CollectionTreeSaving
+{
+    /** @param \Statamic\Structures\CollectionTree $tree */
+    public function __construct(public $tree) {}
+}
+
+class CollectionTreeSaved
+{
+    /** @param \Statamic\Structures\CollectionTree $tree */
+    public function __construct(public $tree) {}
+}
+
+namespace Statamic\Structures;
+
+class CollectionTree
+{
+    /** @return CollectionTreeDiff */
+    public function diff() {}
+}
+
+class CollectionTreeDiff
+{
+    /** @return array<int, string> */
+    public function ancestryChanged() {}
+}
+
+namespace Statamic\Fields;
+
+class Fields
+{
+    /**
+     * @param  array<mixed>  $values
+     * @return static
+     */
+    public function addValues(array $values) {}
+
+    /** @return static */
+    public function process() {}
+
+    /** @return \Illuminate\Support\Collection<string, mixed> */
+    public function values() {}
 }

@@ -6,7 +6,6 @@ namespace Vitamin2\Juicebox\Features\Redirects\Stache;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Statamic\Stache\Indexes\Index;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 class RedirectRepository
@@ -49,7 +48,7 @@ class RedirectRepository
      */
     public function listing(string $site): Collection
     {
-        return $this->index(RedirectStore::LISTING_INDEX)
+        return $this->store->index(RedirectStore::LISTING_INDEX)->items()
             ->filter(fn (mixed $row): bool => is_array($row) && ($row['site'] ?? null) === $site)
             ->map(fn (mixed $row): array => Collection::wrap($row)->except('site')->all())
             ->values();
@@ -148,23 +147,13 @@ class RedirectRepository
      */
     private function indexed(string ...$keys): Collection
     {
-        return $this->index(RedirectStore::LOOKUP_INDEX)
+        return $this->store->index(RedirectStore::LOOKUP_INDEX)->items()
             ->filter(fn (mixed $key): bool => in_array($key, $keys, true))
             ->keys()
             ->map(fn (mixed $id): ?Redirect => is_string($id) ? $this->find($id) : null)
             ->filter()
             ->sortBy(fn (Redirect $redirect): ?int => $redirect->order())
             ->values();
-    }
-
-    /**
-     * @return Collection<int|string, mixed>
-     */
-    private function index(string $name): Collection
-    {
-        $index = Collection::wrap($this->store->index($name))->whereInstanceOf(Index::class)->firstOrFail();
-
-        return Collection::wrap($index->items());
     }
 
     private function withCaptures(Redirect $redirect, string $pattern, string $url): Redirect
