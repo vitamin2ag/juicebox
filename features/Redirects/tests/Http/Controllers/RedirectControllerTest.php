@@ -74,7 +74,8 @@ it('lists the redirects of the selected site by source', function (): void {
             ->where('createUrl', RedirectFixtures::cpUrl('redirects.create'))
             ->where('importUrl', RedirectFixtures::cpUrl('redirects.import'))
             ->where('pruneUrl', RedirectFixtures::cpUrl('redirects.prune'))
-            ->where('actionUrl', RedirectFixtures::cpUrl('redirects.actions.run')));
+            ->where('actionUrl', RedirectFixtures::cpUrl('redirects.actions.run'))
+            ->where('reorderUrl', RedirectFixtures::cpUrl('redirects.reorder')));
 });
 
 it('shows the form to create a redirect with the blueprint defaults', function (): void {

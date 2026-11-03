@@ -37,6 +37,7 @@
     "Redirects": "Weiterleitungen",
     "Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.": "Weiterleitungen sind deaktiviert: juicebox.redirects.enabled ist false oder rias/statamic-redirect ist installiert.",
     "Redirects send visitors of a missing page to a new URL.": "Weiterleitungen schicken Besucher einer fehlenden Seite auf eine neue URL.",
+    "Redirects successfully reordered": "Weiterleitungen erfolgreich neu sortiert",
     "Regex match": "Regex-Übereinstimmung",
     "Sidebar": "Seitenleiste",
     "skipped :count row|skipped :count rows": ":count Zeile übersprungen|:count Zeilen übersprungen",

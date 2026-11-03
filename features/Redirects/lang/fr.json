@@ -37,6 +37,7 @@
     "Redirects": "Redirections",
     "Redirects are disabled: juicebox.redirects.enabled is false or rias/statamic-redirect is installed.": "Les redirections sont désactivées : juicebox.redirects.enabled vaut false ou rias/statamic-redirect est installé.",
     "Redirects send visitors of a missing page to a new URL.": "Les redirections envoient les visiteurs d'une page introuvable vers une nouvelle URL.",
+    "Redirects successfully reordered": "Redirections réorganisées avec succès",
     "Regex match": "Correspondance regex",
     "Sidebar": "Barre latérale",
     "skipped :count row|skipped :count rows": ":count ligne ignorée|:count lignes ignorées",

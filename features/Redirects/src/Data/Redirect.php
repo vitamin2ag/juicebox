@@ -79,6 +79,11 @@ class Redirect
         return clone ($this, ['enabled' => $enabled]);
     }
 
+    public function withOrder(?int $order): self
+    {
+        return clone ($this, ['order' => $order]);
+    }
+
     /**
      * Keeps the id, site and order, and the file the redirect was read from, so saving it replaces that file.
      */

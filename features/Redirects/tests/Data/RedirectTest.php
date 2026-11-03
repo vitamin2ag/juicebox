@@ -84,6 +84,14 @@ it('copies itself as disabled', function (): void {
         ->and($redirect->enabled())->toBeTrue();
 });
 
+it('copies itself with another order', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'de', source: '/old', destination: '/new');
+
+    expect($redirect->withOrder(4)->order())->toBe(4)
+        ->and($redirect->withOrder(4)->withOrder(null)->order())->toBeNull()
+        ->and($redirect->order())->toBeNull();
+});
+
 it('copies itself with the values of the form, keeping its id, site, order and file', function (): void {
     $redirect = new Redirect(id: 'one', site: 'en', source: '/old', destination: '/new', order: 2);
     $redirect->initialPath('en/2_one.yaml');

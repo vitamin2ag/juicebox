@@ -12,7 +12,7 @@ import {
     Listing,
     StatusIndicator,
 } from '@statamic/cms/ui';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
     redirects: { type: Array, required: true },
@@ -20,6 +20,7 @@ const props = defineProps({
     importUrl: { type: String, required: true },
     pruneUrl: { type: String, required: true },
     actionUrl: { type: String, required: true },
+    reorderUrl: { type: String, required: true },
 });
 
 const columns = [
@@ -30,6 +31,30 @@ const columns = [
 ];
 
 const pruning = ref(false);
+const items = ref(props.redirects);
+const reordering = ref(false);
+const saving = ref(false);
+
+watch(() => props.redirects, (redirects) => (items.value = redirects));
+
+function cancelReordering() {
+    items.value = props.redirects;
+    reordering.value = false;
+}
+
+function saveOrder() {
+    saving.value = true;
+
+    router.post(
+        props.reorderUrl,
+        { ids: items.value.map((redirect) => redirect.id) },
+        {
+            preserveScroll: true,
+            onSuccess: () => (reordering.value = false),
+            onFinish: () => (saving.value = false),
+        },
+    );
+}
 
 function prune() {
     router.post(props.pruneUrl, {}, { onFinish: () => (pruning.value = false) });
@@ -41,22 +66,29 @@ function prune() {
 
     <div class="max-w-page mx-auto">
         <Header :title="__('Redirects')" icon="arrow-up-right">
-            <Dropdown v-if="can('create redirects') || can('delete redirects')">
-                <DropdownMenu>
-                    <DropdownItem v-if="can('create redirects')" :text="__('Import CSV')" icon="upload" :href="importUrl" />
-                    <DropdownItem
-                        v-if="can('delete redirects')"
-                        :text="__('Delete disabled redirects')"
-                        icon="trash"
-                        variant="destructive"
-                        @click="pruning = true"
-                    />
-                </DropdownMenu>
-            </Dropdown>
-            <Button v-if="can('create redirects')" :text="__('Create Redirect')" :href="createUrl" variant="primary" />
+            <template v-if="reordering">
+                <Button :text="__('Cancel')" @click="cancelReordering" />
+                <Button variant="primary" :text="__('Save Order')" :disabled="saving" @click="saveOrder" />
+            </template>
+            <template v-else>
+                <Dropdown v-if="can('create redirects') || can('delete redirects')">
+                    <DropdownMenu>
+                        <DropdownItem v-if="can('create redirects')" :text="__('Import CSV')" icon="upload" :href="importUrl" />
+                        <DropdownItem
+                            v-if="can('delete redirects')"
+                            :text="__('Delete disabled redirects')"
+                            icon="trash"
+                            variant="destructive"
+                            @click="pruning = true"
+                        />
+                    </DropdownMenu>
+                </Dropdown>
+                <Button v-if="can('edit redirects') && items.length > 1" :text="__('Reorder')" @click="reordering = true" />
+                <Button v-if="can('create redirects')" :text="__('Create Redirect')" :href="createUrl" variant="primary" />
+            </template>
         </Header>
 
-        <EmptyStateMenu v-if="!redirects.length" :heading="__('Redirects send visitors of a missing page to a new URL.')">
+        <EmptyStateMenu v-if="!items.length" :heading="__('Redirects send visitors of a missing page to a new URL.')">
             <EmptyStateItem
                 v-if="can('create redirects')"
                 :href="createUrl"
@@ -75,11 +107,14 @@ function prune() {
 
         <Listing
             v-else
-            :items="redirects"
+            :items="items"
             :columns="columns"
             :allow-customizing-columns="false"
             :allow-bulk-actions="can('edit redirects') || can('delete redirects')"
             :action-url="actionUrl"
+            :reorderable="reordering"
+            :sortable="!reordering"
+            @reordered="items = $event"
             @refreshing="router.reload()"
         >
             <template #cell-source="{ row: redirect }">
