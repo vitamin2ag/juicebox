@@ -47,9 +47,7 @@ class ServiceProvider extends FeatureServiceProvider
 
         Stache::registerStore($this->app->make(RedirectStore::class));
         $this->registerSerializableClasses();
-        RedirectEnabled::register();
-        RedirectMatchType::register();
-        RedirectType::register();
+        $this->registerFilters();
         Permission::extend($this->registerPermissions(...));
         Nav::extend($this->registerNavigation(...));
 
@@ -66,6 +64,13 @@ class ServiceProvider extends FeatureServiceProvider
     protected function options(): array
     {
         return ['statamic.vite' => ['input' => 'resources/js/cp.js', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+    }
+
+    private function registerFilters(): void
+    {
+        RedirectEnabled::register();
+        RedirectMatchType::register();
+        RedirectType::register();
     }
 
     /**
