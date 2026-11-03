@@ -72,13 +72,6 @@ it('leaves a page that exists alone', function (): void {
     get('/alt')->assertOk();
 });
 
-it('does nothing while the feature is disabled', function (): void {
-    config(['juicebox.redirects.enabled' => false]);
-    resolve(RedirectRepository::class)->save(new Redirect(id: 'one', site: 'de', source: '/alt', destination: '/neu'));
-
-    get('/alt')->assertNotFound();
-});
-
 it('adds the site prefix to :dataset', function (string $destination, string $target): void {
     resolve(RedirectRepository::class)->save(new Redirect(id: 'one', site: 'en', source: '/alt', destination: $destination));
 

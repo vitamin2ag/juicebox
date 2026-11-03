@@ -29,7 +29,7 @@ class HandleNotFound
     {
         $response = $next($request);
 
-        if ($response->getStatusCode() !== 404 || ! config('juicebox.redirects.enabled')) {
+        if ($response->getStatusCode() !== 404) {
             return $response;
         }
 
