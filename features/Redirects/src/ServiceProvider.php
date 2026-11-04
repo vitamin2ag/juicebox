@@ -50,22 +50,19 @@ class ServiceProvider extends FeatureServiceProvider
         }
 
         $this->registerStore();
-        $this->registerSerializableClasses();
         $this->registerFilters();
         $this->registerPermissions();
         $this->registerNavigation();
         $this->registerMiddleware();
     }
 
-    /**
-     * The root .gitignore ignores every build folder, so the control panel build goes to dist.
-     *
-     * @return array<string, mixed>
-     */
     #[Override]
     protected function options(): array
     {
-        return ['statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist']];
+        return [
+            'statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+            'statamic.serializable_classes' => [Redirect::class],
+        ];
     }
 
     private function registerStore(): void
@@ -92,22 +89,6 @@ class ServiceProvider extends FeatureServiceProvider
                 ]);
             });
         });
-    }
-
-    /**
-     * The Stache caches every redirect as a serialized object, which Laravel only unserializes when
-     * cache.serializable_classes lists its class. Statamic's AddonServiceProvider does the same for
-     * an addon, but a feature cannot call it.
-     */
-    private function registerSerializableClasses(): void
-    {
-        $existing = config('cache.serializable_classes');
-
-        if ($existing === null || $existing === true) {
-            return;
-        }
-
-        config(['cache.serializable_classes' => [...(is_array($existing) ? $existing : []), Redirect::class]]);
     }
 
     private function registerNavigation(): void

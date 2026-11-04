@@ -153,17 +153,3 @@ it('lets the cache unserialize redirects', function (): void {
     expect($cache->get('redirect'))->toEqual($redirect)
         ->and(config('cache.serializable_classes'))->toBeArray();
 });
-
-it('adds redirects to what the cache unserializes when :dataset', function (mixed $configured, mixed $expected): void {
-    config(['cache.serializable_classes' => $configured]);
-
-    // boot() would register everything again, including the navigation that this file mocks.
-    new ReflectionMethod(ServiceProvider::class, 'registerSerializableClasses')->invoke(new ServiceProvider(app()));
-
-    expect(config('cache.serializable_classes'))->toBe($expected);
-})->with([
-    'nothing is allowed' => [false, [Redirect::class]],
-    'some classes are allowed' => [[Collection::class], [Collection::class, Redirect::class]],
-    'every class is allowed' => [true, true],
-    'no restriction is set' => [null, null],
-]);
