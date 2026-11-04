@@ -41,7 +41,11 @@ function dropped(event: DragEvent): void {
             <div class="space-y-6">
                 <Field
                     :label="__('File')"
-                    :instructions="__('The first row names the columns `source`, `destination`, `type` and `match_type`, and optionally `site`, `enabled` and `description`.')"
+                    :instructions="
+                        __(
+                            'The first row names the columns `source`, `destination`, `type` and `match_type`, and optionally `site`, `enabled` and `description`.',
+                        )
+                    "
                     :error="errors.file"
                     required
                 >
@@ -62,12 +66,7 @@ function dropped(event: DragEvent): void {
                     </div>
                 </Field>
 
-                <Field
-                    :label="__('Delimiter')"
-                    :instructions="__('One character, usually `,` or `;`.')"
-                    :error="errors.delimiter"
-                    required
-                >
+                <Field :label="__('Delimiter')" :instructions="__('One character, usually `,` or `;`.')" :error="errors.delimiter" required>
                     <div class="w-24">
                         <Input name="delimiter" v-model="delimiter" maxlength="1" />
                     </div>
