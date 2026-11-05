@@ -6,6 +6,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 - Use Laravel- and Statamic-native APIs and the existing service provider shape before adding abstractions.
 - Do not `continue`, `break` or `return` early inside a `foreach`: that is a search or a filter, so use `filter()`, `first()`, `contains()` or `lazy()` A loop that walks a whole set, or whose iterations depend on what the previous one changed, is fine.
+- Put each call of a method chain on its own line once the statement is longer than 100 characters. Pint indents a chain that is split but never splits one, so this is for you to do.
 - Add only the files and dependencies needed for the behavior being implemented.
 - Keep tests focused on observable behavior: response headers, merged config, publish tags, provider wiring.
 
