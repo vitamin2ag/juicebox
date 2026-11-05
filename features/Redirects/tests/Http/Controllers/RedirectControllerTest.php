@@ -68,7 +68,9 @@ it('opens the list with the filters and the urls of the listing', function (): v
             ->has('filters', 3)
             ->where('filters.0.handle', 'redirect_enabled')
             ->where('listingUrl', RedirectFixtures::cpUrl('redirects.index'))
-            ->where('createUrl', RedirectFixtures::cpUrl('redirects.create')));
+            ->where('createUrl', RedirectFixtures::cpUrl('redirects.create'))
+            ->where('importUrl', RedirectFixtures::cpUrl('redirects.import'))
+            ->where('pruneUrl', RedirectFixtures::cpUrl('redirects.prune')));
 });
 
 it('tells the list when the selected site has no redirects', function (): void {
