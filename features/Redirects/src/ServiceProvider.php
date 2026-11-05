@@ -28,7 +28,8 @@ class ServiceProvider extends FeatureServiceProvider
 
     /**
      * The feature switches itself off while rias/statamic-redirect is installed, because that package
-     * registers the same store and handles the same requests.
+     * registers the same store and handles the same requests. The listeners boot either way and check
+     * the same switch.
      */
     #[Override]
     protected function bootFeature(): void
