@@ -133,3 +133,20 @@ class CollectionTreeDiff
     /** @return array<int, string> */
     public function ancestryChanged() {}
 }
+
+namespace Statamic\Fields;
+
+class Fields
+{
+    /**
+     * @param  array<mixed>  $values
+     * @return static
+     */
+    public function addValues(array $values) {}
+
+    /** @return static */
+    public function process() {}
+
+    /** @return \Illuminate\Support\Collection<string, mixed> */
+    public function values() {}
+}
