@@ -41,6 +41,17 @@ class RedirectRepository
     }
 
     /**
+     * Deletes the disabled redirects of every site and says how many it deleted.
+     */
+    public function prune(): string
+    {
+        return trans_choice(
+            '{0} No disabled redirects to delete.|{1} Deleted :count disabled redirect.|[2,*] Deleted :count disabled redirects.',
+            $this->deleteDisabled(),
+        );
+    }
+
+    /**
      * The rows of the list for a site, with the fields of a redirect file, read from one index instead of every redirect.
      *
      * @return Collection<int, array<mixed>>
