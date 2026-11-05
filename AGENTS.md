@@ -10,6 +10,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - Keep a feature provider's `bootFeature()` a short list of `$this->registerX()` calls. Each private method registers what its name says, with the facade call and its callback inside (`Permission::extend(...)`, `Nav::extend(...)`, `app()->booted(...)`), not in `bootFeature()`.
 - Add only the files and dependencies needed for the behavior being implemented.
 - Keep tests focused on observable behavior: response headers, merged config, publish tags, provider wiring.
+- Translate every user-facing string and ship `de`, `de_CH` and `fr` in `features/<Name>/lang/`; add only keys Statamic does not already ship.
 
 ## Quality Bar
 
