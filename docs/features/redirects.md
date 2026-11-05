@@ -4,7 +4,7 @@ Redirects requests that would otherwise return a 404 to a new URL.
 
 Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder.
 
-A disabled feature, with `enabled` set to `false`, handles no 404s and creates no entry redirects, and its commands stop with an error.
+A disabled feature, with `enabled` set to `false`, handles no 404s, creates no entry redirects and adds nothing to the control panel, and its commands stop with an error.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -15,7 +15,7 @@ type: 301
 match_type: exact
 ```
 
-A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A redirect without an `order` is tried before the numbered ones; among the others, the lowest `order` is tried first.
+A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A new redirect, made in the control panel, by a CSV import or for a changed entry URI, gets the next `order` of its site, so it is tried after the others; a redirect without an `order` is tried before the numbered ones.
 
 ## Matching
 
@@ -46,6 +46,19 @@ When the URI of a published entry changes, because its slug changes or because i
 When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
 The children are looked at only when the `slug` of a parent changes or the parent moves. A route that builds the URI of a child from another field of its parent is not followed. A child that is not published, or whose URI does not change, gets no redirect. Each child redirect is a file, so renaming a parent with many children takes a moment longer to save.
+
+## Control panel
+
+### Permissions
+
+| Permission | Allows |
+|---|---|
+| `view redirects` | The list and the navigation item. |
+| `edit redirects` | Editing a redirect, enabling and disabling redirects in bulk, and reordering. |
+| `create redirects` | Creating redirects and importing a CSV file. |
+| `delete redirects` | Deleting a redirect or a selection of redirects, and deleting the disabled redirects. |
+
+`create redirects` and `delete redirects` sit under `edit redirects`, and that under `view redirects`, so the role editor grants a child only together with its parent.
 
 ## Commands
 
