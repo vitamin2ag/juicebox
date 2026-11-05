@@ -4,7 +4,7 @@ Redirects requests that would otherwise return a 404 to a new URL.
 
 Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder.
 
-A disabled feature, with `enabled` set to `false`, registers no redirect store.
+A disabled feature, with `enabled` set to `false`, handles no 404s.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -15,7 +15,29 @@ type: 301
 match_type: exact
 ```
 
-A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty.
+A key without a value is not written: a `410` redirect has no `destination`, and `description` is left out while it is empty. A redirect without an `order` is tried before the numbered ones; among the others, the lowest `order` is tried first.
+
+## Matching
+
+The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middleware groups and acts only on a 404 response, so a page that exists is never redirected.
+
+- The site comes from the request URL (the default site when no site matches). Only the enabled redirects of that site count.
+- Exact redirects win over regex ones; within each, the lowest `order` wins.
+- An exact `source` matches with or without a leading or trailing slash, and with or without the query string of the request: `/alt` matches `/alt/` and `/alt?utm_source=newsletter`, while `/news?page=2` matches only that query.
+- A regex `source` is case-insensitive and not anchored. A `destination` with `$1`, `$2`, ... takes the captures, so `/kampagne/(.*)` to `/aktion/$1` sends `/kampagne/sommer` to `/aktion/sommer`.
+- A regex `source` is matched between backticks with the `i` flag, so a backtick in it needs a backslash. A regex `source` that does not compile is skipped, so it never turns a 404 into an error.
+- A `source` is relative to its site: `/alt` in a site at `/en` matches `/en/alt`. On a site with an absolute URL, a `source` that carries the site prefix matches as well.
+
+## Responses
+
+| `type` | Response |
+|---|---|
+| `301` | Permanent redirect to `destination`. |
+| `302` | Temporary redirect to `destination`. |
+| `410` | `410 Gone`, rendered like any other HTTP error; `destination` is not used. |
+
+- `destination` is a URL or `entry::<id>`, which redirects to the URL of that entry. Without a destination, or when the entry is missing, the 404 stays.
+- A relative `destination` gets the prefix of its site (`/neu` in a site at `/en` redirects to `/en/neu`), unless it already starts with the prefix of a site.
 
 ## Configuration
 
