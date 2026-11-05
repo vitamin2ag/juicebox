@@ -4,7 +4,7 @@ Redirects requests that would otherwise return a 404 to a new URL.
 
 Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder.
 
-A disabled feature, with `enabled` set to `false`, handles no 404s.
+A disabled feature, with `enabled` set to `false`, handles no 404s and creates no entry redirects.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -39,6 +39,14 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 - `destination` is a URL or `entry::<id>`, which redirects to the URL of that entry. Without a destination, or when the entry is missing, the 404 stays.
 - A relative `destination` gets the prefix of its site (`/neu` in a site at `/en` redirects to `/en/neu`), unless it already starts with the prefix of a site.
 
+## Entry redirects
+
+When the URI of a published entry changes, because its slug changes or because it moves to another parent in a structure, the feature saves an exact `301` redirect from the old to the new URI in the site of the entry. Moving a parent, or changing its slug, redirects its children as well, at every depth. A redirect from the old URI that is already stored is not added twice: a disabled one is enabled again and pointed at the new URI as a `301`, keeping its `id`, `order` and `description`, and an enabled one is left as it is. A save that keeps the URI, an unpublished entry and a new entry, including a new page placed in a structure, get no redirect.
+
+When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed. This also happens while `create_entry_redirects` is `false`.
+
+The children are looked at only when the `slug` of a parent changes or the parent moves. A route that builds the URI of a child from another field of its parent is not followed. A child that is not published, or whose URI does not change, gets no redirect. Each child redirect is a file, so renaming a parent with many children takes a moment longer to save.
+
 ## Configuration
 
 Publish the config file:
@@ -51,9 +59,11 @@ php artisan vendor:publish --tag=juicebox-redirects-config
 |---|---|---|
 | `enabled` | `true` | `true`, `false` |
 | `store` | `'content/redirects'` | Directory relative to the project root |
+| `create_entry_redirects` | `true` | `true`, `false` |
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `JUICEBOX_REDIRECTS_ENABLED` | `true` | Master toggle for the feature. |
+| `JUICEBOX_REDIRECTS_CREATE_ENTRY_REDIRECTS` | `true` | Creates a redirect when the URI of an entry changes. |
