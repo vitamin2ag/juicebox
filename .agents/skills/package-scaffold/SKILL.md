@@ -15,6 +15,6 @@ Read `docs/adding-a-feature.md` first: it is the single source for the checklist
 - Put Statamic pieces where `statamic-features` looks and they register themselves: `src/{Actions,Dictionaries,Fieldtypes,Modifiers,Scopes,Tags,Widgets,Subscribers,UpdateScripts}`, `resources/{fieldsets,blueprints}` (namespace `<slug>::`), `routes/{web,cp,actions}.php`, `resources/cp/{js,css}`. Do not call `Fieldset::addNamespace`, `Blueprint::addNamespace`, `Tag::register()` or `Statamic::script()` yourself. Anything else (middleware via `pushMiddlewareToGroup`, say) goes in the provider's `bootFeature()`.
 - Keep stubs in `features/<Name>/resources/`, and fixtures in `features/<Name>/tests/__Fixtures__/`.
 - Name artisan commands `statamic:juicebox:<slug>:<action>`.
-- Put a feature's own boot code in `bootFeature()`, which runs after the conventions have booted; do not override `boot()`. Call the parent first when overriding `register()`.
+- Put a feature's own boot code in `bootFeature()`, which runs after the conventions have booted; do not override `boot()`. Once it registers more than one thing, make it a list of `$this->registerX()` calls, one private method per thing with its facade call and callback inside. Call the parent first when overriding `register()`.
 - Run `composer test` before reporting done; it enforces the provider location, the Boost skill, the feature doc `docs/features/<slug>.md` (publish command and config keys) and its link in the README.
 - Add only the code the behaviour needs.
