@@ -49,6 +49,18 @@ The children are looked at only when the `slug` of a parent changes or the paren
 
 ## Control panel
 
+**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import and to deleting the disabled redirects.
+
+- The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`.
+- `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, and so is a regex `source` that does not compile.
+- The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
+- Deleting the disabled redirects does what the [prune command](#commands) does.
+- The list loads its rows page by page as JSON, so it stays fast with thousands of redirects. Search matches the source, destination and description; the filters are enabled or disabled, match type and type (301, 302 or 410), and the columns sort the list.
+- Select rows in the list to delete, enable or disable several redirects at once, as for entries.
+- **Reorder** switches the list to drag handles for the regex redirects, and **Save Order** numbers them from 1 in the order shown. Only redirects whose `order` changes are written, since each redirect is a file. Exact redirects are not listed: a source is unique per site, so each is found directly and their `order` does not matter. Of several matching regex redirects, the lowest `order` wins.
+- The form is Statamic's publish form. The list and the import are Vue pages, built into `features/Redirects/resources/dist` and published to `public/vendor/redirects/dist`. `statamic:install`, which a Statamic site runs after `composer update`, publishes them; to publish them by hand, run `php artisan vendor:publish --tag=redirects --force`.
+- To change the pages, edit `features/Redirects/resources/js` and rebuild as [Adding a feature](../adding-a-feature.md) describes, then commit `features/Redirects/resources/dist`.
+
 ### Permissions
 
 | Permission | Allows |

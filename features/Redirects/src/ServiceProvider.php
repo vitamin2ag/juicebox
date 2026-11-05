@@ -55,6 +55,14 @@ class ServiceProvider extends FeatureServiceProvider
         $this->registerMiddleware();
     }
 
+    #[Override]
+    protected function options(): array
+    {
+        return [
+            'statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+        ];
+    }
+
     private function registerStore(): void
     {
         Stache::registerStore($this->app->make(RedirectStore::class));
