@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Statamic\Statamic;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
@@ -139,4 +141,15 @@ it('switches itself off while rias/statamic-redirect is installed', function ():
         ->and(Stache::stores()->has('redirects'))->toBeFalse()
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
         ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
+});
+
+it('lets the cache unserialize redirects', function (): void {
+    $redirect = new Redirect(id: 'one', site: 'de', source: '/alt', destination: '/neu');
+
+    // The cache the Stache uses in an application: it serializes, and it unserializes only the classes of the list.
+    $cache = Cache::build(['driver' => 'array', 'serialize' => true]);
+    $cache->put('redirect', $redirect);
+
+    expect($cache->get('redirect'))->toEqual($redirect)
+        ->and(config('cache.serializable_classes'))->toBeArray();
 });
