@@ -10,7 +10,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 ## Quality Bar
 
-- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts.
+- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts. A type Statamic leaves out (`mixed` from a facade, an untyped `handle()`) goes in the PHPStan stub `stubs/statamic.stub`; do not add a helper or a `Collection::wrap(...)->whereInstanceOf(...)` just to narrow it. Values that are really unknown (request input, parsed YAML, config, validation values) are narrowed where they are used.
 - Keep type coverage, code coverage and mutation score (`composer test:mutate`) at 100%.
 - Every PHP file declares `strict_types=1`.
 
