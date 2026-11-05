@@ -5,6 +5,64 @@
  * needs here instead of checking the value at runtime.
  */
 
+namespace Statamic\Sites;
+
+class Site
+{
+    /** @return string */
+    public function handle() {}
+
+    /** @return string */
+    public function url() {}
+
+    /**
+     * @param  string  $url
+     * @return string
+     */
+    public function relativePath($url) {}
+}
+
+namespace Statamic\Facades;
+
+/**
+ * @method static \Statamic\Sites\Site current()
+ * @method static \Statamic\Sites\Site selected()
+ * @method static \Statamic\Sites\Site default()
+ * @method static \Statamic\Sites\Site|null findByUrl(string $url)
+ * @method static \Illuminate\Support\Collection<string, \Statamic\Sites\Site> all()
+ */
+class Site {}
+
+/**
+ * @method static \Statamic\Entries\Entry|null find($id)
+ */
+class Entry {}
+
+
+
+namespace Statamic\Entries;
+
+class Entry
+{
+    /**
+     * @param  string|null  $locale
+     * @return ($locale is null ? string : $this)
+     */
+    public function locale($locale = null) {}
+
+    /**
+     * @param  string|null  $id
+     * @return ($id is null ? string|null : $this)
+     */
+    public function id($id = null) {}
+
+    /** @return string|null */
+    public function uri() {}
+
+    /** @return string|null */
+    public function absoluteUrl() {}
+}
+
 namespace Statamic\Stache\Stores;
 
 abstract class Store
