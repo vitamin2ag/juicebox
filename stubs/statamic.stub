@@ -1,0 +1,6 @@
+<?php
+
+/*
+ * Types that Statamic does not declare, for PHPStan only (phpstan.neon.dist, stubFiles). Add what a feature
+ * needs here instead of checking the value at runtime.
+ */

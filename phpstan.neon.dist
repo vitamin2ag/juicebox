@@ -5,5 +5,7 @@ parameters:
         - features
         - tests
     tmpDir: build/phpstan
+    stubFiles:
+        - stubs/statamic.stub
     configDirectories:
         - features/*/config
