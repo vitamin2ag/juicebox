@@ -26,3 +26,5 @@ phpunit.xml.dist export-ignore
 /types export-ignore
 /.nvmrc export-ignore
 /.npmrc export-ignore
+/.oxlintrc.json export-ignore
+/.prettierrc.json export-ignore
