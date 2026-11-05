@@ -55,6 +55,8 @@ class RedirectController extends CpController
             'filters' => Scope::filters('redirects'),
             'listingUrl' => cp_route('redirects.index'),
             'createUrl' => cp_route('redirects.create'),
+            'importUrl' => cp_route('redirects.import'),
+            'pruneUrl' => cp_route('redirects.prune'),
         ]);
     }
 
