@@ -11,6 +11,7 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectEnabled;
 use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectMatchType;
 use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectType;
@@ -60,6 +61,7 @@ class ServiceProvider extends FeatureServiceProvider
     {
         return [
             'statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+            'statamic.serializable_classes' => [Redirect::class],
         ];
     }
 
