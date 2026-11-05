@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Addon;
+use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
+use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(ServiceProvider::class);
 
@@ -68,6 +71,42 @@ it('points the redirect store at the configured directory', function (): void {
 it('handles the 404s of the :dataset middleware group first', function (string $group): void {
     expect(data_get(resolve('router')->getMiddlewareGroups(), [$group, 0]))->toBe(HandleNotFound::class);
 })->with(['web', 'statamic.web']);
+
+it('registers the permissions in a Redirects group', function (): void {
+    $permission = fn (string $value, string $label, array $children = []): array => [
+        'value' => $value,
+        'label' => $label,
+        'description' => null,
+        'group' => 'redirects',
+        'hidden_by' => [],
+        'children' => $children,
+    ];
+
+    expect(Collection::wrap(Permission::boot()->tree())->firstWhere('handle', 'redirects'))->toBe([
+        'handle' => 'redirects',
+        'label' => 'Redirects',
+        'permissions' => [
+            $permission('view redirects', 'View Redirects', [
+                $permission('edit redirects', 'Edit Redirects', [
+                    $permission('create redirects', 'Create Redirects'),
+                    $permission('delete redirects', 'Delete Redirects'),
+                ]),
+            ]),
+        ],
+    ]);
+});
+
+it('lists Redirects under Tools for a user who can view redirects', function (): void {
+    $this->actingAs(RedirectFixtures::userWith('view redirects'));
+
+    expect(RedirectFixtures::navigation())->toContain(['Tools', 'Redirects', RedirectFixtures::cpUrl('redirects.index'), 'arrow-up-right']);
+});
+
+it('leaves Redirects out of the navigation for a user who cannot view redirects', function (): void {
+    $this->actingAs(RedirectFixtures::userWith('edit redirects', 'create redirects', 'delete redirects'));
+
+    expect(array_column(RedirectFixtures::navigation(), 1))->not->toContain('Redirects');
+});
 
 it('switches itself off while rias/statamic-redirect is installed', function (): void {
     $router = resolve('router');
