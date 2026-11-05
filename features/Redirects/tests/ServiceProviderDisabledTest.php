@@ -35,6 +35,8 @@ it('leaves the control panel without redirects while the feature is disabled', f
     $this->actingAs(RedirectFixtures::superUser());
 
     expect(Route::has('statamic.cp.redirects.index'))->toBeFalse()
+        ->and(Route::has('statamic.cp.redirects.import'))->toBeFalse()
+        ->and(Route::has('statamic.cp.redirects.prune'))->toBeFalse()
         ->and(Collection::wrap(Permission::boot()->tree())->firstWhere('handle', 'redirects'))->toBeNull()
         ->and(array_column(RedirectFixtures::navigation(), 1))->not->toContain('Redirects');
 });
