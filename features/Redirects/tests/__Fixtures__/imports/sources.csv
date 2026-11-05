@@ -1,0 +1,3 @@
+source,destination,type,match_type,site
+/alt/,/neu,301,exact,de
+/alt,/muster,302,regex,de

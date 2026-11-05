@@ -1,0 +1,6 @@
+source,destination,type,match_type,site
+/gueltig,/neu,301,exact,de
+/anderer-typ,/neu,200,exact,de
+/zu-hoch,/neu,999,exact,de
+/fremde-site,/neu,301,exact,fr
+/pfad,/neu,301,exact,../../config
