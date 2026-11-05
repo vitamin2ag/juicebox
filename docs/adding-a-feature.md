@@ -62,7 +62,7 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 
 - Every PHP file declares `strict_types=1`; use `#[Override]` when overriding parent members.
 - Read config with `config('juicebox.<snake_name>.<key>')`. Values are `mixed`; narrow them at the point of use (PHPStan runs at `max`; fix the type instead of using `@phpstan-ignore`, `assert()` or casts).
-- Name artisan commands `statamic:juicebox:<slug>:<action>`.
+- Name artisan commands `statamic:juicebox:<slug>:<action>` and give them the `Statamic\Console\RunsInPlease` trait, so they also run as `php please juicebox:<slug>:<action>`. Keep the trait's `statamic:` prefix in the signature, since please strips it.
 - Add only the files the behaviour needs.
 
 ## Worked example: `RemovePoweredBy`
