@@ -1,0 +1,5 @@
+source,destination,type,match_type,site,enabled,description
+/alt,/neu,301,exact,de,1,Moved
+/kampagne/(.*),/aktion/$1,302,regex,en,false,
+/weg,,410,exact,de,yes,
+/leer,/neu,301,exact,,,
