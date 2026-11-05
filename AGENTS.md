@@ -41,7 +41,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Quick Commands
 
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit). Fix with `composer lint` / `composer refactor`.
-- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`). The `package-testing` skill explains how to load a driver for a single run.
+- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`; `scripts/with-php-test-coverage-driver.sh` loads Xdebug for the run). Run both before you call a change to `src` or `features` done; if you cannot, say so and why. The `package-testing` skill has the details.
 
 ## Local Skills
 
