@@ -1,0 +1,4 @@
+source,destination,type,match_type,site
+/kaputt/(,/neu,301,regex,de
+/klammer(,/neu,301,exact,de
+/kampagne/(.*),/aktion/$1,301,regex,de

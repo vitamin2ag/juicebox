@@ -1,0 +1,8 @@
+source,destination,type,match_type,site
+,/neu,301,exact,de
+/ohne-typ,/neu,,exact,de
+/falscher-typ,/neu,abc,exact,de
+/ohne-match-type,/neu,301,,de
+/ohne-ziel,,301,exact,de
+
+/gueltig,/neu,301,exact,de

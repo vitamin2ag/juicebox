@@ -4,7 +4,7 @@ Redirects requests that would otherwise return a 404 to a new URL.
 
 Redirects are YAML files in `content/redirects/<site>/<id>.yaml`; the site is the name of the folder.
 
-A disabled feature, with `enabled` set to `false`, handles no 404s and creates no entry redirects.
+A disabled feature, with `enabled` set to `false`, handles no 404s and creates no entry redirects, and its commands stop with an error.
 
 ```yaml
 id: 1f6c2b63-2d2e-4c1f-8b62-4a3cad7e8f02
@@ -43,9 +43,44 @@ The `HandleNotFound` middleware runs first in the `web` and `statamic.web` middl
 
 When the URI of a published entry changes, because its slug changes or because it moves to another parent in a structure, the feature saves an exact `301` redirect from the old to the new URI in the site of the entry. Moving a parent, or changing its slug, redirects its children as well, at every depth. A redirect from the old URI that is already stored is not added twice: a disabled one is enabled again and pointed at the new URI as a `301`, keeping its `id`, `order` and `description`, and an enabled one is left as it is. A save that keeps the URI, an unpublished entry and a new entry, including a new page placed in a structure, get no redirect.
 
-When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed. This also happens while `create_entry_redirects` is `false`.
+When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
 The children are looked at only when the `slug` of a parent changes or the parent moves. A route that builds the URI of a child from another field of its parent is not followed. A child that is not published, or whose URI does not change, gets no redirect. Each child redirect is a file, so renaming a parent with many children takes a moment longer to save.
+
+## Commands
+
+Run the commands with `php please`. They also work as `php artisan statamic:juicebox:redirects:<action>`.
+
+``` bash
+php please juicebox:redirects:prune
+```
+
+Deletes every redirect with `enabled: false`, in every site, and prints how many it deleted. Empty or broken redirect files are read as disabled redirects, so it deletes them as well.
+
+``` bash
+php please juicebox:redirects:import redirects.csv --delimiter=";"
+```
+
+Imports the redirects of a CSV file and prints how many rows it imported and skipped. `--delimiter` defaults to `,`.
+
+### CSV format
+
+The first row names the columns, in any order; other columns are ignored.
+
+| Column | Required | Value |
+|---|---|---|
+| `source` | Yes | As in a redirect file. |
+| `destination` | Unless `type` is `410` | A URL or `entry::<id>`. |
+| `type` | Yes | `301`, `302` or `410`. |
+| `match_type` | Yes | `exact` or `regex`. |
+| `site` | No | The site handle. Empty or missing: the current site, which on the command line is the site of `APP_URL`, usually the default site. |
+| `enabled` | No | `1`, `true`, `yes` or `on` enable the redirect, any other value, an empty one included, disables it. Without the column, every row is enabled. |
+| `description` | No | Empty keeps the description of the redirect the row replaces. |
+
+- A row with the `source` and `site` of an existing redirect replaces it and keeps its `id` and `order`, so importing the same file again changes nothing. Of the rows with the same `source` and `site` in one file, the last one wins.
+- A row without a required value, with a `type` that is not a number, or with a regex `source` that does not compile, is skipped and counted. Empty lines are ignored.
+- Values that contain the delimiter or a line break are wrapped in double quotes. The file is UTF-8, with or without the byte order mark Excel writes.
+- The import keeps `description`, enables `true` and `yes` as well as `1`, and skips a `type` that is not a number or a regex that does not compile instead of saving a broken redirect.
 
 ## Configuration
 
