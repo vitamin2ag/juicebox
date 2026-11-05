@@ -4,3 +4,22 @@
  * Types that Statamic does not declare, for PHPStan only (phpstan.neon.dist, stubFiles). Add what a feature
  * needs here instead of checking the value at runtime.
  */
+
+namespace Statamic\Stache\Stores;
+
+abstract class Store
+{
+    /**
+     * @param  string  $name
+     * @return \Statamic\Stache\Indexes\Index
+     */
+    public function index($name) {}
+}
+
+namespace Statamic\Stache\Indexes;
+
+abstract class Index
+{
+    /** @return \Illuminate\Support\Collection<int|string, mixed> */
+    public function items() {}
+}

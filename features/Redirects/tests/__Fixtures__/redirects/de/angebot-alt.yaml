@@ -1,0 +1,8 @@
+id: 4c9f5e96-5051-4f42-9e95-7d6fd0ab1c05
+enabled: true
+source: /angebot-alt
+source_md5: efda36f92dea656b8fe449ee3c2f532b
+destination: /angebot
+type: 301
+site: de
+match_type: exact
