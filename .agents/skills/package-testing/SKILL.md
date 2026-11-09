@@ -15,6 +15,19 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 2. Cover the happy path, the disabled/`false` path, and invalid input where it is possible (for example non-string config values).
 3. Iterate with `composer test:unit -- --filter "<name>"`. Finish with `composer test`.
 
+## Probing while working
+
+To check a hunch without writing a test file, run a snippet with `pestphp/pest-plugin-agent`:
+
+```bash
+vendor/bin/pest --agent='expect(resolve("router")->getMiddlewareGroups()["web"])->toContain(\Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders::class);'
+```
+
+- The snippet runs as a temporary `it()` inside `tests/TestCase.php`, so every feature is booted and `$this->get()`, `actingAs()` and Statamic facades work. Pest deletes the file afterwards.
+- Wrap it in single quotes, so the shell leaves `$` and `\` alone, and use double quotes inside. For a snippet with an apostrophe, write it to a scratch file and pass `--agent="$(cat <file>)"`.
+- Fully qualify every class: the snippet has no `use` imports. `beforeEach()` setup does not run, so inline what the check needs.
+- A probe is not a test. Behaviour worth keeping goes into `features/<Name>/tests`.
+
 ## Scripts
 
 | Script | Runs |
