@@ -1,0 +1,16 @@
+{
+    // strictTemplates stays off: Statamic's generated types do not declare the attributes and events the pages
+    // pass through to its components, so it would only report noise. Scripts and props are checked strictly.
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "verbatimModuleSyntax": true,
+        "erasableSyntaxOnly": true,
+        "lib": ["ES2022", "DOM"]
+    },
+    "include": ["types", "scripts", "features/*/resources/js"]
+}

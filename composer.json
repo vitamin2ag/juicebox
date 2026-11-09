@@ -23,8 +23,8 @@
     "require": {
         "php": "^8.5",
         "statamic/cms": "^6.0",
-        "edalzell/laravel-features": "^1.6.2",
-        "edalzell/statamic-features": "^1.0.1"
+        "edalzell/laravel-features": "^2.0",
+        "edalzell/statamic-features": "^2.0"
     },
     "require-dev": {
         "orchestra/testbench": "^11.0",
@@ -85,13 +85,16 @@
         "refactor:check": [
             "vendor/bin/rector process --dry-run"
         ],
+        "test:assets": [
+            "npm run typecheck",
+            "npm run lint",
+            "npm run format:check"
+        ],
         "test:coverage": [
-            "@putenv XDEBUG_MODE=coverage",
-            "vendor/bin/pest --parallel --coverage --min=100"
+            "scripts/with-php-test-coverage-driver.sh vendor/bin/pest --parallel --coverage --min=100"
         ],
         "test:mutate": [
-            "@putenv XDEBUG_MODE=coverage",
-            "vendor/bin/pest --mutate --parallel --min=100"
+            "scripts/with-php-test-coverage-driver.sh vendor/bin/pest --mutate --parallel --min=100"
         ],
         "test:types": [
             "vendor/bin/pest --type-coverage --min=100"

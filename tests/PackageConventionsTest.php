@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
@@ -25,6 +26,20 @@ dataset('features with config', fn (): array => array_filter(
     juiceboxFeatures(),
     fn (array $feature): bool => file_exists(__DIR__.'/../features/'.$feature[0].'/config/'.Str::snake($feature[0]).'.php'),
 ));
+
+/**
+ * Every PHP file the quality gates cover.
+ *
+ * @return Collection<int, SplFileInfo>
+ */
+function phpFiles(): Collection
+{
+    return collect(['src', 'features', 'tests'])
+        ->flatMap(fn (string $directory): array => iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../$directory", FilesystemIterator::SKIP_DOTS)), false))
+        ->whereInstanceOf(SplFileInfo::class)
+        ->filter(fn (SplFileInfo $file): bool => $file->getExtension() === 'php' && ! str_contains($file->getPathname(), 'node_modules'))
+        ->values();
+}
 
 it('has the provider where feature discovery looks for it', function (string $feature): void {
     expect(__DIR__."/../features/$feature/src/ServiceProvider.php")->toBeFile();
@@ -65,16 +80,10 @@ it('documents every config key and the publish command of every feature with con
 })->with('features with config');
 
 it('declares what its tests mutate for every feature', function (string $feature): void {
-    $tests = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../features/$feature/tests", FilesystemIterator::SKIP_DOTS));
-    $declared = false;
+    $tests = collect(iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../features/$feature/tests", FilesystemIterator::SKIP_DOTS)), false))
+        ->whereInstanceOf(SplFileInfo::class);
 
-    foreach ($tests as $file) {
-        if ($file instanceof SplFileInfo && str_contains((string) file_get_contents($file->getPathname()), 'mutates(')) {
-            $declared = true;
-        }
-    }
-
-    expect($declared)->toBeTrue();
+    expect($tests->contains(fn (SplFileInfo $file): bool => str_contains((string) file_get_contents($file->getPathname()), 'mutates(')))->toBeTrue();
 })->with('features');
 
 it('keeps the changelog and release notes config the release workflow needs', function (): void {
@@ -89,15 +98,9 @@ it('does not silence PHPStan', function (): void {
 
     expect($neon)->not->toContain('baseline')->not->toContain('ignoreErrors');
 
-    foreach (['src', 'features', 'tests'] as $directory) {
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../$directory"));
-
-        foreach ($files as $file) {
-            if (! $file instanceof SplFileInfo || $file->getExtension() !== 'php' || $file->getFilename() === basename(__FILE__)) {
-                continue;
-            }
-
+    phpFiles()
+        ->reject(fn (SplFileInfo $file): bool => $file->getFilename() === basename(__FILE__))
+        ->each(function (SplFileInfo $file): void {
             expect((string) file_get_contents($file->getPathname()))->not->toContain('@phpstan-ignore');
-        }
-    }
+        });
 });

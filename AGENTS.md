@@ -5,12 +5,16 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Package Conventions
 
 - Use Laravel- and Statamic-native APIs and the existing service provider shape before adding abstractions.
+- Do not `continue`, `break` or `return` early inside a `foreach`: that is a search or a filter, so use `filter()`, `first()`, `contains()` or `lazy()` A loop that walks a whole set, or whose iterations depend on what the previous one changed, is fine.
+- Put each call of a method chain on its own line once the statement is longer than 100 characters. Pint indents a chain that is split but never splits one, so this is for you to do.
+- Keep a feature provider's `bootFeature()` a short list of `$this->registerX()` calls. Each private method registers what its name says, with the facade call and its callback inside (`Permission::extend(...)`, `Nav::extend(...)`, `app()->booted(...)`), not in `bootFeature()`.
 - Add only the files and dependencies needed for the behavior being implemented.
 - Keep tests focused on observable behavior: response headers, merged config, publish tags, provider wiring.
+- Translate every user-facing string and ship `de`, `de_CH` and `fr` in `features/<Name>/lang/`; add only keys Statamic does not already ship.
 
 ## Quality Bar
 
-- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts.
+- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts. A type Statamic leaves out (`mixed` from a facade, an untyped `handle()`) goes in the PHPStan stub `stubs/statamic.stub`; do not add a helper or a `Collection::wrap(...)->whereInstanceOf(...)` just to narrow it. Values that are really unknown (request input, parsed YAML, config, validation values) are narrowed where they are used.
 - Keep type coverage, code coverage and mutation score (`composer test:mutate`) at 100%.
 - Every PHP file declares `strict_types=1`.
 
@@ -28,6 +32,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 - `features/<Name>/`: feature modules (`config/<snake_name>.php`, `src/ServiceProvider.php`, `resources/`, `tests/`, ...). Place files where laravel-features and [`edalzell/statamic-features`](https://github.com/edalzell/statamic-features) expect them (see the former's Boost skill in `vendor/edalzell/laravel-features/resources/boost/skills/` and the latter's README).
 - `src/FeatureServiceProvider.php`: base for feature providers (extends laravel-features' `FeatureServiceProvider`; only sets the config file name and publish tag). `src/ServiceProvider.php` registers all features by discovery; `composer.json` lists only `Vitamin2\Juicebox\ServiceProvider`.
+- `package.json`, `tsconfig.json`, `scripts/build-control-panel.ts`, `types/`: the one control panel build of every feature, explained in `docs/adding-a-feature.md`.
 - `resources/boost/skills/`: consumer-facing Boost skills (ships with the package; `.agents/` and `docs/` do not).
 - `docs/features/<slug>.md`: user documentation of one feature, linked from the README's `Features` list.
 - `features/<Name>/tests/` covers a feature; `tests/Feature/` holds the cross-cutting tests that boot the app (discovery, the base provider, Boost skills); the rest of `tests/` holds checks that need no app (conventions, architecture). Fixtures live in `__Fixtures__/` folders.
@@ -41,7 +46,8 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Quick Commands
 
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit). Fix with `composer lint` / `composer refactor`.
-- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`). The `package-testing` skill explains how to load a driver for a single run.
+- Control panel assets, after `composer install` and `nvm use`: `npm ci`, then `composer test:assets` (runs `npm run typecheck`, `lint` with oxlint and `format:check` with Prettier; fix formatting with `npm run format`) and `npm run build` (not part of `composer test`); commit the rebuilt `resources/dist` with its source.
+- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`; `scripts/with-php-test-coverage-driver.sh` loads Xdebug for the run). Run both before you call a change to `src` or `features` done; if you cannot, say so and why. The `package-testing` skill has the details.
 
 ## Local Skills
 
