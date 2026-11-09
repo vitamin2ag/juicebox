@@ -3,8 +3,16 @@
 # Usage: scripts/with-php-test-coverage-driver.sh vendor/bin/pest --parallel --coverage --min=100
 set -euo pipefail
 
-if php -m | grep -qiE '^(xdebug|pcov)$'; then
+# Read once: under pipefail, `php -m | grep -q` fails when grep stops reading early.
+modules=$(php -m 2>/dev/null)
+
+if grep -qiE '^pcov$' <<< "$modules"; then
     exec "$@"
+fi
+
+# A loaded Xdebug collects coverage only in its coverage mode, which its ini may not set.
+if grep -qiE '^xdebug$' <<< "$modules"; then
+    XDEBUG_MODE=coverage exec "$@"
 fi
 
 arch=$(uname -m)
