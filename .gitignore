@@ -4,3 +4,5 @@ vendor
 composer.lock
 .phpunit.result.cache
 features/*/resources/hot
+/tests/Browser/Screenshots
+/tests/Browser/Traces
