@@ -13,7 +13,8 @@ Prove behaviour with Pest on Statamic's `AddonTestCase`, and keep every gate in 
 
 1. Write the smallest failing test for the behaviour first, then the smallest change that makes it pass.
 2. Cover the happy path, the disabled/`false` path, and invalid input where it is possible (for example non-string config values).
-3. Iterate with `composer test:unit -- --filter "<name>"`. Finish with `composer test`.
+3. While working, scope every run to what you changed: `composer test:unit -- --filter "<name>"` for tests and `composer test:mutate -- --class='<Namespace\Class>,<Namespace>'` for mutation (seconds instead of more than a minute).
+4. Run the full `composer test`, `composer test:coverage` and `composer test:mutate` once, at the end, not after every change.
 
 ## Probing while working
 
