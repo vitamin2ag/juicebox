@@ -29,6 +29,17 @@ vendor/bin/pest --agent='expect(resolve("router")->getMiddlewareGroups()["web"])
 - Fully qualify every class: the snippet has no `use` imports. `beforeEach()` setup does not run, so inline what the check needs.
 - A probe is not a test. Behaviour worth keeping goes into `features/<Name>/tests`.
 
+## Browser tests
+
+`pestphp/pest-plugin-browser` drives the control panel in Chromium. Set it up once with `npm ci` and `npx playwright install chromium`, then run `composer test:browser`, which builds the workbench assets first.
+
+- Put them in `features/<Name>/tests/Browser/`. That folder is the `Browser` test suite, which `phpunit.xml.dist` keeps out of the default suite, so `composer test`, coverage and mutation never load them (the plugin starts Playwright as soon as it loads a browser test, so a group exclusion is not enough); CI runs them in their own job.
+- Call `$this->withVite()` in `beforeEach()`: Statamic's `AddonTestCase` switches Vite off, which leaves the control panel without its scripts. A feature's control panel assets must be listed under `workbench.assets` in `testbench.yaml` so `composer build` publishes them.
+- Pest reads a target with parentheses as CSS, so click such text with Playwright's selector: `->click('text="Gone (410)"')`. Assert the next page with `->assertSee(...)`, which waits for it, before checking what a save stored.
+- Statamic's publish form logs a harmless `ResizeObserver loop completed` error, so assert `assertNoJavaScriptErrors()` on listings, not on forms.
+- The same works as a probe: `vendor/bin/pest --agent='$this->withVite(); $this->actingAs(...); visit("/cp/...")->screenshot(filename: "probe");'` after `composer build`. Screenshots land in `tests/Browser/Screenshots/` (ignored by git).
+- Keep them few: one per control panel flow that HTTP tests cannot see (rendering, navigation, a form round trip).
+
 ## Scripts
 
 | Script | Runs |
@@ -36,6 +47,7 @@ vendor/bin/pest --agent='expect(resolve("router")->getMiddlewareGroups()["web"])
 | `composer test` | the full gate: analyse, lint:check, refactor:check, test:types, test:unit |
 | `composer test:unit` | `pest --parallel` |
 | `composer test:types` | `pest --type-coverage --min=100` |
+| `composer test:browser` | `@build`, then `pest --testsuite=Browser` (needs Playwright, see "Browser tests"; not part of `composer test`) |
 | `composer test:coverage` | `pest --parallel --coverage --min=100` (needs a loaded driver, see "Running coverage and mutation tests"; not part of `composer test`) |
 | `composer test:mutate` | `pest --mutate --parallel --min=100` (needs a loaded driver; not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |

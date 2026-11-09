@@ -28,6 +28,7 @@ workbench:
     - asset-publish
   assets:
     - statamic-cp
+    - redirects
   sync:
     - from: storage
       to: workbench/storage
