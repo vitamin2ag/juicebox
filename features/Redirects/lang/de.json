@@ -29,6 +29,7 @@
     "Import the redirects of a CSV file.": "Weiterleitungen aus einer CSV-Datei importieren.",
     "Imported :count redirect|Imported :count redirects": ":count Weiterleitung importiert|:count Weiterleitungen importiert",
     "Match type": "Abgleichstyp",
+    "Missing entry": "Fehlender Eintrag",
     "One character, usually `,` or `;`.": "Ein Zeichen, meist `,` oder `;`.",
     "Only regex redirects are listed, in the order they are tried. The first match wins.": "Nur Regex-Weiterleitungen werden angezeigt, in der Reihenfolge, in der sie geprüft werden. Der erste Treffer gewinnt.",
     "Permanent (301)": "Permanent (301)",

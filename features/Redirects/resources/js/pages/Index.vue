@@ -17,8 +17,10 @@ import { ref, useTemplateRef } from 'vue';
 interface Row {
     id: string;
     source: string;
+    destination: string | null;
     enabled: boolean;
     edit_url: string;
+    destination_entry: { title: string; edit_url: string } | null;
 }
 
 interface Completed {
@@ -157,8 +159,19 @@ function prune(): void {
                     <span v-text="redirect.source" />
                 </span>
             </template>
-            <template #cell-destination="{ value }">
-                <span v-if="value" v-text="value" />
+            <template #cell-destination="{ row: redirect }">
+                <Link
+                    v-if="redirect.destination_entry"
+                    :href="redirect.destination_entry.edit_url"
+                    v-text="redirect.destination_entry.title"
+                />
+                <span
+                    v-else-if="redirect.destination?.startsWith('entry::')"
+                    class="text-red-600 dark:text-red-400"
+                    :title="redirect.destination"
+                    v-text="__('Missing entry')"
+                />
+                <span v-else-if="redirect.destination" v-text="redirect.destination" />
                 <span v-else class="text-gray-500">—</span>
             </template>
             <template #prepended-row-actions="{ row: redirect }">

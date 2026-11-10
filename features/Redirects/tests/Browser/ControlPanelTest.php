@@ -38,3 +38,20 @@ it('creates a redirect through the form', function (): void {
     expect(RedirectFixtures::sources())->toBe(['default/weg'])
         ->and(resolve(RedirectRepository::class)->all()->first()?->type())->toBe(410);
 });
+
+it('shows the entry a redirect points to', function (): void {
+    $entry = RedirectFixtures::page('kontakt');
+    $entry->set('title', 'Kontaktseite');
+    $entry->save();
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: 'entry::kontakt', description: 'Umzug 2026', order: 1));
+    $redirects->save(new Redirect(id: 'missing', site: 'default', source: '/weg', destination: 'entry::fehlt', order: 2));
+
+    visit(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertNoJavaScriptErrors()
+        ->assertSee('Kontaktseite')
+        ->assertSee('Missing entry')
+        ->assertDontSee('entry::kontakt')
+        ->click('Kontaktseite')
+        ->assertPathIs('/cp/collections/pages/entries/kontakt');
+});
