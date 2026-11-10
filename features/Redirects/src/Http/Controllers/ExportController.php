@@ -16,7 +16,9 @@ class ExportController extends CpController
     /**
      * Downloads the redirects of the selected site in the columns of the CSV import, so importing the file
      * again changes nothing. They are in the order they are tried, so an import elsewhere keeps it.
-     * The file starts with a byte order mark, so Excel reads it as UTF-8.
+     * An entry destination of the site is written as the URL of the entry, which the import links to the
+     * entry again, so the file reads in Excel and moves to another project. The file starts with a byte order mark,
+     * so Excel reads it as UTF-8.
      */
     public function __invoke(RedirectRepository $redirects): StreamedResponse
     {
@@ -45,12 +47,24 @@ class ExportController extends CpController
     {
         return [
             $redirect->source(),
-            $redirect->destination(),
+            $this->destination($redirect),
             $redirect->type(),
             $redirect->matchType(),
             $redirect->site(),
             $redirect->enabled() ? 1 : 0,
             $redirect->description(),
         ];
+    }
+
+    /**
+     * The URI of an entry of the site of the redirect, as the import finds it again. An entry of another site,
+     * a missing entry and one without a URL stay `entry::<id>`, which the import keeps, so nothing is lost.
+     */
+    private function destination(Redirect $redirect): ?string
+    {
+        $entry = Redirect::entryOf($redirect->destination());
+        $uri = $entry?->locale() === $redirect->site() ? $entry->uri() : null;
+
+        return $uri ?? $redirect->destination();
     }
 }
