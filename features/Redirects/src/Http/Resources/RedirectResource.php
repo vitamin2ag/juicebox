@@ -32,10 +32,10 @@ class RedirectResource extends JsonResource
     }
 
     /**
-     * The title and link of the entry an `entry::<id>` destination points to, so the list shows the entry
+     * The title, link and status of the entry an `entry::<id>` destination points to, so the list shows the entry
      * instead of its id. Null for any other destination and for an entry that no longer exists.
      *
-     * @return array{title: string, edit_url: string}|null
+     * @return array{title: string, edit_url: string, status: string}|null
      */
     private function entry(mixed $destination): ?array
     {
@@ -51,6 +51,6 @@ class RedirectResource extends JsonResource
 
         $title = $entry->value('title');
 
-        return ['title' => is_string($title) ? $title : $destination, 'edit_url' => $entry->editUrl()];
+        return ['title' => is_string($title) ? $title : $destination, 'edit_url' => $entry->editUrl(), 'status' => $entry->status()];
     }
 }
