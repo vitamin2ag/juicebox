@@ -7,6 +7,8 @@ namespace Vitamin2\Juicebox\Features\Redirects\Data;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Statamic\Data\ExistsAsFile;
+use Statamic\Entries\Entry;
+use Statamic\Facades\Entry as Entries;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 
 class Redirect
@@ -148,6 +150,24 @@ class Redirect
     public static function types(): array
     {
         return [301, 302, 410];
+    }
+
+    /**
+     * The destination that points to an entry, which follows the entry when its URI changes.
+     */
+    public static function toEntry(Entry $entry): string
+    {
+        return 'entry::'.$entry->id();
+    }
+
+    /**
+     * The entry an `entry::<id>` destination points to, or null for any other destination and for a missing entry.
+     */
+    public static function entryOf(?string $destination): ?Entry
+    {
+        return $destination !== null && str_starts_with($destination, 'entry::')
+            ? Entries::find(Str::after($destination, 'entry::'))
+            : null;
     }
 
     public static function exactKey(string $site, string $url): string

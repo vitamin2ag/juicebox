@@ -65,7 +65,7 @@ class CreateRedirect
         }
 
         if (is_string($oldUri) && config('juicebox.redirects.create_entry_redirects')) {
-            $this->redirectFrom($site, $oldUri, 'entry::'.$entry->id());
+            $this->redirectFrom($site, $oldUri, Redirect::toEntry($entry));
         }
     }
 

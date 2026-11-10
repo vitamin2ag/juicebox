@@ -6,8 +6,6 @@ namespace Vitamin2\Juicebox\Features\Redirects\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site as Sites;
 use Statamic\Facades\URL;
 use Statamic\Sites\Site;
@@ -66,7 +64,7 @@ class HandleNotFound
             return $destination;
         }
 
-        return Entries::find(Str::after($destination, 'entry::'))?->absoluteUrl();
+        return Redirect::entryOf($destination)?->absoluteUrl();
     }
 
     /**

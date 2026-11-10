@@ -22,7 +22,7 @@ class DisableEntryRedirects
             return;
         }
 
-        $this->redirects->withDestination('entry::'.$event->entry->id())
+        $this->redirects->withDestination(Redirect::toEntry($event->entry))
             ->each(fn (Redirect $redirect) => $this->redirects->save($redirect->withEnabled(false)));
     }
 }
