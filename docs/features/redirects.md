@@ -51,12 +51,13 @@ The children are looked at only when the `slug` of a parent changes or the paren
 
 ## Control panel
 
-**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import and to deleting the disabled redirects.
+**Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import, the CSV export and deleting the disabled redirects.
 
 - A destination `entry::<id>` shows the title of the entry, linked to its form, or *Missing entry* when the entry no longer exists. The description shows in one line, in full on hover.
 - The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`.
 - `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
+- The export downloads the redirects of the selected site as `redirects-<site>.csv` in the [CSV format](#csv-format), with every column, in the order they are tried, and with the byte order mark Excel needs to read UTF-8. Importing it again changes nothing.
 - Deleting the disabled redirects does what the [prune command](#commands) does.
 - The list loads its rows page by page as JSON, so it stays fast with thousands of redirects. Search matches the source, destination and description, and a whole type such as `301` matches the redirects of that type; the filters are enabled or disabled, match type and type (301, 302 or 410), and the columns sort the list.
 - Select rows in the list to delete, enable or disable several redirects at once, as for entries.
@@ -68,7 +69,7 @@ The children are looked at only when the `slug` of a parent changes or the paren
 
 | Permission | Allows |
 |---|---|
-| `view redirects` | The list and the navigation item. |
+| `view redirects` | The list, the navigation item and the CSV export. |
 | `edit redirects` | Editing a redirect, enabling and disabling redirects in bulk, and reordering. |
 | `create redirects` | Creating redirects and importing a CSV file. |
 | `delete redirects` | Deleting a redirect or a selection of redirects, and deleting the disabled redirects. |
