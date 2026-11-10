@@ -16,6 +16,7 @@ use Statamic\Facades\AssetContainer as AssetContainerFacade;
 use Statamic\Facades\Blink;
 use Statamic\Facades\Cascade;
 use Statamic\Facades\Collection;
+use Statamic\Fields\BlueprintRepository;
 use Statamic\Facades\Site;
 use Statamic\Globals\GlobalSet;
 use Statamic\Globals\Variables;
@@ -51,7 +52,16 @@ final class SchemaOrgFixtures
 
     public static function useBlueprintStubs(): void
     {
-        config(['statamic.system.blueprints_path' => __DIR__.'/../__stubs__/blueprints']);
+        self::useBlueprintsPath(__DIR__.'/../__stubs__/blueprints');
+    }
+
+    /**
+     * Statamic resolves the blueprint repository while booting, so the config alone no longer moves it.
+     */
+    private static function useBlueprintsPath(string $path): void
+    {
+        config(['statamic.system.blueprints_path' => $path]);
+        resolve(BlueprintRepository::class)->setDirectories($path);
     }
 
     /**
@@ -246,7 +256,7 @@ final class SchemaOrgFixtures
 
         mkdir($path.'/globals', recursive: true);
 
-        config()->set('statamic.system.blueprints_path', $path);
+        self::useBlueprintsPath($path);
 
         return $path;
     }
