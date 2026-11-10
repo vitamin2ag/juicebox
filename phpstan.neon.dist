@@ -7,6 +7,6 @@ parameters:
     tmpDir: build/phpstan
     checkMissingOverrideMethodAttribute: true
     stubFiles:
-        - stubs/statamic.stub
+        - .phpstan/stubs/statamic.stub
     configDirectories:
         - features/*/config
