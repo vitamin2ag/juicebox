@@ -12,7 +12,8 @@ import {
     Listing,
     StatusIndicator,
 } from '@statamic/cms/ui';
-import { ref, useTemplateRef } from 'vue';
+import { toast } from '@statamic/cms/api';
+import { getCurrentInstance, ref, useTemplateRef } from 'vue';
 
 interface Row {
     id: string;
@@ -72,9 +73,23 @@ function saveOrder(): void {
     );
 }
 
-// The export is a download, which a visit of the Inertia router would swallow.
+const { __ } = getCurrentInstance()!.appContext.config.globalProperties;
+
+// Downloads the file the way Statamic downloads the file of an action, since a visit of the Inertia router would swallow
+// it. It fetches without Statamic's axios, whose toast interceptor parses every blob it gets as JSON and fails on a CSV.
+// Asking for JSON turns a missing permission or session into an error instead of the login page.
 function exportCsv(): void {
-    window.location.assign(props.exportUrl);
+    fetch(props.exportUrl, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        .then((response) => (response.ok ? response : Promise.reject(response)))
+        .then(async (response) => {
+            const url = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = response.headers.get('content-disposition')?.match(/filename="?([^";]+)"?/)?.[1] ?? 'redirects.csv';
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url));
+        })
+        .catch(() => toast.error(__('Something went wrong'), {}));
 }
 
 function prune(): void {
