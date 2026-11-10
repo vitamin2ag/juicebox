@@ -35,6 +35,7 @@ class Site {}
 
 /**
  * @method static \Statamic\Entries\Entry|null find($id)
+ * @method static \Statamic\Entries\Entry|\Statamic\Structures\Page|null findByUri(string $uri, ?string $site = null)
  */
 class Entry {}
 
@@ -135,6 +136,9 @@ class Page
 {
     /** @return string */
     public function id() {}
+
+    /** @return \Statamic\Entries\Entry|null */
+    public function entry() {}
 
     /** @return \Illuminate\Support\Collection<int, Page> */
     public function flattenedPages() {}
