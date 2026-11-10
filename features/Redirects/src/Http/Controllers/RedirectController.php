@@ -166,6 +166,7 @@ class RedirectController extends CpController
                 $nested->where('source', 'like', "%{$search}%");
                 $nested->orWhere('destination', 'like', "%{$search}%");
                 $nested->orWhere('description', 'like', "%{$search}%");
+                $this->whereType($nested, $search);
             });
         }
 
@@ -189,6 +190,19 @@ class RedirectController extends CpController
         return collect(['source' => __('Source'), 'destination' => __('Destination'), 'type' => __('Type'), 'match_type' => __('Match type')])
             ->map(fn (string $label, string $field): array => ['field' => $field, 'label' => $label, 'visible' => true, 'sortable' => true])
             ->values();
+    }
+
+    /**
+     * A search for a type, like `301`, finds the redirects of that type. Only the whole type counts,
+     * so `30` does not list every 301 and 302.
+     */
+    private function whereType(ItemQueryBuilder $query, string $search): void
+    {
+        $type = filter_var($search, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
+
+        if (in_array($type, Redirect::types(), true)) {
+            $query->orWhere('type', $type);
+        }
     }
 
     private function site(): string

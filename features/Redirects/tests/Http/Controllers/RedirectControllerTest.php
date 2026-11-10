@@ -125,7 +125,7 @@ it('sorts the list by source unless asked otherwise', function (array $query, ar
     'by match type' => [['sort' => 'match_type', 'order' => 'desc'], ['/a', '/b', '/c']],
 ]);
 
-it('searches the source, destination and description', function (string $search, array $expected): void {
+it('searches the source, destination, description and type', function (string $search, array $expected): void {
     seedListing();
 
     expect(listedSources(['search' => $search]))->toBe($expected);
@@ -133,6 +133,10 @@ it('searches the source, destination and description', function (string $search,
     'source' => ['/b', ['/b']],
     'destination' => ['zeit', ['/c']],
     'description' => ['kampagne', ['/c']],
+    'type' => ['302', ['/c']],
+    'type with spaces' => [' 410 ', ['/a']],
+    'part of a type' => ['30', []],
+    'a number that is no type' => ['200', []],
     'nothing' => ['gibt-es-nicht', []],
     'empty' => ['', ['/a', '/b', '/c']],
 ]);
