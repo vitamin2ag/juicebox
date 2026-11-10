@@ -115,7 +115,7 @@ it('lists the redirects of the selected site as JSON with their fields', functio
         ]);
 });
 
-it('shows the title and link of the entry a destination points to', function (): void {
+it('shows the title, link and status of the entry a destination points to', function (): void {
     $entry = RedirectFixtures::page('kontakt');
     $entry->set('title', 'Kontakt');
     $entry->save();
@@ -123,7 +123,16 @@ it('shows the title and link of the entry a destination points to', function ():
 
     $this->actingAs(RedirectFixtures::superUser())
         ->getJson(RedirectFixtures::cpUrl('redirects.index'))
-        ->assertJsonPath('data.0.destination_entry', ['title' => 'Kontakt', 'edit_url' => $entry->editUrl()]);
+        ->assertJsonPath('data.0.destination_entry', ['title' => 'Kontakt', 'edit_url' => $entry->editUrl(), 'status' => 'published']);
+});
+
+it('shows the status of a draft entry a destination points to', function (): void {
+    RedirectFixtures::page('kontakt', published: false);
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: 'entry::kontakt'));
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertJsonPath('data.0.destination_entry.status', 'draft');
 });
 
 it('titles an entry without a title by its destination', function (): void {

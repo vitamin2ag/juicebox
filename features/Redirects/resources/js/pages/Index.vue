@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@statamic/cms/inertia';
 import {
+    Badge,
     Button,
     ConfirmationModal,
     Dropdown,
@@ -21,7 +22,7 @@ interface Row {
     destination: string | null;
     enabled: boolean;
     edit_url: string;
-    destination_entry: { title: string; edit_url: string } | null;
+    destination_entry: { title: string; edit_url: string; status: string } | null;
 }
 
 interface Completed {
@@ -182,11 +183,11 @@ function prune(): void {
                 </span>
             </template>
             <template #cell-destination="{ row: redirect }">
-                <Link
-                    v-if="redirect.destination_entry"
-                    :href="redirect.destination_entry.edit_url"
-                    v-text="redirect.destination_entry.title"
-                />
+                <!-- Linked like the entries of a relationship field in a listing, with the status of the entry. -->
+                <Badge v-if="redirect.destination_entry" size="sm" :href="redirect.destination_entry.edit_url">
+                    <StatusIndicator :status="redirect.destination_entry.status" class="h-1" />
+                    <span v-text="redirect.destination_entry.title" />
+                </Badge>
                 <span
                     v-else-if="redirect.destination?.startsWith('entry::')"
                     class="text-red-600 dark:text-red-400"

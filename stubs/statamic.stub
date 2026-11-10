@@ -65,6 +65,9 @@ class Entry
     /** @return string */
     public function editUrl() {}
 
+    /** @return string */
+    public function status() {}
+
     /** @return \Statamic\Structures\Page|null */
     public function page() {}
 }

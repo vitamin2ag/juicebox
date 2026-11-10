@@ -53,7 +53,7 @@ The children are looked at only when the `slug` of a parent changes or the paren
 
 **Tools > Redirects** lists the redirects of the site selected in the control panel, by source, with a search and a menu per row to edit or delete a redirect. The header links to the form, and its menu to the CSV import, the CSV export and deleting the disabled redirects.
 
-- A destination `entry::<id>` shows the title of the entry, linked to its form, or *Missing entry* when the entry no longer exists. The description shows in one line, in full on hover.
+- A destination `entry::<id>` shows the title and status of the entry, linked to its form, or *Missing entry* when the entry no longer exists. The description shows in one line, in full on hover.
 - The form has the fields `match_type`, `source`, `destination` (an entry or a URL), `type` (default `301`), `description` and `enabled`. A new redirect belongs to the selected site; editing keeps its site, `id` and `order`.
 - `destination` is required unless `type` is `410`. A `source` that another redirect of the same site already has is rejected, and so is a regex `source` that does not compile.
 - The import takes a CSV file in the [CSV format](#csv-format) and a delimiter of one character, and reports how many rows it imported and skipped.
