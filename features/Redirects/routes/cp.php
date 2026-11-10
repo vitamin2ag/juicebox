@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\ExportController;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\ImportController;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\PruneController;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\RedirectActionController;
@@ -16,6 +17,7 @@ if (! config('juicebox.redirects.enabled')) {
 
 Route::get('redirects/import', [ImportController::class, 'index'])->name('redirects.import');
 Route::post('redirects/import', [ImportController::class, 'store'])->name('redirects.import.store');
+Route::get('redirects/export', ExportController::class)->name('redirects.export');
 Route::post('redirects/prune', PruneController::class)->name('redirects.prune');
 
 Route::post('redirects/reorder', ReorderController::class)->name('redirects.reorder');

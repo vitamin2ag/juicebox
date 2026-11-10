@@ -70,6 +70,7 @@ it('opens the list with the filters and the urls of the listing', function (): v
             ->where('listingUrl', RedirectFixtures::cpUrl('redirects.index'))
             ->where('createUrl', RedirectFixtures::cpUrl('redirects.create'))
             ->where('importUrl', RedirectFixtures::cpUrl('redirects.import'))
+            ->where('exportUrl', RedirectFixtures::cpUrl('redirects.export'))
             ->where('pruneUrl', RedirectFixtures::cpUrl('redirects.prune'))
             ->where('actionUrl', RedirectFixtures::cpUrl('redirects.actions.run'))
             ->where('reorderUrl', RedirectFixtures::cpUrl('redirects.reorder')));

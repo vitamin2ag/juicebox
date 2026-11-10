@@ -34,6 +34,7 @@ const props = defineProps<{
     listingUrl: string;
     createUrl: string;
     importUrl: string;
+    exportUrl: string;
     pruneUrl: string;
     actionUrl: string;
     reorderUrl: string;
@@ -71,6 +72,11 @@ function saveOrder(): void {
     );
 }
 
+// The export is a download, which a visit of the Inertia router would swallow.
+function exportCsv(): void {
+    window.location.assign(props.exportUrl);
+}
+
 function prune(): void {
     router.post(
         props.pruneUrl,
@@ -94,9 +100,10 @@ function prune(): void {
                 <Button variant="primary" :text="__('Save Order')" :disabled="saving" @click="saveOrder" />
             </template>
             <template v-else>
-                <Dropdown v-if="can('create redirects') || can('delete redirects')">
+                <Dropdown v-if="hasRedirects || can('create redirects') || can('delete redirects')">
                     <DropdownMenu>
                         <DropdownItem v-if="can('create redirects')" :text="__('Import CSV')" icon="upload" :href="importUrl" />
+                        <DropdownItem v-if="hasRedirects" :text="__('Export CSV')" icon="download" @click="exportCsv" />
                         <DropdownItem
                             v-if="can('delete redirects')"
                             :text="__('Delete disabled redirects')"
