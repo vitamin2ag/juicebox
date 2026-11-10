@@ -7,9 +7,9 @@ namespace Vitamin2\Juicebox\Features\Redirects\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Override;
-use Statamic\Facades\Entry as Entries;
+use Statamic\Entries\Entry;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 
 /**
  * A row of the redirect list, with its link, built for the rows of one page only.
@@ -39,18 +39,14 @@ class RedirectResource extends JsonResource
      */
     private function entry(mixed $destination): ?array
     {
-        if (! is_string($destination) || ! str_starts_with($destination, 'entry::')) {
-            return null;
-        }
+        $entry = Redirect::entryOf(is_string($destination) ? $destination : null);
 
-        $entry = Entries::find(Str::after($destination, 'entry::'));
-
-        if ($entry === null) {
+        if (! $entry instanceof Entry) {
             return null;
         }
 
         $title = $entry->value('title');
 
-        return ['title' => is_string($title) ? $title : $destination, 'edit_url' => $entry->editUrl(), 'status' => $entry->status()];
+        return ['title' => is_string($title) ? $title : Redirect::toEntry($entry), 'edit_url' => $entry->editUrl(), 'status' => $entry->status()];
     }
 }
