@@ -7,7 +7,9 @@ namespace Vitamin2\Juicebox\Features\Redirects\Import;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use SplFileObject;
+use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site as Sites;
+use Statamic\Structures\Page;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 
@@ -18,6 +20,9 @@ class CsvImporter
     /**
      * Reads a CSV file whose first row names the columns. A row replaces the redirect with its
      * site, match type and source (see Redirect::sourceKey()), keeping its id and order.
+     *
+     * A destination that is the path of an entry in the site of its row is stored as `entry::<id>`, so
+     * the redirect follows the entry, as the redirects of a changed entry URI do.
      *
      * A row is skipped when it has no source, type or match type, when its type is not one the Redirects
      * accept, when its site does not exist, when it has no destination and its type is not 410, or when
@@ -104,13 +109,26 @@ class CsvImporter
             id: $replaced?->id() ?? Str::uuid()->toString(),
             site: $site,
             source: $source,
-            destination: $destination,
+            destination: $this->entryDestination($site, $destination),
             type: $type,
             matchType: $matchType,
             enabled: filter_var($row->get('enabled', '1'), FILTER_VALIDATE_BOOL),
             description: $this->value($row, 'description') ?? $replaced?->description(),
             order: $replaced instanceof Redirect ? $replaced->order() : $this->nextOrder($site, $orders),
         );
+    }
+
+    /**
+     * Only a path matches, compared normalised as an exact source is: a URL with a query string, an anchor,
+     * a domain or regex captures is no entry URI and stays as it is. In a structured collection Statamic
+     * finds the page of the entry, which knows its entry.
+     */
+    private function entryDestination(string $site, ?string $destination): ?string
+    {
+        $found = $destination === null ? null : Entries::findByUri(Redirect::normalise($destination), $site);
+        $entry = $found instanceof Page ? $found->entry() : $found;
+
+        return $entry === null ? $destination : Redirect::toEntry($entry);
     }
 
     /**

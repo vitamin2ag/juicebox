@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
@@ -146,3 +147,52 @@ it('skips the rows with a type the redirects do not offer or a site that does no
     expect($result)->toEqual(new ImportResult(imported: 1, skipped: 4))
         ->and(array_keys(importedRedirects()))->toBe(['de/gueltig']);
 });
+
+/**
+ * Imports one row with this destination into a site and returns the destination it saved.
+ */
+function importedDestination(string $destination, string $site = 'de'): ?string
+{
+    $file = tempnam(sys_get_temp_dir(), 'redirects');
+    file_put_contents($file, "source,destination,type,match_type,site\n/alt,{$destination},301,exact,{$site}\n");
+
+    resolve(CsvImporter::class)->import($file);
+    File::delete($file);
+
+    return resolve(RedirectRepository::class)->all()->sole()->destination();
+}
+
+it('links a destination that is the path of an entry in the site of its row to the entry: :dataset', function (string $destination): void {
+    RedirectFixtures::page('kontakt');
+
+    expect(importedDestination($destination))->toBe('entry::kontakt');
+})->with([
+    'the path' => '/kontakt',
+    'with a trailing slash' => '/kontakt/',
+    'without a leading slash' => 'kontakt',
+]);
+
+it('links the path of an entry in a structured collection to the entry', function (): void {
+    RedirectFixtures::structure([['entry' => 'ueber-uns', 'children' => [['entry' => 'team']]]]);
+
+    expect(importedDestination('/ueber-uns/team'))->toBe('entry::team');
+});
+
+it('links the path of an entry of another site in the site of that entry', function (): void {
+    RedirectFixtures::page('contact', site: 'en');
+
+    expect(importedDestination('/contact', 'en'))->toBe('entry::contact');
+});
+
+it('keeps :dataset as it is', function (string $destination, string $site): void {
+    RedirectFixtures::page('kontakt');
+
+    expect(importedDestination($destination, $site))->toBe($destination);
+})->with([
+    'a path that no entry has' => ['/fehlt', 'de'],
+    'a path with a query string' => ['/kontakt?ref=alt', 'de'],
+    'a path with an anchor' => ['/kontakt#formular', 'de'],
+    'a url with a domain' => ['https://example.com/kontakt', 'de'],
+    'the path of an entry of another site' => ['/kontakt', 'en'],
+    'an entry destination' => ['entry::kontakt', 'de'],
+]);

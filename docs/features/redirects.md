@@ -99,7 +99,7 @@ The first row names the columns, in any order; other columns are ignored.
 | Column | Required | Value |
 |---|---|---|
 | `source` | Yes | As in a redirect file. |
-| `destination` | Unless `type` is `410` | A URL or `entry::<id>`. |
+| `destination` | Unless `type` is `410` | A URL or `entry::<id>`. A path that is the URL of an entry in the site of the row, with or without its slashes, is saved as `entry::<id>` of that entry; a URL with a query string, an anchor or a domain stays as it is. |
 | `type` | Yes | `301`, `302` or `410`. |
 | `match_type` | Yes | `exact` or `regex`. |
 | `site` | No | The site handle. Empty or missing: the current site, which on the command line is the site of `APP_URL`, usually the default site. |
