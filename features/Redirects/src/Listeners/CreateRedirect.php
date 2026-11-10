@@ -65,15 +65,16 @@ class CreateRedirect
         }
 
         if (is_string($oldUri) && config('juicebox.redirects.create_entry_redirects')) {
-            $this->redirectFrom($site, $oldUri, $uri);
+            $this->redirectFrom($site, $oldUri, 'entry::'.$entry->id());
         }
     }
 
     /**
+     * The redirect points to the entry, not to its new uri, so it follows the entry when the uri changes again.
      * A redirect from the old uri that is already stored is not added twice: a disabled one is reused,
      * which keeps its id, order and description, and an enabled one is a deliberate redirect and stays.
      */
-    private function redirectFrom(string $site, string $oldUri, string $uri): void
+    private function redirectFrom(string $site, string $oldUri, string $destination): void
     {
         $stored = $this->redirects->findBySource($site, $oldUri);
 
@@ -82,7 +83,7 @@ class CreateRedirect
                 id: Str::uuid()->toString(),
                 site: $site,
                 source: $oldUri,
-                destination: $uri,
+                destination: $destination,
                 order: $this->redirects->nextOrder($site),
             ));
 
@@ -95,7 +96,7 @@ class CreateRedirect
 
         $this->redirects->save($stored->withValues(
             $stored->source(),
-            $uri,
+            $destination,
             301,
             $stored->matchType(),
             true,
