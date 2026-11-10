@@ -45,6 +45,8 @@ When the URI of a published entry changes, because its slug changes or because i
 
 When a published entry gets a URI that an enabled redirect of its site redirects from, because its slug or parent changes or because it is new or newly published, that redirect gets `enabled: false`, so it no longer hides the entry once the entry moves away. It stays until it is removed, for example with the [prune command](#commands). This also happens while `create_entry_redirects` is `false`.
 
+When an entry is deleted, every redirect to `entry::<id>` of it, in every site, gets `enabled: false`, since it leads nowhere. The list still shows it, so it can be pointed elsewhere, until it is removed, for example with the [prune command](#commands).
+
 The children are looked at only when the `slug` of a parent changes or the parent moves. A route that builds the URI of a child from another field of its parent is not followed. A child that is not published, or whose URI does not change, gets no redirect. Each child redirect is a file, so renaming a parent with many children takes a moment longer to save.
 
 ## Control panel

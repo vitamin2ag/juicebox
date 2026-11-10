@@ -237,6 +237,17 @@ it('finds the redirects of a site by their match type and source, enabled or not
         ->and($redirects->withSource('de', 'regex', '/alt'))->toBeEmpty();
 });
 
+it('finds the redirects of every site by their destination, enabled or not', function (): void {
+    $redirects = resolve(RedirectRepository::class);
+    $redirects->save(new Redirect(id: 'enabled', site: 'de', source: '/alt', destination: 'entry::neu'));
+    $redirects->save(new Redirect(id: 'disabled', site: 'en', source: '/old', destination: 'entry::neu', enabled: false));
+    $redirects->save(new Redirect(id: 'other', site: 'de', source: '/anders', destination: 'entry::neu-2'));
+    $redirects->save(new Redirect(id: 'gone', site: 'de', source: '/weg', type: 410));
+
+    expect(RedirectFixtures::ids($redirects->withDestination('entry::neu')))->toBe(['disabled', 'enabled'])
+        ->and($redirects->withDestination('entry::fehlt'))->toBeEmpty();
+});
+
 it('numbers the next redirect of a site behind the highest order', function (): void {
     $redirects = resolve(RedirectRepository::class);
     $redirects->save(new Redirect(id: 'one', site: 'de', source: '/eins', destination: '/neu', order: 2));

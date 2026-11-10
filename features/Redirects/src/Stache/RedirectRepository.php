@@ -113,6 +113,21 @@ class RedirectRepository
             ->values();
     }
 
+    /**
+     * The redirects of every site to this destination, enabled or not, found in the rows of the list.
+     *
+     * @return Collection<int, Redirect>
+     */
+    public function withDestination(string $destination): Collection
+    {
+        return $this->store->index(RedirectStore::LISTING_INDEX)->items()
+            ->filter(fn (mixed $row): bool => is_array($row) && ($row['destination'] ?? null) === $destination)
+            ->keys()
+            ->map(fn (mixed $id): ?Redirect => is_string($id) ? $this->find($id) : null)
+            ->filter()
+            ->values();
+    }
+
     public function save(Redirect $redirect): void
     {
         $this->store->save($redirect);

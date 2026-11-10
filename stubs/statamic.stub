@@ -99,6 +99,12 @@ class EntrySaved
     public function __construct(public $entry) {}
 }
 
+class EntryDeleted
+{
+    /** @param \Statamic\Entries\Entry $entry */
+    public function __construct(public $entry) {}
+}
+
 class CollectionTreeSaving
 {
     /** @param \Statamic\Structures\CollectionTree $tree */
