@@ -18,4 +18,9 @@ declare module 'vue' {
     }
 }
 
+// The package exports its core components at the root, as `src/index.js` does, but types them under `core` only.
+declare module '@statamic/cms' {
+    export const InlineEditForm: typeof core.InlineEditForm;
+}
+
 export {};

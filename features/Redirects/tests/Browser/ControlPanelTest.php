@@ -52,9 +52,25 @@ it('shows the entry a redirect points to and the description', function (): void
         ->assertSee('Kontaktseite')
         ->assertSee('Missing entry')
         ->assertSee('Umzug 2026')
-        ->assertDontSee('entry::kontakt')
+        ->assertDontSee('entry::kontakt');
+});
+
+it('edits the entry a redirect points to in a stack and shows its new title', function (): void {
+    $entry = RedirectFixtures::page('kontakt');
+    $entry->set('title', 'Kontaktseite');
+    $entry->save();
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: 'entry::kontakt', order: 1));
+
+    visit(RedirectFixtures::cpUrl('redirects.index'))
         ->click('Kontaktseite')
-        ->assertPathIs('/cp/collections/pages/entries/kontakt');
+        ->assertPathIs('/cp/redirects')
+        ->assertValue('title', 'Kontaktseite')
+        ->clear('title')
+        ->type('title', 'Kontakt & Anfahrt')
+        ->click('Save & Publish')
+        ->wait(1)
+        ->assertPathIs('/cp/redirects')
+        ->assertSee('Kontakt & Anfahrt');
 });
 
 it('downloads the CSV export without leaving the list', function (): void {

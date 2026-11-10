@@ -162,3 +162,17 @@ class Fields
     /** @return \Illuminate\Support\Collection<string, mixed> */
     public function values() {}
 }
+
+namespace Statamic\Fieldtypes;
+
+abstract class Relationship
+{
+    /** @return string */
+    protected function getFormComponent() {}
+
+    /** @return array<string, string> */
+    protected function getFormComponentProps() {}
+
+    /** @return string|null */
+    protected function getFormStackSize() {}
+}

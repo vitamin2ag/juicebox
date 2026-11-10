@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { InlineEditForm } from '@statamic/cms';
 import { Head, Link, router } from '@statamic/cms/inertia';
 import {
     Badge,
@@ -40,6 +41,7 @@ const props = defineProps<{
     pruneUrl: string;
     actionUrl: string;
     reorderUrl: string;
+    entryForm: { formComponent: string; formComponentProps: Record<string, string>; formStackSize: string | null };
 }>();
 
 // Not named like the ref in the template, or Vue binds the ref to this variable by name.
@@ -48,6 +50,8 @@ const pruning = ref(false);
 const reordering = ref(false);
 const saving = ref(false);
 const items = ref<Row[]>([]);
+// The entry of a destination open in a stack, as the entries fieldtype opens its entries.
+const editingEntry = ref<Row['destination_entry']>(null);
 const page = ref(1);
 const perPage = ref<number | null>(null);
 
@@ -183,8 +187,9 @@ function prune(): void {
                 </span>
             </template>
             <template #cell-destination="{ row: redirect }">
-                <!-- Linked like the entries of a relationship field in a listing, with the status of the entry. -->
-                <Badge v-if="redirect.destination_entry" size="sm" :href="redirect.destination_entry.edit_url">
+                <!-- Opens the entry in a stack, as the entries fieldtype does. With an href, Badge renders an Inertia link,
+                which leaves the list whatever the click handler does, so it is a button. -->
+                <Badge v-if="redirect.destination_entry" as="button" size="sm" @click="editingEntry = redirect.destination_entry">
                     <StatusIndicator :status="redirect.destination_entry.status" class="h-1" />
                     <span v-text="redirect.destination_entry.title" />
                 </Badge>
@@ -204,6 +209,16 @@ function prune(): void {
                 <DropdownItem v-if="can('edit redirects')" :text="__('Edit')" icon="edit" :href="redirect.edit_url" />
             </template>
         </Listing>
+
+        <InlineEditForm
+            v-if="editingEntry"
+            :item="editingEntry"
+            :component="entryForm.formComponent"
+            :component-props="entryForm.formComponentProps"
+            :stack-size="entryForm.formStackSize ?? undefined"
+            @updated="listingRef?.refresh()"
+            @closed="editingEntry = null"
+        />
 
         <ConfirmationModal
             v-model:open="pruning"

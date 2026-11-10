@@ -73,7 +73,11 @@ it('opens the list with the filters and the urls of the listing', function (): v
             ->where('exportUrl', RedirectFixtures::cpUrl('redirects.export'))
             ->where('pruneUrl', RedirectFixtures::cpUrl('redirects.prune'))
             ->where('actionUrl', RedirectFixtures::cpUrl('redirects.actions.run'))
-            ->where('reorderUrl', RedirectFixtures::cpUrl('redirects.reorder')));
+            ->where('reorderUrl', RedirectFixtures::cpUrl('redirects.reorder'))
+            ->where('entryForm.formComponent', 'entry-publish-form')
+            ->where('entryForm.formComponentProps.initialValues', 'values')
+            ->where('entryForm.formStackSize', null)
+            ->has('entryForm', 3));
 });
 
 it('tells the list when the selected site has no redirects', function (): void {

@@ -25,6 +25,7 @@ use Statamic\Query\Scopes\Filters\Concerns\QueriesFilters;
 use Statamic\Statamic;
 use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\Http\EntryForm;
 use Vitamin2\Juicebox\Features\Redirects\Http\Resources\RedirectResource;
 use Vitamin2\Juicebox\Features\Redirects\Rules\UniqueSource;
 use Vitamin2\Juicebox\Features\Redirects\Rules\ValidRegex;
@@ -60,6 +61,7 @@ class RedirectController extends CpController
             'pruneUrl' => cp_route('redirects.prune'),
             'actionUrl' => cp_route('redirects.actions.run'),
             'reorderUrl' => cp_route('redirects.reorder'),
+            'entryForm' => new EntryForm()->toArray(),
         ]);
     }
 
