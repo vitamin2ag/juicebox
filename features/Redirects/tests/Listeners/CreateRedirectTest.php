@@ -12,6 +12,8 @@ use Vitamin2\Juicebox\Features\Redirects\Listeners\CreateRedirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
+use function Pest\Laravel\get;
+
 mutates(CreateRedirect::class);
 
 beforeEach(function (): void {
@@ -64,7 +66,7 @@ it('handles every saved entry once', function (): void {
     $listener->shouldHaveReceived('handle')->once();
 });
 
-it('creates an exact 301 redirect from the old to the new uri of :dataset', function (?string $site): void {
+it('creates an exact 301 redirect from the old uri to :dataset', function (?string $site): void {
     RedirectFixtures::page('alt', site: $site);
 
     RedirectFixtures::rename('alt', 'neu');
@@ -77,7 +79,7 @@ it('creates an exact 301 redirect from the old to the new uri of :dataset', func
             'id' => $redirect->id(),
             'enabled' => true,
             'source' => '/alt',
-            'destination' => '/neu',
+            'destination' => 'entry::alt',
             'type' => 301,
             'match_type' => 'exact',
             'description' => null,
@@ -87,6 +89,17 @@ it('creates an exact 301 redirect from the old to the new uri of :dataset', func
     'an entry' => null,
     'an entry of another site' => 'en',
 ]);
+
+it('sends every old uri of an entry to its current one when it moves again', function (): void {
+    config(['statamic.editions.pro' => true]);
+    RedirectFixtures::page('alt');
+
+    RedirectFixtures::rename('alt', 'neu');
+    RedirectFixtures::rename('alt', 'neuer');
+
+    get('/alt')->assertMovedPermanently()->assertRedirect('/neuer');
+    get('/neu')->assertMovedPermanently()->assertRedirect('/neuer');
+});
 
 it('reuses the disabled redirect from the old uri instead of adding one', function (): void {
     $redirects = resolve(RedirectRepository::class);
@@ -99,7 +112,7 @@ it('reuses the disabled redirect from the old uri instead of adding one', functi
         'id' => 'reused',
         'enabled' => true,
         'source' => '/alt',
-        'destination' => '/neu',
+        'destination' => 'entry::alt',
         'type' => 301,
         'match_type' => 'exact',
         'description' => 'Alt',
@@ -125,7 +138,7 @@ it('keeps one redirect per source when an entry moves back and forth', function 
     RedirectFixtures::rename('a', 'a');
     RedirectFixtures::rename('a', 'b');
 
-    expect(savedRedirects())->toBe(['/a -> /b', '/b -> /a'])
+    expect(savedRedirects())->toBe(['/a -> entry::a', '/b -> entry::a'])
         ->and(resolve(RedirectRepository::class)->findBySource('de', '/a')?->enabled())->toBeTrue()
         ->and(resolve(RedirectRepository::class)->findBySource('de', '/b')?->enabled())->toBeFalse();
 });
@@ -210,20 +223,20 @@ it('creates a redirect for every entry :dataset', function (Closure $move, array
         function (): void {
             moveInPages([['entry' => 'ueber-uns'], ['entry' => 'angebot', 'children' => [['entry' => 'team']]]]);
         },
-        ['/ueber-uns/team -> /angebot/team'],
+        ['/ueber-uns/team -> entry::team'],
     ],
     'a parent slug change reaches its children and grandchildren' => [
         function (): void {
             structureWithDeepChildren();
             RedirectFixtures::rename('ueber-uns', 'about');
         },
-        ['/ueber-uns -> /about', '/ueber-uns/team -> /about/team', '/ueber-uns/team/chef -> /about/team/chef'],
+        ['/ueber-uns -> entry::ueber-uns', '/ueber-uns/team -> entry::team', '/ueber-uns/team/chef -> entry::chef'],
     ],
     'a tree change moves with its parent' => [
         function (): void {
             moveInPages([['entry' => 'angebot', 'children' => [['entry' => 'ueber-uns', 'children' => [['entry' => 'team']]]]]]);
         },
-        ['/ueber-uns -> /angebot/ueber-uns', '/ueber-uns/team -> /angebot/ueber-uns/team'],
+        ['/ueber-uns -> entry::ueber-uns', '/ueber-uns/team -> entry::team'],
     ],
 ]);
 
@@ -253,7 +266,7 @@ it('leaves an unpublished child alone when its parent gets another slug', functi
 
     RedirectFixtures::rename('ueber-uns', 'about');
 
-    expect(savedRedirects())->toBe(['/ueber-uns -> /about', '/ueber-uns/team/chef -> /about/team/chef']);
+    expect(savedRedirects())->toBe(['/ueber-uns -> entry::ueber-uns', '/ueber-uns/team/chef -> entry::chef']);
 });
 
 it('disables an enabled redirect from the uri a parent slug change moves a child to', function (): void {
@@ -264,7 +277,7 @@ it('disables an enabled redirect from the uri a parent slug change moves a child
     RedirectFixtures::rename('ueber-uns', 'about');
 
     expect($redirects->find('conflict')?->enabled())->toBeFalse()
-        ->and(savedRedirects())->toContain('/ueber-uns/team -> /about/team');
+        ->and(savedRedirects())->toContain('/ueber-uns/team -> entry::team');
 });
 
 it('leaves an enabled redirect from the uri of a child alone when its parent is saved with the same slug', function (): void {
