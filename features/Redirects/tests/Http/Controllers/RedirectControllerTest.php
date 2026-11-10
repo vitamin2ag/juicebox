@@ -101,6 +101,7 @@ it('lists the redirects of the selected site as JSON with their fields', functio
             'description' => 'Kampagne',
             'order' => 1,
             'edit_url' => RedirectFixtures::cpUrl('redirects.edit', 'c'),
+            'destination_entry' => null,
         ])
         ->assertJsonPath('meta.total', 3)
         ->assertJsonPath('meta.activeFilterBadges', [])
@@ -111,6 +112,41 @@ it('lists the redirects of the selected site as JSON with their fields', functio
             ['field' => 'match_type', 'label' => 'Match type', 'visible' => true, 'sortable' => true],
         ]);
 });
+
+it('shows the title and link of the entry a destination points to', function (): void {
+    $entry = RedirectFixtures::page('kontakt');
+    $entry->set('title', 'Kontakt');
+    $entry->save();
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: 'entry::kontakt'));
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertJsonPath('data.0.destination_entry', ['title' => 'Kontakt', 'edit_url' => $entry->editUrl()]);
+});
+
+it('titles an entry without a title by its destination', function (): void {
+    RedirectFixtures::page('kontakt');
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: 'entry::kontakt'));
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertJsonPath('data.0.destination_entry.title', 'entry::kontakt');
+});
+
+it('has no entry for :dataset', function (?string $destination): void {
+    RedirectFixtures::page('kontakt');
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'entry', site: 'default', source: '/alt', destination: $destination, type: 410));
+
+    $this->actingAs(RedirectFixtures::superUser())
+        ->getJson(RedirectFixtures::cpUrl('redirects.index'))
+        ->assertJsonPath('data.0.destination_entry', null);
+})->with([
+    'a missing entry' => 'entry::missing',
+    'a url' => '/kontakt',
+    'a url that names an entry' => '/entry::kontakt',
+    'the id of an entry' => 'kontakt',
+    'no destination' => null,
+]);
 
 it('sorts the list by source unless asked otherwise', function (array $query, array $expected): void {
     seedListing();
