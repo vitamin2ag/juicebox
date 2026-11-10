@@ -16,9 +16,7 @@ trait ResolvesGeneralGlobals
      */
     protected function generalGlobals(): ?Variables
     {
-        $variables = GlobalSet::findByHandle('general')?->inCurrentSite();
-
-        return $variables instanceof Variables ? $variables : null;
+        return GlobalSet::findByHandle('general')?->inCurrentSite();
     }
 
     /**

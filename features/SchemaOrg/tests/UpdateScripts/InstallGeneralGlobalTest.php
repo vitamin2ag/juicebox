@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Vitamin2\Juicebox\Features\SchemaOrg\UpdateScripts\InstallGeneralGlobal;
 
-mutates(InstallGeneralGlobal::class);
+covers(InstallGeneralGlobal::class);
 
 it('always wants to update', function (): void {
     $script = new InstallGeneralGlobal('vitamin2/juicebox');

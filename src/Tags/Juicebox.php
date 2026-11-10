@@ -34,10 +34,9 @@ class Juicebox extends Tags
         $tag = $parts[0];
         $method = $parts[1] ?? 'index';
 
-        throw_unless($class = $this->tagClass($tag), TagNotFoundException::class, "Tag [$tag] could not be found.");
+        $class = $this->tagClass($tag) ?? throw new TagNotFoundException("Tag [$tag] could not be found.");
 
-        /** @var Tags $instance */
-        $instance = resolve($class);
+        $instance = app()->build($class);
 
         $instance->setProperties([
             'parser' => $this->parser,
@@ -66,14 +65,10 @@ class Juicebox extends Tags
      */
     protected function tagClass(string $tag): ?string
     {
-        foreach (collect(app()->getProviders(FeatureServiceProvider::class))->whereInstanceOf(FeatureServiceProvider::class) as $provider) {
-            $class = Str::beforeLast($provider::class, '\\').'\\Tags\\'.Str::studly($tag);
-
-            if (is_subclass_of($class, Tags::class)) {
-                return $class;
-            }
-        }
-
-        return null;
+        return collect(app()->getProviders(FeatureServiceProvider::class))
+            ->map(fn (FeatureServiceProvider $provider): string => Str::beforeLast($provider::class, '\\').'\\Tags\\'.Str::studly($tag))
+            ->map(fn (string $class): ?string => is_subclass_of($class, Tags::class) ? $class : null)
+            ->filter()
+            ->first();
     }
 }

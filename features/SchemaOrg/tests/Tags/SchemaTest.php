@@ -7,7 +7,7 @@ use Statamic\Facades\Blink;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tags\Schema;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(Schema::class);
+covers(Schema::class);
 
 /**
  * @param  array<string, mixed>  $params

@@ -11,7 +11,7 @@ use Statamic\Query\OrderedQueryBuilder;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\EntrySchema;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(EntrySchema::class);
+covers(EntrySchema::class);
 
 beforeEach(function (): void {
     Fixtures::useBlueprintStubs();
@@ -31,12 +31,14 @@ function imageUrlOf(Entry $entry, string $field): ?string
 {
     $schema = new class($entry) extends EntrySchema
     {
+        #[Override]
         public static function label(): string
         {
             return 'Image Url';
         }
 
         /** @return iterable<int, BaseType&ThingContract> */
+        #[Override]
         public function schema(): iterable
         {
             return [];
@@ -74,6 +76,7 @@ it('returns null for an empty or non asset field', function (): void {
 it('returns null when the augmented field is not a value', function (): void {
     $entry = new class extends Entry
     {
+        #[Override]
         public function augmentedValue(mixed $key): string
         {
             return 'not a value';
@@ -89,6 +92,7 @@ it('returns null when a multi asset query does not yield a collection', function
         public function __construct() {}
 
         /** @return array<never> */
+        #[Override]
         public function get(mixed $columns = ['*']): array
         {
             return [];
@@ -102,6 +106,7 @@ it('returns null when a multi asset query does not yield a collection', function
             parent::__construct();
         }
 
+        #[Override]
         public function augmentedValue(mixed $key): Value
         {
             return new Value($this->query);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__;
 
+use Override;
 use Spatie\SchemaOrg\BaseType;
 use Spatie\SchemaOrg\Contracts\ThingContract;
 use Spatie\SchemaOrg\Schema;
@@ -13,11 +14,13 @@ abstract class FakeCollectionPageSchema implements Contract
 {
     protected const string LABEL = '';
 
+    #[Override]
     public static function label(): string
     {
         return static::LABEL;
     }
 
+    #[Override]
     public function schema(): BaseType&ThingContract
     {
         return Schema::collectionPage()->name(static::LABEL);

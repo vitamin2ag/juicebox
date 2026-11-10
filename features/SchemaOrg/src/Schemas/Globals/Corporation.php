@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals;
 
+use Override;
 use Spatie\SchemaOrg\Schema;
 
 class Corporation extends Organization
 {
+    #[Override]
     public static function label(): string
     {
         return 'Aktiengesellschaft';
     }
 
+    #[Override]
     public function schema(): \Spatie\SchemaOrg\Corporation
     {
         $data = $this->generalGlobals();

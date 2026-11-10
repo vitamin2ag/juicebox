@@ -20,6 +20,12 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Contracts\Schema;
 
 class Schemas extends BasicDictionary
 {
+    /** @return class-string<Schema>|null */
+    public function resolveClass(?string $name): ?string
+    {
+        return $this->classesByName()->get($name);
+    }
+
     /** @return array<int, string> */
     protected function roots(): array
     {
@@ -27,12 +33,6 @@ class Schemas extends BasicDictionary
             'Vitamin2\\Juicebox\\Features\\SchemaOrg\\Schemas',
             'App\\Schemas',
         ];
-    }
-
-    /** @return class-string<Schema>|null */
-    public function resolveClass(?string $name): ?string
-    {
-        return $this->classesByName()->get($name);
     }
 
     /** @return array<string, array<string, mixed>> */
@@ -51,25 +51,18 @@ class Schemas extends BasicDictionary
     }
 
     /** @return array<int, array{label: string, value: string}> */
+    #[Override]
     protected function getItems(): array
     {
         if (! $this->category()) {
             return [];
         }
 
-        $items = [];
-
-        foreach ($this->cached($this->cacheKey('items'), $this->fingerprint(), fn (): array => $this->classesByName()
+        return $this->classesByName()
             ->map(fn (string $class, string $name): array => ['label' => $class::label(), 'value' => $name])
             ->sortBy('label')
             ->values()
-            ->all()) as $item) {
-            if (is_array($item) && is_string($item['label'] ?? null) && is_string($item['value'] ?? null)) {
-                $items[] = ['label' => $item['label'], 'value' => $item['value']];
-            }
-        }
-
-        return $items;
+            ->all();
     }
 
     private function category(): ?string
@@ -112,15 +105,21 @@ class Schemas extends BasicDictionary
 
         $classes = [];
 
-        foreach ($this->cached($this->cacheKey('classes'), $this->fingerprint(), fn (): array => $this->categoryFiles()
-            ->reduce(fn (Collection $classes, Collection $namespaceFiles, string $namespace) => $classes->merge($this->classesFromFiles($namespaceFiles, $namespace)), collect())
-            ->all()) as $name => $class) {
+        foreach ($this->cached($this->cacheKey('classes'), $this->fingerprint(), $this->discoverClasses(...)) as $name => $class) {
             if (is_string($name) && is_string($class) && is_a($class, Schema::class, true)) {
                 $classes[$name] = $class;
             }
         }
 
         return collect($classes);
+    }
+
+    /** @return array<string, class-string<Schema>> */
+    private function discoverClasses(): array
+    {
+        return $this->categoryFiles()
+            ->flatMap(fn (Collection $files, string $namespace): array => $this->classesFromFiles($files, $namespace))
+            ->all();
     }
 
     /**
@@ -149,7 +148,7 @@ class Schemas extends BasicDictionary
     private function fingerprint(): string
     {
         return $this->categoryFiles()
-            ->flatten()
+            ->flatMap(fn (Collection $files): Collection => $files)
             ->map(fn (SplFileInfo $file): string => $file->getFilename().':'.$file->getSize().':'.$file->getMTime())
             ->sort()
             ->implode('|');
@@ -174,23 +173,14 @@ class Schemas extends BasicDictionary
     /** @return Collection<int, non-falsy-string> */
     private function resolveNamespaceDirectories(string $namespace): Collection
     {
-        $resolved = [];
-
         $loader = current(ClassLoader::getRegisteredLoaders());
 
-        foreach ($loader ? $loader->getPrefixesPsr4() : [] as $prefix => $directories) {
-            if (! str_starts_with($namespace, $prefix)) {
-                continue;
-            }
-
-            $directory = $this->resolveDirectory($directories, $prefix, $namespace);
-
-            if ($directory && $this->files()->isDirectory($directory)) {
-                $resolved[] = $directory;
-            }
-        }
-
-        return collect($resolved);
+        return collect($loader ? $loader->getPrefixesPsr4() : [])
+            ->filter(fn (array $directories, string $prefix): bool => str_starts_with($namespace, $prefix))
+            ->map(fn (array $directories, string $prefix): ?string => $this->resolveDirectory($directories, $prefix, $namespace))
+            ->filter()
+            ->filter(fn (string $directory): bool => $this->files()->isDirectory($directory))
+            ->values();
     }
 
     /** @param  array<int, string>  $directories */

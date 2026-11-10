@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Vitamin2\Juicebox\Features\SchemaOrg\Console\Commands\MakeEntrySchema;
 
-mutates(MakeEntrySchema::class);
+covers(MakeEntrySchema::class);
 
 const MAKE_SCHEMA_COMMAND = 'statamic:juicebox:schema-org:make-schema';
 
@@ -90,5 +90,7 @@ it('overwrites an existing class with --force', function (): void {
     Artisan::call(MAKE_SCHEMA_COMMAND, ['name' => 'BlogPost']);
 
     expect(Artisan::call(MAKE_SCHEMA_COMMAND, ['name' => 'BlogPost', '--type' => 'Article', '--force' => true]))->toBe(0)
-        ->and((string) file_get_contents(generatedSchemaPath('BlogPost')))->toContain('Schema::article()')->not->toContain('Schema::thing()');
+        ->and((string) file_get_contents(generatedSchemaPath('BlogPost')))
+        ->toContain('Schema::article()')
+        ->not->toContain('Schema::thing()');
 });

@@ -96,7 +96,7 @@ trait ResolvesBreadcrumbs
         return $crumbs;
     }
 
-    /** @return list<array{title: string, url: string}> */
+    /** @return array<int, array{title: string, url: string}> */
     private function resolveCrumbs(): array
     {
         $nav = resolve(Nav::class);
@@ -108,21 +108,23 @@ trait ResolvesBreadcrumbs
             'params' => ['include_home' => config('juicebox.schema_org.breadcrumbs_include_home')],
         ]);
 
-        $crumbs = [];
+        return Collection::wrap($nav->breadcrumbs())
+            ->map(fn (mixed $crumb): ?array => $this->crumb($crumb))
+            ->filter()
+            ->values()
+            ->all();
+    }
 
-        foreach (Collection::wrap($nav->breadcrumbs()) as $crumb) {
-            if (! ($crumb instanceof Entry || $crumb instanceof Page || $crumb instanceof LocalizedTerm || $crumb instanceof Taxonomy)) {
-                continue;
-            }
-
-            $title = $crumb->get('title');
-            $url = $crumb->absoluteUrl();
-
-            if (is_string($url)) {
-                $crumbs[] = ['title' => is_string($title) ? $title : '', 'url' => $url];
-            }
+    /** @return array{title: string, url: string}|null */
+    private function crumb(mixed $crumb): ?array
+    {
+        if (! ($crumb instanceof Entry || $crumb instanceof Page || $crumb instanceof LocalizedTerm || $crumb instanceof Taxonomy)) {
+            return null;
         }
 
-        return $crumbs;
+        $url = $crumb->absoluteUrl();
+        $title = $crumb->get('title');
+
+        return is_string($url) ? ['title' => is_string($title) ? $title : '', 'url' => $url] : null;
     }
 }

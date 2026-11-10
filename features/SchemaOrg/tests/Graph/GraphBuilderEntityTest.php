@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Graph\GraphBuilder;
 use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(GraphBuilder::class);
+covers(GraphBuilder::class);
 
 beforeEach(function (): void {
     Fixtures::useBlueprintStubs();

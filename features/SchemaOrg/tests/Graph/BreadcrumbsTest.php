@@ -12,7 +12,7 @@ use Statamic\Tags\Nav;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesBreadcrumbs;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(ResolvesBreadcrumbs::class);
+covers(ResolvesBreadcrumbs::class);
 
 beforeEach(function (): void {
     Site::setCurrent('default');
@@ -147,6 +147,7 @@ function breadcrumbsNavReturning(array $crumbs): void
         public function __construct(private readonly array $crumbs) {}
 
         /** @return array<int, object> */
+        #[Override]
         public function breadcrumbs(): array
         {
             return $this->crumbs;

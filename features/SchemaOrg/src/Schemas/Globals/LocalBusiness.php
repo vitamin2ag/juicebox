@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals;
 
 use Illuminate\Support\Collection;
+use Override;
 use Spatie\SchemaOrg\DayOfWeek;
 use Spatie\SchemaOrg\OpeningHoursSpecification;
 use Spatie\SchemaOrg\Schema;
@@ -17,11 +18,13 @@ class LocalBusiness implements Contract
 {
     use HasCommonEntitySchema;
 
+    #[Override]
     public static function label(): string
     {
         return 'Lokales Unternehmen';
     }
 
+    #[Override]
     public function schema(): \Spatie\SchemaOrg\LocalBusiness
     {
         $data = $this->generalGlobals();

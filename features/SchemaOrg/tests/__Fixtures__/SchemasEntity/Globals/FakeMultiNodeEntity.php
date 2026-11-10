@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__\SchemasEntity\Globals;
 
+use Override;
 use Spatie\SchemaOrg\BaseType;
 use Spatie\SchemaOrg\Contracts\ThingContract;
 use Spatie\SchemaOrg\Schema;
@@ -11,12 +12,14 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Contracts\Schema as Contract;
 
 class FakeMultiNodeEntity implements Contract
 {
+    #[Override]
     public static function label(): string
     {
         return 'Fake Multi Node';
     }
 
     /** @return iterable<int, BaseType&ThingContract> */
+    #[Override]
     public function schema(): iterable
     {
         return [

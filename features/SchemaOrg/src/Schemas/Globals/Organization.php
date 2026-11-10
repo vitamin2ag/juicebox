@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals;
 
+use Override;
 use Spatie\SchemaOrg\BaseType;
 use Spatie\SchemaOrg\Contracts\OrganizationContract;
 use Spatie\SchemaOrg\Contracts\ThingContract;
@@ -16,11 +17,13 @@ class Organization implements Contract
 {
     use HasCommonEntitySchema;
 
+    #[Override]
     public static function label(): string
     {
         return 'Organisation';
     }
 
+    #[Override]
     public function schema(): BaseType&OrganizationContract&ThingContract
     {
         return $this->organization(Schema::organization(), $this->generalGlobals());

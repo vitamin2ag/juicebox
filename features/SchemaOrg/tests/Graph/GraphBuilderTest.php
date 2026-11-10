@@ -11,7 +11,7 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Graph\GraphBuilder;
 use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(GraphBuilder::class);
+covers(GraphBuilder::class);
 
 beforeEach(function (): void {
     Fixtures::useBlueprintStubs();
@@ -191,12 +191,6 @@ it('falls back to the site name and omits blank website values', function (): vo
 
     expect($website['name'])->toBe('Acme Site')
         ->and($website)->not->toHaveKeys(['alternateName', 'description']);
-});
-
-it('omits site derived website values without a current site', function (): void {
-    Fixtures::withoutCurrentSite();
-
-    expect(Fixtures::nodeOfType(Fixtures::build(), 'WebSite'))->not->toHaveKeys(['name', 'inLanguage']);
 });
 
 it('adds no page nodes when the current content is not an entry', function (): void {

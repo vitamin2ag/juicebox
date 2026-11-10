@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ConvertsToPlainText;
 
-mutates(ConvertsToPlainText::class);
+covers(ConvertsToPlainText::class);
 
 /**
  * @param  string|array<mixed>|null  $value

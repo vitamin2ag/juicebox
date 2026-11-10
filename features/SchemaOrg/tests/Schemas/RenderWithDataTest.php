@@ -13,11 +13,11 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Organization;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Person;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(HasCommonEntitySchema::class);
-mutates(Organization::class);
-mutates(Corporation::class);
-mutates(LocalBusiness::class);
-mutates(Person::class);
+covers(HasCommonEntitySchema::class);
+covers(Organization::class);
+covers(Corporation::class);
+covers(LocalBusiness::class);
+covers(Person::class);
 
 beforeEach(function (): void {
     Fixtures::useBlueprintStubs();
@@ -145,7 +145,10 @@ it('maps every weekday to its schema.org day', function (string $day, string $ex
         'json_ld_entity_opening_hours' => [['day' => $day, 'opening' => '09:00', 'closing' => '18:00']],
     ]);
 
-    $hours = Fixtures::arrayList((new LocalBusiness)->schema()->toArray()['openingHoursSpecification'] ?? []);
+    $schema = (new LocalBusiness)
+        ->schema()
+        ->toArray();
+    $hours = Fixtures::arrayList($schema['openingHoursSpecification'] ?? []);
 
     expect($hours)->toHaveCount(1)
         ->and($hours[0]['dayOfWeek'])->toBe('https://schema.org/'.$expected);

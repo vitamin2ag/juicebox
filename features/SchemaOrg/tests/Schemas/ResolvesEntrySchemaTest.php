@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use Vitamin2\Juicebox\Features\SchemaOrg\Graph\GraphBuilder;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(GraphBuilder::class);
+covers(GraphBuilder::class);
 
 /**
  * Proves the `schema` binding resolves the same way whether it comes from

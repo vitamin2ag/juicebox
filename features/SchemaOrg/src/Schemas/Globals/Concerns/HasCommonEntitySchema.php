@@ -10,10 +10,10 @@ use Spatie\SchemaOrg\GeoCoordinates;
 use Spatie\SchemaOrg\PostalAddress;
 use Spatie\SchemaOrg\Schema;
 use Statamic\Assets\Asset;
+use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 use Statamic\Globals\Variables;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesGeneralGlobals;
-use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
 
 trait HasCommonEntitySchema
 {
@@ -43,16 +43,12 @@ trait HasCommonEntitySchema
 
     protected function entityName(?Variables $data): ?string
     {
-        $name = $data?->json_ld_entity_name ?: Ids::currentSite()?->name();
-
-        return is_string($name) ? $name : null;
+        return $data?->json_ld_entity_name ?: Site::current()->name();
     }
 
     protected function entityUrl(?Variables $data): ?string
     {
-        $url = $data?->json_ld_entity_url ?: Ids::currentSite()?->absoluteUrl();
-
-        return is_string($url) ? $url : null;
+        return $data?->json_ld_entity_url ?: Site::current()->absoluteUrl();
     }
 
     /** @return Collection<int, non-falsy-string> */

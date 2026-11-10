@@ -18,7 +18,7 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__\Schemas\Globals\Fake
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__\SchemasOverride\Entries\FakeCollectionSchemaA as FakeCollectionSchemaAOverride;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__\SchemasOverride\Globals\FakeSchemaA as FakeSchemaAOverride;
 
-mutates(Schemas::class);
+covers(Schemas::class);
 
 const SCHEMAS_FIXTURE_ROOT = 'Vitamin2\\Juicebox\\Features\\SchemaOrg\\Tests\\__Fixtures__\\Schemas';
 
@@ -36,9 +36,9 @@ beforeEach(function (): void {
 /**
  * @param  array<int, string>  $roots
  */
-function schemasItemsCacheKey(string $category, array $roots = [SCHEMAS_FIXTURE_ROOT]): string
+function schemasCacheKey(string $category, array $roots = [SCHEMAS_FIXTURE_ROOT]): string
 {
-    return 'juicebox-schema-dictionary-schemas-'.hash('xxh128', implode('|', $roots))."-$category-items";
+    return 'juicebox-schema-dictionary-schemas-'.hash('xxh128', implode('|', $roots))."-$category-classes";
 }
 
 /**
@@ -52,6 +52,7 @@ function schemasDictionary(?string $category = null, array $roots = [SCHEMAS_FIX
         public function __construct(private readonly array $rootList) {}
 
         /** @return array<int, string> */
+        #[Override]
         protected function roots(): array
         {
             return $this->rootList;
@@ -112,17 +113,17 @@ it('returns null for an unknown class', function (): void {
 it('caches results', function (string $category): void {
     schemasDictionary($category)->options();
 
-    expect(Cache::has(schemasItemsCacheKey($category)))->toBeTrue();
+    expect(Cache::has(schemasCacheKey($category)))->toBeTrue();
 })->with('schema categories');
 
 it('reuses the cache while source files are unchanged', function (string $category): void {
     $dictionary = schemasDictionary($category);
     $dictionary->options();
 
-    $cached = Cache::get(schemasItemsCacheKey($category));
-    Cache::forever(schemasItemsCacheKey($category), [
+    $cached = Cache::get(schemasCacheKey($category));
+    Cache::forever(schemasCacheKey($category), [
         'fingerprint' => is_array($cached) ? $cached['fingerprint'] : null,
-        'data' => [['label' => 'Stub', 'value' => 'Stub']],
+        'data' => ['Stub' => FakeSchemaA::class],
     ]);
 
     expect($dictionary->options())->toHaveKey('Stub');
@@ -132,9 +133,9 @@ it('invalidates the cache when a source file changes', function (string $categor
     $dictionary = schemasDictionary($category);
     $dictionary->options();
 
-    Cache::forever(schemasItemsCacheKey($category), [
+    Cache::forever(schemasCacheKey($category), [
         'fingerprint' => 'stale-fingerprint',
-        'data' => [['label' => 'Stub', 'value' => 'Stub']],
+        'data' => ['Stub' => FakeSchemaA::class],
     ]);
 
     expect($dictionary->options())->not->toHaveKey('Stub');
@@ -178,6 +179,7 @@ it('caches categories independently', function (): void {
         public function __construct(private readonly array $rootList) {}
 
         /** @return array<int, string> */
+        #[Override]
         protected function roots(): array
         {
             return $this->rootList;
@@ -210,36 +212,18 @@ it('fingerprints the category files by name, size and mtime', function (): void 
         ->sort()
         ->implode('|');
 
-    $cached = Cache::get(schemasItemsCacheKey('Entries'));
+    $cached = Cache::get(schemasCacheKey('Entries'));
 
     expect($files)->not->toBeEmpty()
         ->and(is_array($cached) ? $cached['fingerprint'] : null)->toBe($expected)
         ->and(is_array($cached) ? $cached['data'] : null)->toBeArray()->not->toBeEmpty();
 });
 
-it('ignores malformed cached options', function (): void {
-    $dictionary = schemasDictionary('Globals');
-    $dictionary->options();
-
-    $cached = Cache::get(schemasItemsCacheKey('Globals'));
-    Cache::forever(schemasItemsCacheKey('Globals'), [
-        'fingerprint' => is_array($cached) ? $cached['fingerprint'] : null,
-        'data' => [
-            'not an array',
-            ['label' => 'No value'],
-            ['value' => 'NoLabel'],
-            ['label' => 'Valid', 'value' => 'Valid'],
-        ],
-    ]);
-
-    expect($dictionary->options())->toBe(['Valid' => 'Valid']);
-});
-
 it('ignores malformed cached classes', function (): void {
     $dictionary = schemasDictionary('Globals');
     $dictionary->options();
 
-    $key = str_replace('-items', '-classes', schemasItemsCacheKey('Globals'));
+    $key = schemasCacheKey('Globals');
     $cached = Cache::get($key);
     Cache::forever($key, [
         'fingerprint' => is_array($cached) ? $cached['fingerprint'] : null,

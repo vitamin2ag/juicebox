@@ -17,6 +17,7 @@ function makeJuiceboxTag(string $tag, array $params = [], string $content = '', 
 {
     $instance ??= new class extends Juicebox
     {
+        #[Override]
         protected function tagClass(string $tag): ?string
         {
             return [

@@ -6,7 +6,6 @@ namespace Vitamin2\Juicebox\Features\SchemaOrg\Graph;
 
 use Statamic\Entries\Entry;
 use Statamic\Facades\Site;
-use Statamic\Sites\Site as StatamicSite;
 use Statamic\Support\Str;
 
 /**
@@ -16,32 +15,19 @@ use Statamic\Support\Str;
  */
 final class Ids
 {
-    public static function currentSite(): ?StatamicSite
-    {
-        $site = Site::current();
-
-        return $site instanceof StatamicSite ? $site : null;
-    }
-
     public static function site(): string
     {
-        $url = self::currentSite()?->absoluteUrl();
-
-        return is_string($url) ? $url : '';
+        return Site::current()->absoluteUrl();
     }
 
-    public static function language(): ?string
+    public static function language(): string
     {
-        $language = self::currentSite()?->shortLocale();
-
-        return is_string($language) ? $language : null;
+        return Site::current()->shortLocale();
     }
 
     public static function entryUrl(Entry $entry): ?string
     {
-        $url = $entry->absoluteUrl();
-
-        return is_string($url) ? $url : null;
+        return $entry->absoluteUrl();
     }
 
     /**

@@ -19,11 +19,11 @@ trait ConvertsToPlainText
     /** @param Value|string|array<array-key, mixed>|null $value */
     protected function plainText(Value|string|array|null $value): ?string
     {
-        $bardText = Modify::value($value)->modify('bard_text');
-        $stripped = Modify::value($bardText)->modify('strip_tags');
+        $stripped = Modify::value($value)
+            ->bardText()
+            ->stripTags();
 
-        // Both modifiers always yield a string here; the fallback only narrows the type for PHPStan.
-        $text = Str::squish(html_entity_decode(is_string($stripped) ? $stripped : '', ENT_QUOTES)); // @pest-mutate-ignore: EmptyStringToNotEmpty
+        $text = Str::squish(html_entity_decode($stripped->__toString(), ENT_QUOTES));
 
         return $text !== '' ? $text : null;
     }

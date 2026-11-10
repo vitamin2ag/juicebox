@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals;
 
+use Override;
 use Spatie\SchemaOrg\Schema;
 use Vitamin2\Juicebox\Features\SchemaOrg\Contracts\Schema as Contract;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Concerns\HasCommonEntitySchema;
@@ -12,11 +13,13 @@ class Person implements Contract
 {
     use HasCommonEntitySchema;
 
+    #[Override]
     public static function label(): string
     {
         return 'Person';
     }
 
+    #[Override]
     public function schema(): \Spatie\SchemaOrg\Person
     {
         $data = $this->generalGlobals();

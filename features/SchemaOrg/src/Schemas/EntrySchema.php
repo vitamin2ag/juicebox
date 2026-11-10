@@ -43,8 +43,6 @@ abstract class EntrySchema implements Schema
             $image = $results instanceof Collection ? $results->first() : null;
         }
 
-        $url = $image instanceof Asset ? $image->absoluteUrl() : null;
-
-        return is_string($url) ? $url : null;
+        return $image instanceof Asset ? $image->absoluteUrl() : null;
     }
 }

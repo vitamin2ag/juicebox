@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
@@ -10,11 +9,10 @@ use Statamic\Facades\Site;
 use Statamic\Fields\Blueprint as FieldsBlueprint;
 use Statamic\Fields\Tab;
 use Statamic\Globals\GlobalSet as GlobalSetModel;
-use Statamic\Globals\Variables;
 use Vitamin2\Juicebox\Features\SchemaOrg\Console\Commands\InstallGeneralGlobal;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(InstallGeneralGlobal::class);
+covers(InstallGeneralGlobal::class);
 
 function runInstallCommand(): string
 {
@@ -27,19 +25,18 @@ function jsonLdTabDisplay(FieldsBlueprint $blueprint): ?string
 {
     $tab = $blueprint->tabs()->get('json_ld');
 
-    $display = $tab instanceof Tab ? $tab->display() : null;
-
-    return is_string($display) ? $display : null;
+    return $tab instanceof Tab ? $tab->display() : null;
 }
 
 /**
- * @return list<string>
+ * @return array<int, string>
  */
 function localizedSites(GlobalSetModel $set): array
 {
-    $localizations = $set->localizations();
-
-    return $localizations instanceof Collection ? array_values(array_map(strval(...), $localizations->keys()->all())) : [];
+    return $set->localizations()
+        ->keys()
+        ->values()
+        ->all();
 }
 
 function generalBlueprintFile(): string
@@ -56,9 +53,9 @@ function generalSet(): GlobalSetModel
 
 function currentSiteValue(GlobalSetModel $set, string $key): mixed
 {
-    $variables = $set->inCurrentSite();
+    $variables = $set->inCurrentSite() ?? throw new RuntimeException('No variables for current site.');
 
-    return $variables instanceof Variables ? $variables->get($key) : throw new RuntimeException('No variables for current site.');
+    return $variables->get($key);
 }
 
 function generalBlueprint(): FieldsBlueprint
@@ -122,7 +119,6 @@ it('leaves an existing global untouched', function (): void {
     $set->title('Custom Title');
     $set->save();
     $localization = $set->makeLocalization('default');
-    $localization = $localization instanceof Variables ? $localization : throw new RuntimeException('Localization missing.');
     $localization->data(['custom_field' => 'custom_value']);
     $localization->save();
 

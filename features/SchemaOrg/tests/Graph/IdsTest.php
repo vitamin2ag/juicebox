@@ -6,7 +6,7 @@ use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(Ids::class);
+covers(Ids::class);
 
 beforeEach(function (): void {
     config(['statamic.system.multisite' => true]);
@@ -22,17 +22,11 @@ it('site returns the current sites absolute url without a trailing slash', funct
     expect(Ids::site())->toBe('http://site-a.test');
 });
 
-it('has no current site and an empty site url when there is no current site', function (): void {
-    Fixtures::withoutCurrentSite();
+it('language returns the short locale of the current site', function (): void {
+    Site::setSites(['default' => ['name' => 'Default', 'url' => 'http://site-a.test/', 'locale' => 'de_CH']]);
+    Site::setCurrent('default');
 
-    expect(Ids::currentSite())->toBeNull()
-        ->and(Ids::site())->toBeEmpty();
-});
-
-it('ignores a current site that is not a site', function (): void {
-    Fixtures::withCurrentSite(new stdClass);
-
-    expect(Ids::currentSite())->toBeNull();
+    expect(Ids::language())->toBe('de');
 });
 
 it('entity defaults to the organization fragment', function (): void {

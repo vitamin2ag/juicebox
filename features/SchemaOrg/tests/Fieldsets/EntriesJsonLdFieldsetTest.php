@@ -14,4 +14,4 @@ it('ships a schema picker fieldset backed by the Entries category', function ():
             'dictionary' => ['type' => 'schemas', 'category' => 'Entries'],
             'max_items' => 1,
         ]);
-});
+})->coversNothing();

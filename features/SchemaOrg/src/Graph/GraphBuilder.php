@@ -13,6 +13,7 @@ use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\WebPage;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Cascade;
+use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 use Statamic\Structures\Page;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesBreadcrumbs;
@@ -115,14 +116,12 @@ class GraphBuilder
     private function addWebsiteNode(Graph $graph, ?string $entityId): void
     {
         $data = $this->generalGlobals();
-        $site = Ids::currentSite();
-
         $website = Schema::webSite()
             ->identifier(Ids::website())
             ->url(Ids::site());
 
         $website->addProperties([
-            'name' => $data?->json_ld_website_name ?: $site?->name(),
+            'name' => $data?->json_ld_website_name ?: Site::current()->name(),
             'alternateName' => $data?->json_ld_website_alternate_name,
             'description' => $data?->json_ld_website_description,
             'inLanguage' => Ids::language(),

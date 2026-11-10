@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
 use Override;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Blueprint;
@@ -36,12 +35,9 @@ class InstallGeneralGlobal extends Command
             return;
         }
 
-        $sites = Site::all();
-
         $set = new StatamicGlobalSet;
         $set->handle('general');
-        // Site::all() is untyped but always a collection; the guard only narrows the type for PHPStan.
-        $set->sites($sites instanceof Collection ? $sites->keys()->all() : []); // @pest-mutate-ignore: InstanceOfToTrue
+        $set->sites(Site::all()->keys()->all());
         $set->save();
 
         $this->components->info('Created the [general] global.');
@@ -62,20 +58,26 @@ class InstallGeneralGlobal extends Command
 
         $blueprint = Blueprint::find('globals.general');
 
-        if (! $blueprint) {
-            $blueprint = new StatamicBlueprint;
-            $blueprint->setHandle('general');
-            $blueprint->setNamespace('globals');
-            $blueprint->setContents(['tabs' => ['json_ld' => $tab]]);
-            $blueprint->save();
+        if ($blueprint?->hasTab('json_ld')) {
+            return;
+        }
 
-            $this->components->info('Created the [globals.general] blueprint.');
-        } elseif (! $blueprint->hasTab('json_ld')) {
+        if ($blueprint) {
             $blueprint->setContents([...$blueprint->contents(), 'tabs' => [...$this->tabsOf($blueprint), 'json_ld' => $tab]]);
             $blueprint->save();
 
             $this->components->info('Added the [json_ld] tab to the [globals.general] blueprint.');
+
+            return;
         }
+
+        $blueprint = new StatamicBlueprint;
+        $blueprint->setHandle('general');
+        $blueprint->setNamespace('globals');
+        $blueprint->setContents(['tabs' => ['json_ld' => $tab]]);
+        $blueprint->save();
+
+        $this->components->info('Created the [globals.general] blueprint.');
     }
 
     /** @return array<array-key, mixed> */

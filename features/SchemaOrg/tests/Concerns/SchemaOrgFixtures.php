@@ -6,6 +6,7 @@ namespace Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Override;
 use RuntimeException;
 use Spatie\Blink\Blink as BlinkStore;
 use Spatie\SchemaOrg\Graph;
@@ -17,9 +18,7 @@ use Statamic\Facades\Blink;
 use Statamic\Facades\Cascade;
 use Statamic\Facades\Collection;
 use Statamic\Fields\BlueprintRepository;
-use Statamic\Facades\Site;
 use Statamic\Globals\GlobalSet;
-use Statamic\Globals\Variables;
 use Statamic\Taxonomies\LocalizedTerm;
 use Statamic\Taxonomies\Taxonomy;
 use Statamic\Taxonomies\Term;
@@ -43,6 +42,7 @@ final class SchemaOrgFixtures
             public function __construct(private readonly string $root) {}
 
             /** @return array<int, string> */
+            #[Override]
             protected function roots(): array
             {
                 return ['Vitamin2\\Juicebox\\Features\\SchemaOrg\\Tests\\__Fixtures__\\'.$this->root];
@@ -53,15 +53,6 @@ final class SchemaOrgFixtures
     public static function useBlueprintStubs(): void
     {
         self::useBlueprintsPath(__DIR__.'/../__stubs__/blueprints');
-    }
-
-    /**
-     * Statamic resolves the blueprint repository while booting, so the config alone no longer moves it.
-     */
-    private static function useBlueprintsPath(string $path): void
-    {
-        config(['statamic.system.blueprints_path' => $path]);
-        resolve(BlueprintRepository::class)->setDirectories($path);
     }
 
     /**
@@ -177,11 +168,6 @@ final class SchemaOrgFixtures
         $set->save();
 
         $variables = $set->makeLocalization('default');
-
-        if (! $variables instanceof Variables) {
-            throw new RuntimeException('Global variables are not editable.');
-        }
-
         $variables->data($data);
         $variables->save();
     }
@@ -266,24 +252,6 @@ final class SchemaOrgFixtures
         File::deleteDirectory($path);
     }
 
-    /**
-     * Statamic has no current site when none is configured; a partial mock
-     * reproduces that without disturbing the rest of the Site service.
-     */
-    public static function withoutCurrentSite(): void
-    {
-        self::withCurrentSite(null);
-    }
-
-    /**
-     * Makes `Site::current()` return $site as is, which Statamic's own
-     * types do not rule out.
-     */
-    public static function withCurrentSite(mixed $site): void
-    {
-        Site::partialMock()->shouldReceive('current')->andReturn($site);
-    }
-
     public static function build(): Graph
     {
         return resolve(GraphBuilder::class)->build() ?? throw new RuntimeException('Graph was not built.');
@@ -335,5 +303,14 @@ final class SchemaOrgFixtures
         }
 
         return $list;
+    }
+
+    /**
+     * Statamic resolves the blueprint repository while booting, so the config alone no longer moves it.
+     */
+    private static function useBlueprintsPath(string $path): void
+    {
+        config(['statamic.system.blueprints_path' => $path]);
+        resolve(BlueprintRepository::class)->setDirectories($path);
     }
 }

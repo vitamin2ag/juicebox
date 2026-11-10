@@ -25,6 +25,20 @@ class MakeEntrySchema extends GeneratorCommand
     protected $type = 'Schema';
 
     #[Override]
+    public function handle(): bool|int|null
+    {
+        $type = $this->option('type');
+
+        if (is_string($type) && ! $this->isSchemaType(Str::studly($type))) {
+            $this->components->error("[$type] is not a Schema.org type.");
+
+            return self::FAILURE;
+        }
+
+        return parent::handle();
+    }
+
+    #[Override]
     protected function getStub(): string
     {
         return dirname(__DIR__, 3).'/resources/stubs/entry-schema.php.stub';
@@ -49,21 +63,7 @@ class MakeEntrySchema extends GeneratorCommand
     #[Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return $rootNamespace.'\\Schemas\\Entries';
-    }
-
-    #[Override]
-    public function handle(): bool|int|null
-    {
-        $type = $this->option('type');
-
-        if (is_string($type) && ! $this->isSchemaType(Str::studly($type))) {
-            $this->components->error("[$type] is not a Schema.org type.");
-
-            return self::FAILURE;
-        }
-
-        return parent::handle();
+        return 'App\\Schemas\\Entries';
     }
 
     /** @return array<int, array<int, mixed>> */

@@ -7,12 +7,11 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Corporation;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\LocalBusiness;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Organization;
 use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\Globals\Person;
-use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
-mutates(Organization::class);
-mutates(Corporation::class);
-mutates(LocalBusiness::class);
-mutates(Person::class);
+covers(Organization::class);
+covers(Corporation::class);
+covers(LocalBusiness::class);
+covers(Person::class);
 
 it('renders without general globals', function (Organization|Corporation|LocalBusiness|Person $schema, string $type): void {
     $script = $schema->schema()->toScript();
@@ -32,17 +31,6 @@ it('falls back to the current site for name and url', function (Organization|Cor
 
     expect($data['name'])->toBe('Acme Site')
         ->and($data['url'])->toBe('https://acme.test');
-})->with([
-    'organization' => [new Organization],
-    'corporation' => [new Corporation],
-    'local business' => [new LocalBusiness],
-    'person' => [new Person],
-]);
-
-it('omits name and url without a current site', function (Organization|Corporation|LocalBusiness|Person $schema): void {
-    Fixtures::withoutCurrentSite();
-
-    expect($schema->schema()->toArray())->not->toHaveKeys(['name', 'url']);
 })->with([
     'organization' => [new Organization],
     'corporation' => [new Corporation],
