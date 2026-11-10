@@ -187,7 +187,15 @@ class RedirectController extends CpController
      */
     private function columns(): Collection
     {
-        return collect(['source' => __('Source'), 'destination' => __('Destination'), 'type' => __('Type'), 'match_type' => __('Match type')])
+        $columns = [
+            'source' => __('Source'),
+            'destination' => __('Destination'),
+            'type' => __('Type'),
+            'match_type' => __('Match type'),
+            'description' => __('Description'),
+        ];
+
+        return collect($columns)
             ->map(fn (string $label, string $field): array => ['field' => $field, 'label' => $label, 'visible' => true, 'sortable' => true])
             ->values();
     }

@@ -39,7 +39,7 @@ it('creates a redirect through the form', function (): void {
         ->and(resolve(RedirectRepository::class)->all()->first()?->type())->toBe(410);
 });
 
-it('shows the entry a redirect points to', function (): void {
+it('shows the entry a redirect points to and the description', function (): void {
     $entry = RedirectFixtures::page('kontakt');
     $entry->set('title', 'Kontaktseite');
     $entry->save();
@@ -51,6 +51,7 @@ it('shows the entry a redirect points to', function (): void {
         ->assertNoJavaScriptErrors()
         ->assertSee('Kontaktseite')
         ->assertSee('Missing entry')
+        ->assertSee('Umzug 2026')
         ->assertDontSee('entry::kontakt')
         ->click('Kontaktseite')
         ->assertPathIs('/cp/collections/pages/entries/kontakt');
