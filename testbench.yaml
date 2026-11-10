@@ -12,6 +12,9 @@ env:
   - APP_DEBUG=true
   - CACHE_STORE=file
   - SESSION_DRIVER=file
+  # The workbench database is an empty in-memory SQLite without a jobs table, so Statamic's
+  # queued listeners (e.g. the search index update on saving an entry) run right away.
+  - QUEUE_CONNECTION=sync
 
 workbench:
   start: '/'
