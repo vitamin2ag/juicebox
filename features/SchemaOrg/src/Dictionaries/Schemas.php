@@ -59,7 +59,7 @@ class Schemas extends BasicDictionary
         }
 
         return $this->classesByName()
-            ->map(fn (string $class, string $name): array => ['label' => $class::label(), 'value' => $name])
+            ->map(fn (string $class, string $name): array => ['label' => __($class::label()), 'value' => $name])
             ->sortBy('label')
             ->values()
             ->all();

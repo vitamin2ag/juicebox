@@ -134,9 +134,9 @@ it('renders person common entity fields from the global set', function (): void 
 it('exposes a label for every global schema', function (Organization|Corporation|LocalBusiness|Person $schema, string $label): void {
     expect($schema::label())->toBe($label);
 })->with([
-    'organization' => [new Organization, 'Organisation'],
-    'corporation' => [new Corporation, 'Aktiengesellschaft'],
-    'local business' => [new LocalBusiness, 'Lokales Unternehmen'],
+    'organization' => [new Organization, 'Organization'],
+    'corporation' => [new Corporation, 'Corporation'],
+    'local business' => [new LocalBusiness, 'Local Business'],
     'person' => [new Person, 'Person'],
 ]);
 

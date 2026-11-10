@@ -21,7 +21,7 @@ class LocalBusiness implements Contract
     #[Override]
     public static function label(): string
     {
-        return 'Lokales Unternehmen';
+        return 'Local Business';
     }
 
     #[Override]

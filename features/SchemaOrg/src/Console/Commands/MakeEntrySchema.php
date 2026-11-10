@@ -30,7 +30,7 @@ class MakeEntrySchema extends GeneratorCommand
         $type = $this->option('type');
 
         if (is_string($type) && ! $this->isSchemaType(Str::studly($type))) {
-            $this->components->error("[$type] is not a Schema.org type.");
+            $this->components->error(__('[:type] is not a Schema.org type.', ['type' => $type]));
 
             return self::FAILURE;
         }

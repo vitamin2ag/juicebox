@@ -40,7 +40,7 @@ class InstallGeneralGlobal extends Command
         $set->sites(Site::all()->keys()->all());
         $set->save();
 
-        $this->components->info('Created the [general] global.');
+        $this->components->info(__('Created the [general] global.'));
     }
 
     protected function ensureBlueprintTab(): void
@@ -66,7 +66,7 @@ class InstallGeneralGlobal extends Command
             $blueprint->setContents([...$blueprint->contents(), 'tabs' => [...$this->tabsOf($blueprint), 'json_ld' => $tab]]);
             $blueprint->save();
 
-            $this->components->info('Added the [json_ld] tab to the [globals.general] blueprint.');
+            $this->components->info(__('Added the [json_ld] tab to the [globals.general] blueprint.'));
 
             return;
         }
@@ -77,7 +77,7 @@ class InstallGeneralGlobal extends Command
         $blueprint->setContents(['tabs' => ['json_ld' => $tab]]);
         $blueprint->save();
 
-        $this->components->info('Created the [globals.general] blueprint.');
+        $this->components->info(__('Created the [globals.general] blueprint.'));
     }
 
     /** @return array<array-key, mixed> */

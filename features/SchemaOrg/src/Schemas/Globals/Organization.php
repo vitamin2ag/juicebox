@@ -20,7 +20,7 @@ class Organization implements Contract
     #[Override]
     public static function label(): string
     {
-        return 'Organisation';
+        return 'Organization';
     }
 
     #[Override]

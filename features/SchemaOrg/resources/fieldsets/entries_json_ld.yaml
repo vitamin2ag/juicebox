@@ -8,6 +8,6 @@ fields:
         category: Entries
       max_items: 1
       type: dictionary
-      display: Schema-Typ
-      instructions: 'Legt fest, welcher strukturierte Schema-Typ für diesen Eintrag ausgegeben wird. Überschreibt den Standard der Collection.'
+      display: 'Schema Type'
+      instructions: 'Sets which structured data type is output for this entry. Overrides the default of the collection.'
       instructions_position: below

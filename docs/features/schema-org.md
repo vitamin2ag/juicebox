@@ -73,7 +73,7 @@ php artisan statamic:juicebox:schema-org:make-schema Article
 
 It writes `app/Schemas/Entries/Article.php`. When the name is a Schema.org type (`Article`, `Event`, ...) the class returns that node; otherwise (`BlogPost`) it returns a `Thing`. Pass `--type=Article` to choose the type explicitly (the short Schema.org name; an unknown type is rejected). Fill in the properties. An existing file is not overwritten unless you pass `--force`.
 
-No further registration needed — it's picked up automatically and listed alphabetically by its `label()`. Abstract classes (shared bases) are excluded from the picker.
+No further registration needed — it's picked up automatically and listed alphabetically by its `label()`, which the picker passes through `__()`, so return the English label and translate it in the app's `lang/<locale>.json`. Abstract classes (shared bases) are excluded from the picker.
 
 If your entry/listing type's schema implements `Spatie\SchemaOrg\Contracts\WebPageContract` (e.g. `CollectionPage`, `ProfilePage`), `GraphBuilder` suppresses its own automatic `WebPage` node for that entry — so wrap the return value of `schema()` in `$this->identifyAsWebPage(..., $this->entry)` (from the `ResolvesBreadcrumbs` trait `EntrySchema` already uses) to give it the same `@id` and `breadcrumb` reference that node would have had:
 

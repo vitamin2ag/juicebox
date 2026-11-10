@@ -35,7 +35,7 @@ Scaffold it, then fill in `schema()`:
 php artisan statamic:juicebox:schema-org:make-schema Article
 ```
 
-This writes `app/Schemas/Entries/<Name>.php`, discovered by directory convention with no registration. The node is the Schema.org type named by the class (`Article`, `Event`), else a `Thing`. Pick the type with `--type` instead of editing the file afterwards, for example `make-schema BlogPost --type=Article`; an unknown type is rejected. An existing file is not overwritten unless you pass `--force`. The class name is the value you bind in step 3, and `label()` is what the CP picker shows. The result looks like this once filled in:
+This writes `app/Schemas/Entries/<Name>.php`, discovered by directory convention with no registration. The node is the Schema.org type named by the class (`Article`, `Event`), else a `Thing`. Pick the type with `--type` instead of editing the file afterwards, for example `make-schema BlogPost --type=Article`; an unknown type is rejected. An existing file is not overwritten unless you pass `--force`. The class name is the value you bind in step 3, and `label()` is what the CP picker shows; return it in English, since the picker translates it with `__()` (add the translation to the app's `lang/<locale>.json`). The result looks like this once filled in:
 
 ```php
 <?php

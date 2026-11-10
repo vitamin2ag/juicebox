@@ -12,7 +12,7 @@ class Corporation extends Organization
     #[Override]
     public static function label(): string
     {
-        return 'Aktiengesellschaft';
+        return 'Corporation';
     }
 
     #[Override]
