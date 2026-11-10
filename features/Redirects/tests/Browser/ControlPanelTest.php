@@ -56,3 +56,24 @@ it('shows the entry a redirect points to and the description', function (): void
         ->click('Kontaktseite')
         ->assertPathIs('/cp/collections/pages/entries/kontakt');
 });
+
+it('downloads the CSV export without leaving the list', function (): void {
+    resolve(RedirectRepository::class)->save(new Redirect(id: 'alt', site: 'default', source: '/alte-seite', destination: '/neue-seite', order: 1));
+
+    $page = visit(RedirectFixtures::cpUrl('redirects.index'))->assertSee('/alte-seite');
+
+    // The browser test can not read a download, so the link the page clicks keeps its file name and contents.
+    $page->script(<<<'JS'
+        HTMLAnchorElement.prototype.click = function () {
+            fetch(this.href).then((response) => response.text()).then((text) => (window.exported = [this.download, text]));
+        };
+        JS);
+
+    $page->click('button[aria-label="Open dropdown menu"]:not([placement])')
+        ->click('Export CSV')
+        ->wait(0.5)
+        ->assertNoJavaScriptErrors()
+        ->assertPathIs('/cp/redirects')
+        ->assertScript('window.exported[0]', 'redirects-default.csv')
+        ->assertScript('window.exported[1].includes("/alte-seite,/neue-seite,301,exact,default,1,")');
+});
