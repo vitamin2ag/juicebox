@@ -110,6 +110,7 @@ it('lists the redirects of the selected site as JSON with their fields', functio
             ['field' => 'destination', 'label' => 'Destination', 'visible' => true, 'sortable' => true],
             ['field' => 'type', 'label' => 'Type', 'visible' => true, 'sortable' => true],
             ['field' => 'match_type', 'label' => 'Match type', 'visible' => true, 'sortable' => true],
+            ['field' => 'description', 'label' => 'Description', 'visible' => true, 'sortable' => true],
         ]);
 });
 

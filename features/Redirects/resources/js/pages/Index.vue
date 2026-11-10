@@ -174,6 +174,9 @@ function prune(): void {
                 <span v-else-if="redirect.destination" v-text="redirect.destination" />
                 <span v-else class="text-gray-500">—</span>
             </template>
+            <template #cell-description="{ value }">
+                <span v-if="value" class="block max-w-xs truncate" :title="value" v-text="value" />
+            </template>
             <template #prepended-row-actions="{ row: redirect }">
                 <DropdownItem v-if="can('edit redirects')" :text="__('Edit')" icon="edit" :href="redirect.edit_url" />
             </template>
