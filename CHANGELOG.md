@@ -1,6 +1,46 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.2...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.3...HEAD)
+
+## [v0.4.3](https://github.com/vitamin2ag/juicebox/compare/v0.4.2...v0.4.3) - 2026-11-11
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Enhancements
+
+* Add the Redirects feature by @mrshljivovica in https://github.com/vitamin2ag/juicebox/pull/15
+* Address Redirects review feedback by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/43
+
+#### Documentation
+
+* Open pull requests as drafts by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/48
+
+#### Dependencies
+
+* Update laravel-features and statamic-features by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/16
+* Bump stefanzweifel/git-auto-commit-action from 7.2.0 to 7.2.1 by @dependabot[bot] in https://github.com/vitamin2ag/juicebox/pull/20
+* Require statamic-features ^2.1.1 by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/41
+
+#### Maintenance
+
+* Add control panel build, quality tooling and conventions by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/24
+* Add Pest's agent plugin for quick probes by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/39
+* Register middleware through feature options by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/44
+* Tighten the Pint rules by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/45
+* Enforce the Override attribute by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/46
+* Run the slow checks only when code changes by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/49
+* Decide every mutant by an assertion by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/51
+* Install Chromium without apt packages by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/55
+* Split mutation CI per feature and cache dependencies by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/52
+* Audit dependencies and run the tests weekly by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/53
+* Move the PHPStan stub to .phpstan/stubs by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/56
+
+### New Contributors
+
+* @mrshljivovica made their first contribution in https://github.com/vitamin2ag/juicebox/pull/15
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.4.2...v0.4.3
 
 ## [v0.4.2](https://github.com/vitamin2ag/juicebox/compare/v0.4.1...v0.4.2) - 2026-10-20
 
