@@ -34,3 +34,5 @@ Set any value to `false` to omit that header entirely.
 | Variable | Default | Description |
 |---|---|---|
 | `JUICEBOX_SECURE_HEADERS_ENABLED` | `true` | Master toggle — disables all headers when `false`. |
+
+This line only tests that a docs-only change skips the slow CI checks.
