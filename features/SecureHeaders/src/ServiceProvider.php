@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SecureHeaders;
 
-use Illuminate\Routing\Router;
 use Override;
 use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 use Vitamin2\Juicebox\FeatureServiceProvider;
@@ -12,8 +11,8 @@ use Vitamin2\Juicebox\FeatureServiceProvider;
 class ServiceProvider extends FeatureServiceProvider
 {
     #[Override]
-    protected function bootFeature(): void
+    protected function options(): array
     {
-        $this->app->make(Router::class)->pushMiddlewareToGroup('web', SetSecureHeaders::class);
+        return ['statamic.middleware_groups' => ['web' => [SetSecureHeaders::class]]];
     }
 }
