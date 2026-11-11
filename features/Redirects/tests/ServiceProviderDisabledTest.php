@@ -6,8 +6,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Statamic\Facades\Permission;
 use Statamic\Facades\Stache;
+use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
+use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 mutates(ServiceProvider::class);
@@ -24,12 +26,17 @@ afterAll(function (): void {
 });
 
 it('leaves the redirect store out of the Stache while the feature is disabled', function (): void {
-    expect(Stache::stores()->has('redirects'))->toBeFalse();
+    expect(Stache::stores()->has('redirects'))->toBeFalse()
+        ->and(app()->bound(RedirectStore::class))->toBeFalse();
 });
 
 it('leaves the 404s of the :dataset middleware group alone while the feature is disabled', function (string $group): void {
     expect(resolve('router')->getMiddlewareGroups()[$group])->not->toContain(HandleNotFound::class);
 })->with(['web', 'statamic.web']);
+
+it('leaves redirects out of the classes the cache unserializes while the feature is disabled', function (): void {
+    expect(config('cache.serializable_classes'))->not->toContain(Redirect::class);
+});
 
 it('leaves the control panel without redirects while the feature is disabled', function (): void {
     $this->actingAs(RedirectFixtures::superUser());
