@@ -26,6 +26,8 @@ on:
       - .github/workflows/quality.yml
   pull_request:
     paths: *paths
+  # Run by hand on main before a release, since dependencies move without a lock file.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -60,9 +62,29 @@ jobs:
       - name: Code Coverage
         run: composer test:coverage
 
-  mutation:
+  mutation-paths:
     runs-on: ubuntu-latest
-    name: Mutation Testing
+    name: Mutation Paths
+    outputs:
+      paths: ${{ steps.paths.outputs.paths }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # One mutation job per source folder, so a new feature gets its own job.
+      - name: List the source folders
+        id: paths
+        run: echo "paths=$(ls -d src features/*/src | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+
+  mutation:
+    needs: mutation-paths
+    runs-on: ubuntu-latest
+    name: Mutation Testing (${{ matrix.path }})
+    strategy:
+      fail-fast: false
+      matrix:
+        path: ${{ fromJSON(needs.mutation-paths.outputs.paths) }}
 
     steps:
       - name: Checkout code
@@ -83,7 +105,7 @@ jobs:
           composer run prepare
 
       - name: Mutation Testing
-        run: composer test:mutate
+        run: composer test:mutate -- --path=${{ matrix.path }} --ignore-min-score-on-zero-mutations
 
   browser:
     runs-on: ubuntu-latest
