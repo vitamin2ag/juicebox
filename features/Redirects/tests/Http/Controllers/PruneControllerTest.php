@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\PruneController;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(PruneController::class);
+covers(PruneController::class, RedirectRepository::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

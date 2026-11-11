@@ -12,7 +12,7 @@ use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(CsvImporter::class, ImportResult::class);
+covers(CsvImporter::class, ImportResult::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

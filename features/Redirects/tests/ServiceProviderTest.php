@@ -7,15 +7,19 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Permission;
+use Statamic\Facades\Scope;
 use Statamic\Facades\Stache;
 use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectEnabled;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectMatchType;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectType;
 use Vitamin2\Juicebox\Features\Redirects\Http\Middleware\HandleNotFound;
 use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(ServiceProvider::class);
+covers(ServiceProvider::class);
 
 afterEach(function (): void {
     putenv('JUICEBOX_REDIRECTS_ENABLED');
@@ -144,6 +148,14 @@ it('switches itself off while rias/statamic-redirect is installed', function ():
         ->and($router->getMiddlewareGroups()['web'])->not->toContain(HandleNotFound::class)
         ->and($router->getMiddlewareGroups()['statamic.web'])->not->toContain(HandleNotFound::class);
 });
+
+it('registers the :dataset filter', function (string $handle, string $class): void {
+    expect(get_debug_type(Scope::find($handle)))->toBe($class);
+})->with([
+    'enabled' => ['redirect_enabled', RedirectEnabled::class],
+    'match type' => ['redirect_match_type', RedirectMatchType::class],
+    'type' => ['redirect_type', RedirectType::class],
+]);
 
 it('lets the cache unserialize redirects', function (): void {
     $redirect = new Redirect(id: 'one', site: 'de', source: '/alt', destination: '/neu');

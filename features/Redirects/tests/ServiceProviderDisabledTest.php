@@ -12,7 +12,7 @@ use Vitamin2\Juicebox\Features\Redirects\ServiceProvider;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(ServiceProvider::class);
+covers(ServiceProvider::class);
 
 /*
  * The switch is read while the app boots, so these tests turn it off in beforeAll(), as a project does.

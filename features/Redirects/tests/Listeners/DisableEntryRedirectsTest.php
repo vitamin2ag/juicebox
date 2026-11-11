@@ -8,7 +8,7 @@ use Vitamin2\Juicebox\Features\Redirects\Listeners\DisableEntryRedirects;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(DisableEntryRedirects::class);
+covers(DisableEntryRedirects::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

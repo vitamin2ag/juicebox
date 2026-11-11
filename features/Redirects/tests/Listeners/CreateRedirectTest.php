@@ -14,7 +14,7 @@ use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 use function Pest\Laravel\get;
 
-mutates(CreateRedirect::class);
+covers(CreateRedirect::class, Redirect::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

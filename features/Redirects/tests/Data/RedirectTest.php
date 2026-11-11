@@ -6,7 +6,7 @@ use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(Redirect::class);
+covers(Redirect::class);
 
 it('is an enabled exact 301 redirect by default', function (): void {
     $redirect = new Redirect(id: 'one', site: 'de', source: '/old', destination: '/new');

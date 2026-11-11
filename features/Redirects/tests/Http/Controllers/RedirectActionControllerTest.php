@@ -8,7 +8,7 @@ use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\RedirectActionControll
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RedirectActionController::class);
+covers(RedirectActionController::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

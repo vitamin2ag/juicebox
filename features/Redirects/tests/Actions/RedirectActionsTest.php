@@ -13,7 +13,7 @@ use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RedirectAction::class, DeleteRedirects::class, EnableRedirects::class, DisableRedirects::class);
+covers(RedirectAction::class, DeleteRedirects::class, EnableRedirects::class, DisableRedirects::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
@@ -43,6 +43,12 @@ it('offers its actions on redirects and nothing else', function (): void {
 
     expect($classes(new Redirect(id: 'one', site: 'de')))->toBe([DeleteRedirects::class, DisableRedirects::class, EnableRedirects::class])
         ->and($classes(RedirectFixtures::page('seite')))->toBeEmpty();
+});
+
+it('asks before deleting redirects', function (): void {
+    expect(new DeleteRedirects()->toArray())
+        ->toHaveKey('handle', DeleteRedirects::handle())
+        ->toHaveKey('dangerous', true);
 });
 
 it('lets the permission decide who may run :dataset', function (RedirectAction $action, string $permission): void {

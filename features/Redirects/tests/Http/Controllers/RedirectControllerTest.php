@@ -6,12 +6,18 @@ use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Data\Redirect;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectEnabled;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectFilter;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectMatchType;
+use Vitamin2\Juicebox\Features\Redirects\Filters\RedirectType;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\RedirectController;
+use Vitamin2\Juicebox\Features\Redirects\Http\EntryForm;
+use Vitamin2\Juicebox\Features\Redirects\Http\Resources\RedirectResource;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RedirectController::class);
+covers(RedirectController::class, RedirectResource::class, EntryForm::class, RedirectFilter::class, RedirectEnabled::class, RedirectMatchType::class, RedirectType::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

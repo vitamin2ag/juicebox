@@ -7,6 +7,7 @@
     </include>
     <exclude>
       <directory>features/*/config</directory>
+      <directory>features/*/routes</directory>
       <directory>features/*/tests</directory>
     </exclude>
   </source>

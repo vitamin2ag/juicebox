@@ -11,7 +11,7 @@ use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
 use function Pest\Laravel\get;
 
-mutates(HandleNotFound::class);
+covers(HandleNotFound::class, Redirect::class);
 
 pest()->use(FakesViews::class);
 

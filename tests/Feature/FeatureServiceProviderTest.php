@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders;
 use Vitamin2\Juicebox\Features\SecureHeaders\ServiceProvider as SecureHeadersServiceProvider;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
-mutates(FeatureServiceProvider::class);
+covers(FeatureServiceProvider::class);
 
 it('merges feature config under the addon key', function (): void {
     expect(config('juicebox.secure_headers'))->toBeArray();

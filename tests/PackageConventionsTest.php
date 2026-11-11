@@ -134,12 +134,19 @@ it('translates only what Statamic does not ship in :dataset', function (string $
     expect(array_values(array_intersect($ours, $statamic)))->toBeEmpty();
 })->with('translated locales');
 
-it('declares what its tests mutate for every feature', function (string $feature): void {
-    $tests = collect(iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../features/$feature/tests", FilesystemIterator::SKIP_DOTS)), false))
-        ->whereInstanceOf(SplFileInfo::class);
+it('declares what every test covers, with covers() instead of mutates()', function (): void {
+    $tests = phpFiles()->filter(fn (SplFileInfo $file): bool => str_ends_with($file->getFilename(), 'Test.php')
+        && (str_contains($file->getPathname(), '/tests/Feature/') || preg_match('#/features/[^/]+/tests/#', $file->getPathname()) === 1)
+        && ! str_contains($file->getPathname(), '/Browser/'));
 
-    expect($tests->contains(fn (SplFileInfo $file): bool => str_contains((string) file_get_contents($file->getPathname()), 'mutates(')))->toBeTrue();
-})->with('features');
+    expect($tests)->not->toBeEmpty();
+
+    $tests->each(function (SplFileInfo $file): void {
+        expect((string) file_get_contents($file->getPathname()))
+            ->toMatch('/^covers\(|->coversNothing\(\)/m', $file->getPathname())
+            ->not->toMatch('/\bmutates\(/', $file->getPathname());
+    });
+});
 
 it('keeps the changelog and release notes config the release workflow needs', function (): void {
     expect(__DIR__.'/../.github/release.yml')->toBeFile()

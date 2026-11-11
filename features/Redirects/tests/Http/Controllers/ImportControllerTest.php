@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Http\Controllers\ImportController;
+use Vitamin2\Juicebox\Features\Redirects\Import\ImportResult;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(ImportController::class);
+covers(ImportController::class, ImportResult::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
