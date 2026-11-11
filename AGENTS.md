@@ -21,6 +21,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 - Commit only when explicitly instructed for that specific commit.
 - Work on a branch and open a pull request for every change, new features included. `main` receives changes only through merged pull requests (direct pushes and force pushes are blocked).
+- Open every pull request as a draft (`gh pr create --draft`). The maintainer reviews it and marks it ready; do not mark it ready or merge it yourself. Stack a pull request that builds on an unmerged one on its branch (`--base <branch>`), so the stack can be merged in order or one by one.
 - Commit in logical units: one self-contained change per commit; split unrelated changes.
 - Keep subjects short, imperative and precise (e.g. `Add master toggle for Secure Headers`); add a body only when the subject is not self-explanatory.
 - Write commit messages without co-author trailers or AI attribution.
