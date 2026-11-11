@@ -135,7 +135,9 @@ it('switches itself off while rias/statamic-redirect is installed', function ():
     Stache::stores()->forget('redirects');
     Addon::shouldReceive('all')->andReturn(collect(['rias/statamic-redirect' => null]));
 
-    new ServiceProvider(app())->boot();
+    $provider = new ServiceProvider(app());
+    $provider->register();
+    $provider->boot();
 
     expect(config('juicebox.redirects.enabled'))->toBeFalse()
         ->and(Stache::stores()->has('redirects'))->toBeFalse()
