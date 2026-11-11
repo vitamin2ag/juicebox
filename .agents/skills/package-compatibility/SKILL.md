@@ -21,3 +21,4 @@ Keep code, dependencies and workflows within the supported range: PHP `^8.5` and
 - Judge the supported range by the constraints in `composer.json`, not by the locally installed versions.
 - Declare a lower bound (for example `statamic/cms`) only when something tests it.
 - Raise the constraint before using an API newer than the lowest version it allows.
+- Dependabot (`.github/dependabot.yml`) opens weekly update pull requests for Composer, npm and GitHub Actions, and one grouped pull request per ecosystem for security updates; review them like any other change.
