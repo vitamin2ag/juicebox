@@ -61,7 +61,7 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 7. Write Pest tests in `features/<Name>/tests/` (see the `package-testing` skill): happy path, `false` path, invalid input. Declare every class a test file checks with `covers(<Class>::class, ...)`, or mark tests that check no class (translation files, say) `->coversNothing()` **(enforced)**; coverage and mutation count only the classes a test names. `tests/Pest.php` binds everything under `features/` automatically. Put fixtures in `features/<Name>/tests/__Fixtures__/` (namespace `Vitamin2\Juicebox\Features\<Name>\Tests\__Fixtures__`).
 8. Add the Boost skill `resources/boost/skills/juicebox-<slug>/SKILL.md` **(enforced)**: front matter `name` equals the folder name, plus `description`; every config key appears in backticks **(enforced)**. Write it for apps that install the package, not for maintainers. This folder ships with the package; `.agents/` does not.
 9. Document the feature in `docs/features/<slug>.md` and list it in the README `Features` section as `- [<Feature name>](docs/features/<slug>.md): <one-line summary>` **(enforced)**. For features with config the doc contains the publish command (`--tag=juicebox-<slug>-config`) and every config key in backticks **(enforced)**.
-10. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (100% required each; both load a coverage driver for the run).
+10. Run `composer test`, then `composer test:coverage` and `composer test:mutate -- --class='<the feature's namespace>'` (100% required each; both load a coverage driver for the run). CI runs the full mutation run.
 
 ## Conventions
 
