@@ -13,7 +13,7 @@ Keep code, dependencies and workflows within the supported range: PHP `^8.5` and
 
 1. Read `composer.json` first for the PHP and Statamic constraints.
 2. Check changed code against Statamic 6 and Laravel APIs that exist in the lowest version the `composer.json` constraint allows, not only the locally installed one.
-3. CI runs every gate against the newest allowed versions only: `.github/workflows/tests.yml` runs `composer test` on every change, `.github/workflows/quality.yml` runs coverage, mutation, browser and asset checks when code or its tooling changes (its `paths` list). When raising or lowering a constraint, say why in the PR.
+3. CI runs every gate against the newest allowed versions only: `.github/workflows/tests.yml` runs `composer test` on every change, `.github/workflows/quality.yml` runs coverage, mutation (one job per `src` folder), browser and asset checks when code or its tooling changes (its `paths` list). When raising or lowering a constraint, say why in the PR.
 4. Validate locally with `composer test`.
 
 ## Rules
