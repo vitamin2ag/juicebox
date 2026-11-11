@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Validator;
 use Vitamin2\Juicebox\Features\Redirects\Rules\ValidRegex;
 
-mutates(ValidRegex::class);
+covers(ValidRegex::class);
 
 /**
  * @param  array<array-key, mixed>  $data

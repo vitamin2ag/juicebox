@@ -83,7 +83,8 @@ rm -rf "$d"
 
 ## Test layout
 
-- Declare the class under test with `mutates(<Class>::class)` right after the imports. `PackageConventionsTest` enforces at least one per feature.
+- Declare every class a test file checks with `covers(<Class>::class, ...)` right after the imports, including classes it checks through another one (a controller test that asserts a filter covers the filter too). Mark a test that checks no class `->coversNothing()`. `PackageConventionsTest` enforces one of the two in every test file under `features/*/tests` (outside `Browser/`) and `tests/Feature`, and rejects `mutates()`, which would count a test's coverage for every class again.
+- `covers()` makes PHPUnit count a test's coverage only for the classes it names, so a mutant runs only the tests of its own class and is killed by an assertion, not by Pest's timeout (which Pest counts as caught). A class that loses coverage under it is checked only through other classes: name it in the test that asserts its behaviour.
 - Feature tests live next to the feature in `features/<Name>/tests/...` mirroring `features/<Name>/src/...`, written Pest-style (`it()`, `expect()`, datasets). Put cross-cutting tests in `tests/`.
 - `tests/Pest.php` binds `TestCase` to `tests/Feature` and everything under `features/`; per-feature bindings are not needed. `tests/Feature` holds tests that boot the app and are not tied to one feature; tests that need no app (`ArchTest`, `PackageConventionsTest`) stay in the `tests/` root.
 - Features are discovered through the addon provider, so `tests/TestCase.php` needs no change for a new feature. It gives every test process its own Stache and search-index directory, so tests that save entries or globals run in parallel.

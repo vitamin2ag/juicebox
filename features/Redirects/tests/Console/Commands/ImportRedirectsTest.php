@@ -5,9 +5,10 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Console\Commands\ImportRedirects;
+use Vitamin2\Juicebox\Features\Redirects\Import\ImportResult;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(ImportRedirects::class);
+covers(ImportRedirects::class, ImportResult::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

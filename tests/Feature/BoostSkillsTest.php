@@ -27,7 +27,7 @@ dataset('boost skills with config', fn (): array => array_filter(
 
 it('has Boost skill front matter matching its folder', function (string $name, string $skill): void {
     expect($skill)->toStartWith("---\nname: $name\ndescription: ");
-})->with('boost skills');
+})->with('boost skills')->coversNothing();
 
 it('documents every config key in the Boost skill', function (string $name, string $skill): void {
     $feature = Str::replace('-', '_', Str::after($name, 'juicebox-'));
@@ -35,4 +35,4 @@ it('documents every config key in the Boost skill', function (string $name, stri
     foreach (array_keys(config()->array("juicebox.$feature")) as $key) {
         expect($skill)->toContain("`$key`");
     }
-})->with('boost skills with config');
+})->with('boost skills with config')->coversNothing();

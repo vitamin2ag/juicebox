@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RedirectStore::class);
+covers(RedirectStore::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();

@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\SecureHeaders\ServiceProvider;
 
 use function Pest\Laravel\get;
 
-mutates(ServiceProvider::class);
+covers(ServiceProvider::class);
 
 dataset('web headers', [
     'X-Frame-Options' => ['X-Frame-Options', 'SAMEORIGIN'],

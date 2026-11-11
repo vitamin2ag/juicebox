@@ -10,7 +10,7 @@ use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Redirects\Listeners\RememberOldUri;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RememberOldUri::class);
+covers(RememberOldUri::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
@@ -64,7 +64,11 @@ it('remembers the uris of the entries below one whose slug changes, and marks it
         ->and(Blink::get('juicebox-redirects-old-uri:team'))->toBe('/ueber-uns/team')
         ->and(Blink::get('juicebox-redirects-old-uri:chef'))->toBe('/ueber-uns/team/chef')
         ->and(Blink::get('juicebox-redirects-old-uri:angebot'))->toBeNull()
-        ->and(Blink::get('juicebox-redirects-old-descendants:ueber-uns'))->not->toBeNull();
+        ->and(Blink::all())->toHaveKey('juicebox-redirects-old-descendants:ueber-uns', true);
+});
+
+it('finds no entries below one outside a structure', function (): void {
+    expect(RememberOldUri::descendantIds(RedirectFixtures::page('seite')))->toBeEmpty();
 });
 
 it('remembers nothing of the entries below one whose slug stays', function (): void {

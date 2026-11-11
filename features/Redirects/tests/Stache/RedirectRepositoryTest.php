@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectRepository;
 use Vitamin2\Juicebox\Features\Redirects\Stache\RedirectStore;
 use Vitamin2\Juicebox\Features\Redirects\Tests\__Fixtures__\RedirectFixtures;
 
-mutates(RedirectRepository::class);
+covers(RedirectRepository::class);
 
 beforeEach(function (): void {
     RedirectFixtures::isolate();
