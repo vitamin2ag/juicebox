@@ -49,7 +49,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - Control panel assets, after `composer install` and `nvm use`: `npm ci`, then `composer test:assets` (runs `npm run typecheck`, `lint` with oxlint and `format:check` with Prettier; fix formatting with `npm run format`) and `npm run build` (not part of `composer test`); commit the rebuilt `resources/dist` with its source.
 - Quick check while working: `vendor/bin/pest --agent='<php>'` runs a snippet as a temporary test; the `package-testing` skill has the rules.
 - Browser tests: `composer test:browser` (after `npm ci` and `npx playwright install chromium`; not part of `composer test`). The `package-testing` skill has the setup.
-- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`; `scripts/with-php-test-coverage-driver.sh` loads Xdebug for the run). Run both before you call a change to `src` or `features` done; if you cannot, say so and why. The `package-testing` skill has the details.
+- Code coverage and mutation: `composer test:coverage` and `composer test:mutate` (not part of `composer test`; `scripts/with-php-test-coverage-driver.sh` loads Xdebug for the run). Run both once, before you call a change to `src` or `features` done, not after every change; while working, scope mutation to the changed classes with `composer test:mutate -- --class='<Namespace\Class>'`. If you cannot run them, say so and why. The `package-testing` skill has the details.
 
 ## Local Skills
 
