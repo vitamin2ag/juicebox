@@ -5,12 +5,16 @@ on:
     branches:
       - main
   pull_request:
+  # Weekly, so a new release of a dependency that breaks the package shows up without a push.
+  schedule:
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # The event keeps the weekly run and a push to main from cancelling each other.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
