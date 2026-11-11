@@ -97,7 +97,7 @@ rm -rf "$d"
 
 ## Tooling
 
-- PHPStan runs at `level: max` over `src`, `features` and `tests`, with `pest-plugin-phpstan` (registered automatically) so it understands `it()`, `expect()` and `$this` in tests. Treat its `pest.*` errors (redundant or impossible expectations, empty tests, duplicate descriptions) as test problems and fix the test. Fix types instead of using `@phpstan-ignore`, baselines, `assert()` or casts. When PHPStan reports `mixed` from a Statamic method, check the Statamic source and add the type to the PHPStan stub `stubs/statamic.stub` before writing a helper; it has nothing to do with the command stubs in `resources/stubs`.
+- PHPStan runs at `level: max` over `src`, `features` and `tests`, with `pest-plugin-phpstan` (registered automatically) so it understands `it()`, `expect()` and `$this` in tests. Treat its `pest.*` errors (redundant or impossible expectations, empty tests, duplicate descriptions) as test problems and fix the test. Fix types instead of using `@phpstan-ignore`, baselines, `assert()` or casts. When PHPStan reports `mixed` from a Statamic method, check the Statamic source and add the type to the PHPStan stub `stubs/statamic.stub` before writing a helper, but only when the code uses the value, not to allow a style such as a fluent chain; it has nothing to do with the command stubs in `resources/stubs`.
 - Write Pest files without a namespace; Rector does not import names in `tests/` and `features/*/tests/`.
 - Reach protected members with `ReflectionMethod`; Rector's first-class-callable rewrite breaks `->call($object)`.
 - Compute values in a method instead of class constants or property defaults; mutation testing does not cover code that runs at class load.
