@@ -46,6 +46,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 ## Quick Commands
 
 - Full validation: `composer test` (analyse, lint:check, refactor:check, test:types, test:unit). Fix with `composer lint` / `composer refactor`.
+- Dependency audit: `composer test:audit` (Composer and npm; not part of `composer test`, CI runs it).
 - Control panel assets, after `composer install` and `nvm use`: `npm ci`, then `composer test:assets` (runs `npm run typecheck`, `lint` with oxlint and `format:check` with Prettier; fix formatting with `npm run format`) and `npm run build` (not part of `composer test`); commit the rebuilt `resources/dist` with its source.
 - Quick check while working: `vendor/bin/pest --agent='<php>'` runs a snippet as a temporary test; the `package-testing` skill has the rules.
 - Browser tests: `composer test:browser` (after `npm ci` and `npx playwright install chromium`; not part of `composer test`). The `package-testing` skill has the setup.
