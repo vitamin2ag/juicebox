@@ -116,8 +116,10 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      # Without --with-deps: the runner image already has the libraries Chromium needs, and apt
+      # downloads from the Ubuntu archive hang on the runner now and then.
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Browser Tests
         run: composer test:browser
