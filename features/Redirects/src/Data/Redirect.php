@@ -27,6 +27,88 @@ class Redirect
         private readonly ?int $order = null,
     ) {}
 
+    /**
+     * An exact source is compared normalised, as it matches, and a regex one as written, since
+     * normalising a pattern changes what it matches. A redirect without a source gets a key
+     * no source has.
+     */
+    public static function sourceKeyOf(string $site, string $matchType, ?string $source): string
+    {
+        return $matchType === 'exact' && $source !== null
+            ? self::exactKey($site, $source)
+            : "{$site}|{$matchType}|{$source}";
+    }
+
+    /**
+     * The pattern a regex source matches with, or null when there is no source or it does not compile.
+     * An empty pattern compiles and matches every URL, so it is refused. Grepping no subjects only
+     * compiles the pattern.
+     */
+    public static function pattern(?string $source): ?string
+    {
+        $pattern = self::rawPattern($source);
+
+        return $pattern === null || @preg_grep($pattern, []) === false ? null : $pattern;
+    }
+
+    /**
+     * The pattern of pattern() without the check that it compiles, for matching, where preg_match
+     * compiles it anyway and does not match when it fails.
+     */
+    public static function rawPattern(?string $source): ?string
+    {
+        return $source === null || $source === '' ? null : "`{$source}`i";
+    }
+
+    /**
+     * The types the blueprint of a redirect offers.
+     *
+     * @return array<int, int>
+     */
+    public static function types(): array
+    {
+        return [301, 302, 410];
+    }
+
+    /**
+     * The destination that points to an entry, which follows the entry when its URI changes.
+     */
+    public static function toEntry(Entry $entry): string
+    {
+        return 'entry::'.$entry->id();
+    }
+
+    /**
+     * The entry an `entry::<id>` destination points to, or null for any other destination and for a missing entry.
+     */
+    public static function entryOf(?string $destination): ?Entry
+    {
+        return $destination !== null && str_starts_with($destination, 'entry::')
+            ? Entries::find(Str::after($destination, 'entry::'))
+            : null;
+    }
+
+    public static function exactKey(string $site, string $url): string
+    {
+        return "{$site}|exact|".self::normalise($url);
+    }
+
+    public static function regexKey(string $site): string
+    {
+        return "{$site}|regex";
+    }
+
+    /**
+     * Drops the slashes before the query string and at the end, and starts the URL with one.
+     */
+    public static function normalise(string $url): string
+    {
+        return Str::of($url)
+            ->replaceMatches('#/+(?=\?|$)#', '')
+            ->start('/')
+            ->value();
+    }
+
     public function id(): string
     {
         return $this->id;
@@ -99,18 +181,6 @@ class Redirect
     }
 
     /**
-     * An exact source is compared normalised, as it matches, and a regex one as written, since
-     * normalising a pattern changes what it matches. A redirect without a source gets a key
-     * no source has.
-     */
-    public static function sourceKeyOf(string $site, string $matchType, ?string $source): string
-    {
-        return $matchType === 'exact' && $source !== null
-            ? self::exactKey($site, $source)
-            : "{$site}|{$matchType}|{$source}";
-    }
-
-    /**
      * The row of the list in the `listing_row` Stache index (Statamic finds it by this method name), so the
      * list reads one index instead of every redirect.
      *
@@ -119,76 +189,6 @@ class Redirect
     public function listingRow(): array
     {
         return [...$this->fileData(), 'site' => $this->site];
-    }
-
-    /**
-     * The pattern a regex source matches with, or null when there is no source or it does not compile.
-     * An empty pattern compiles and matches every URL, so it is refused. Grepping no subjects only
-     * compiles the pattern.
-     */
-    public static function pattern(?string $source): ?string
-    {
-        $pattern = self::rawPattern($source);
-
-        return $pattern === null || @preg_grep($pattern, []) === false ? null : $pattern;
-    }
-
-    /**
-     * The pattern of pattern() without the check that it compiles, for matching, where preg_match
-     * compiles it anyway and does not match when it fails.
-     */
-    public static function rawPattern(?string $source): ?string
-    {
-        return $source === null || $source === '' ? null : "`{$source}`i";
-    }
-
-    /**
-     * The types the blueprint of a redirect offers.
-     *
-     * @return array<int, int>
-     */
-    public static function types(): array
-    {
-        return [301, 302, 410];
-    }
-
-    /**
-     * The destination that points to an entry, which follows the entry when its URI changes.
-     */
-    public static function toEntry(Entry $entry): string
-    {
-        return 'entry::'.$entry->id();
-    }
-
-    /**
-     * The entry an `entry::<id>` destination points to, or null for any other destination and for a missing entry.
-     */
-    public static function entryOf(?string $destination): ?Entry
-    {
-        return $destination !== null && str_starts_with($destination, 'entry::')
-            ? Entries::find(Str::after($destination, 'entry::'))
-            : null;
-    }
-
-    public static function exactKey(string $site, string $url): string
-    {
-        return "{$site}|exact|".self::normalise($url);
-    }
-
-    public static function regexKey(string $site): string
-    {
-        return "{$site}|regex";
-    }
-
-    /**
-     * Drops the slashes before the query string and at the end, and starts the URL with one.
-     */
-    public static function normalise(string $url): string
-    {
-        return Str::of($url)
-            ->replaceMatches('#/+(?=\?|$)#', '')
-            ->start('/')
-            ->value();
     }
 
     public function withDestination(?string $destination): self

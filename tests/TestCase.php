@@ -20,6 +20,16 @@ abstract class TestCase extends AddonTestCase
     #[Override]
     protected string $addonServiceProvider = ServiceProvider::class;
 
+    #[Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The local search index defaults to a file inside the vendored
+        // testbench skeleton, which parallel workers would write to at once.
+        config(['statamic.search.drivers.local.path' => sys_get_temp_dir().'/juicebox-search-'.getmypid()]);
+    }
+
     /**
      * Features are discovered by the addon provider, so new features need no test wiring.
      * Testbench skips package discovery, so the framework providers an application would
@@ -43,16 +53,6 @@ abstract class TestCase extends AddonTestCase
         parent::getEnvironmentSetUp($app);
 
         $app['config']->set('cache.serializable_classes', false);
-    }
-
-    #[Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // The local search index defaults to a file inside the vendored
-        // testbench skeleton, which parallel workers would write to at once.
-        config(['statamic.search.drivers.local.path' => sys_get_temp_dir().'/juicebox-search-'.getmypid()]);
     }
 
     /**
