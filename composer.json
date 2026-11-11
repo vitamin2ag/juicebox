@@ -52,7 +52,10 @@
             "phpstan/extension-installer": true,
             "pixelfear/composer-dist-plugin": true
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "abandoned": "report"
+        }
     },
     "scripts": {
         "post-autoload-dump": [
@@ -87,6 +90,10 @@
         ],
         "refactor:check": [
             "vendor/bin/rector process --dry-run"
+        ],
+        "test:audit": [
+            "@composer audit",
+            "npm audit"
         ],
         "test:assets": [
             "npm run typecheck",
