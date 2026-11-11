@@ -9,6 +9,11 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: "composer"
     directory: "/"
@@ -16,3 +21,20 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
