@@ -38,11 +38,7 @@ class ServiceProvider extends FeatureServiceProvider
             return;
         }
 
-        $this->app->singleton(
-            RedirectStore::class,
-            fn (): RedirectStore => new RedirectStore()
-                ->directory(base_path(config()->string('juicebox.redirects.store'))),
-        );
+        $this->registerStore();
     }
 
     #[Override]
@@ -52,10 +48,10 @@ class ServiceProvider extends FeatureServiceProvider
             return;
         }
 
-        $this->registerStore();
-        $this->registerFilters();
-        $this->registerPermissions();
-        $this->registerNavigation();
+        $this->bootStore();
+        $this->bootFilters();
+        $this->bootPermissions();
+        $this->bootNavigation();
     }
 
     #[Override]
@@ -74,17 +70,26 @@ class ServiceProvider extends FeatureServiceProvider
 
     private function registerStore(): void
     {
+        $this->app->singleton(
+            RedirectStore::class,
+            fn (): RedirectStore => new RedirectStore()
+                ->directory(base_path(config()->string('juicebox.redirects.store'))),
+        );
+    }
+
+    private function bootStore(): void
+    {
         Stache::registerStore($this->app->make(RedirectStore::class));
     }
 
-    private function registerFilters(): void
+    private function bootFilters(): void
     {
         RedirectEnabled::register();
         RedirectMatchType::register();
         RedirectType::register();
     }
 
-    private function registerPermissions(): void
+    private function bootPermissions(): void
     {
         Permission::extend(function (): void {
             Permission::group('redirects', 'Redirects', function (): void {
@@ -98,7 +103,7 @@ class ServiceProvider extends FeatureServiceProvider
         });
     }
 
-    private function registerNavigation(): void
+    private function bootNavigation(): void
     {
         Nav::extend(function (Navigation $nav): void {
             $item = $nav->create('Redirects');
