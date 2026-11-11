@@ -6,6 +6,7 @@ namespace Vitamin2\Juicebox\Features\Redirects\Data;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Override;
 use Statamic\Data\ExistsAsFile;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Entry as Entries;
@@ -221,6 +222,7 @@ class Redirect
         ]);
     }
 
+    #[Override]
     public function path(): string
     {
         return resolve(RedirectStore::class)->directory()."{$this->site}/{$this->id}.yaml";
