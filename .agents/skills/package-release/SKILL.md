@@ -18,7 +18,7 @@ Prepare a safe release and tell the user exactly what to approve. Tag, push, cre
 ## Workflow
 
 1. Confirm the working tree is clean and you are on an up-to-date `main`. List what is unreleased with `git log --oneline $(git describe --tags --abbrev=0)..HEAD`, then check that every merged PR since the last tag has a label: `gh pr list --state merged --base main --search "merged:>=$(git log -1 --format=%cs $(git describe --tags --abbrev=0))" --json number,title,labels`. Unlabelled PRs land in "Other Changes"; propose labels and change them only after approval.
-2. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (both load a coverage driver for the run; the `package-testing` skill covers a missing one). Confirm CI is green for the release commit: `gh run list --branch main --limit 1`. All must be green.
+2. Run `composer test`, then `composer test:coverage` and `composer test:mutate` (both load a coverage driver for the run; the `package-testing` skill covers a missing one). Confirm CI is green on `main`: `gh run list --branch main --workflow tests.yml --limit 1` for the release commit, and `gh run list --branch main --workflow quality.yml --limit 1` for the last code change (it skips docs-only commits). All must be green.
 3. Propose the version: SemVer with a `v` prefix. While below 1.0.0, a breaking change bumps the minor and anything else bumps the patch.
 4. Show the user the version, the labelled changes and the generated notes (`gh release create vX.Y.Z --target main --generate-notes --title vX.Y.Z --draft` creates a draft to review). Ask for explicit approval to publish.
 5. After explicit approval, run the approved `gh release create` command (or publish the draft with `gh release edit vX.Y.Z --draft=false`). Create tags only through that command.
@@ -33,4 +33,4 @@ The workflow pushes straight to `main`. When that push is rejected (for example 
 - Tag, push, publish and create labels only after explicit approval of that action.
 - Recommend a release only when every gate is green and no lane was skipped.
 - Keep released sections of `CHANGELOG.md` and the `## [Unreleased]` heading as they are.
-- Check `.github/workflows/tests.yml` when changing release workflows.
+- Check `.github/workflows/tests.yml` and `.github/workflows/quality.yml` when changing release workflows.
