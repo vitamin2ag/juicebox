@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Redirects\Http;
 
+use Override;
 use Statamic\Fieldtypes\Entries;
 
 /**
@@ -16,6 +17,7 @@ class EntryForm extends Entries
     /**
      * @return array{formComponent: string, formComponentProps: array<string, string>, formStackSize: string|null}
      */
+    #[Override]
     public function toArray(): array
     {
         return [

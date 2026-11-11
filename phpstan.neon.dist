@@ -5,6 +5,7 @@ parameters:
         - features
         - tests
     tmpDir: build/phpstan
+    checkMissingOverrideMethodAttribute: true
     stubFiles:
         - stubs/statamic.stub
     configDirectories:
