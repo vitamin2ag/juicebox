@@ -2,7 +2,7 @@
 
 `Vitamin2\Juicebox\Features\SecureHeaders\Http\Middleware\SetSecureHeaders`
 
-Appends security-related HTTP response headers to every request. Registered automatically via the service provider.
+Adds security-related HTTP headers to every response of the `web` middleware group, which the feature registers it on.
 
 | Header                      | Default value                     | Purpose                                                                         |
 |-----------------------------|-----------------------------------|---------------------------------------------------------------------------------|

@@ -48,37 +48,37 @@ vendor/bin/pest --agent='expect(resolve("router")->getMiddlewareGroups()["web"])
 | `composer test:unit` | `pest --parallel` |
 | `composer test:types` | `pest --type-coverage --min=100` |
 | `composer test:browser` | `@build`, then `pest --testsuite=Browser` (needs Playwright, see "Browser tests"; not part of `composer test`) |
-| `composer test:coverage` | `pest --parallel --coverage --min=100` (needs a loaded driver, see "Running coverage and mutation tests"; not part of `composer test`) |
-| `composer test:mutate` | `pest --mutate --parallel --min=100` (needs a loaded driver; not part of `composer test`) |
+| `composer test:coverage` | `pest --parallel --coverage --min=100` with a driver loaded by `scripts/with-php-test-coverage-driver.sh` (see "Running coverage and mutation tests"; not part of `composer test`) |
+| `composer test:mutate` | `pest --mutate --parallel --min=100`, loaded the same way (not part of `composer test`) |
 | `composer lint` / `refactor` | apply Pint / Rector fixes (the `:check` variants only report) |
 
 ## Running coverage and mutation tests
 
-Mutation testing (`composer test:mutate`) changes the code and checks that a test fails. Strengthen the test for every surviving mutant and keep `--min=100`. It needs the same driver as coverage and runs the same way (`--mutate` instead of `--coverage`). When CI and local results differ, add `--no-cache` and re-run serially with inline flags: `php -d zend_extension=<path> -d xdebug.mode=coverage -d xdebug.start_with_request=no vendor/bin/pest --mutate --min=100 --no-cache`.
+Mutation testing (`composer test:mutate`) changes the code and checks that a test fails. Strengthen the test for every surviving mutant and keep `--min=100`.
 
-1. Check for a driver: `php -m | grep -iE '^(xdebug|pcov)$'`. If one is listed, run `composer test:coverage`.
-2. Otherwise find the Xdebug build for the current PHP, in this order, and use the first file that exists:
+`composer test:coverage` and `composer test:mutate` run through `scripts/with-php-test-coverage-driver.sh`, which loads a driver for that run only. It uses pcov or an already loaded Xdebug as they are; otherwise it writes a temporary `php.ini` for Herd's `xdebug-<major><minor>-<arch>.so` or the `xdebug.so` in PHP's extension directory and passes it with `PHPRC`, so parallel workers and mutation runs get it too.
+
+When the script finds no build, look further and run the same steps by hand:
+
+1. Find the Xdebug build for the current PHP and use the first file that exists:
    - a `zend_extension=` line mentioning `xdebug` (commented out is fine) in the ini files listed by `php --ini`;
-   - `xdebug.so` in the directory printed by `php -r 'echo ini_get("extension_dir");'`;
    - a file named like `*xdebug*` that matches this PHP's major.minor (`php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'`) and CPU (`uname -m`), in the directory of the PHP binary (`php -r 'echo PHP_BINARY;'`) and in the install directory of whatever manages this PHP (a version manager, Homebrew, an app bundle). Search only those directories.
 
-   When `PHP_BINARY` contains `Herd`, check first: `/Applications/Herd.app/Contents/Resources/xdebug/xdebug-<major><minor>-<arch>.so`, e.g. `xdebug-85-arm64.so`.
-
-   When every location above was checked and none has a build, list the locations in your message and tell the user to install Xdebug or pcov for this PHP version.
-3. Load the driver for this run only through a temporary `php.ini` and the `PHPRC` variable. Child processes inherit it, so parallel workers and mutation runs get the driver too:
+   When none has a build, list the locations in your message and tell the user to install Xdebug or pcov for this PHP version.
+2. Load it through a temporary `php.ini` and `PHPRC`:
 
 ```bash
 d=$(mktemp -d)
 printf 'zend_extension=<path>\nxdebug.mode=coverage\nxdebug.start_with_request=no\n' > "$d/php.ini"
 
-PHPRC=$d vendor/bin/pest --parallel --coverage --min=100   # code coverage, a few seconds
-PHPRC=$d vendor/bin/pest --mutate --parallel --min=100     # mutation score, about a minute
+PHPRC=$d vendor/bin/pest --parallel --coverage --min=100
+PHPRC=$d vendor/bin/pest --mutate --parallel --min=100
 
 rm -rf "$d"
 ```
 
-- Run coverage and mutation in parallel with `PHPRC`; serial mutation takes about six times as long.
-- Enable the driver only through the temporary `php.ini`. `PHPRC` affects just the commands it prefixes, and the file adds to the ini files PHP already scans. Prefer `PHPRC` over `PHP_INI_SCAN_DIR`, which version-manager wrappers may ignore.
+- Run mutation in parallel; serial mutation takes about six times as long.
+- When CI and local results differ, add `--no-cache` and re-run serially: `PHPRC=$d vendor/bin/pest --mutate --min=100 --no-cache`.
 - `composer test` checks type coverage only; run `composer test:coverage` and `composer test:mutate` separately.
 
 ## Test layout
@@ -101,7 +101,7 @@ rm -rf "$d"
 - Write Pest files without a namespace; Rector does not import names in `tests/` and `features/*/tests/`.
 - Reach protected members with `ReflectionMethod`; Rector's first-class-callable rewrite breaks `->call($object)`.
 - Compute values in a method instead of class constants or property defaults; mutation testing does not cover code that runs at class load.
-- Treat a surviving mutant as a prompt to simplify or test: remove redundant checks or add a test for a real branch. Add `// @pest-mutate-ignore: <MutatorName>` with a one-line reason only on a PHPStan-driven guard that cannot fail.
+- Treat a surviving mutant as a prompt to simplify or test: remove redundant checks, add a test for a real branch, or restructure code whose mutant changes nothing. Do not add `// @pest-mutate-ignore`: a guard that exists only for PHPStan is a type for the stub.
 - Pint style is the repo's `pint.json`. Run `composer lint` instead of formatting by hand.
 
 ## Rules

@@ -29,8 +29,11 @@ composer dump-autoload
 composer test            # full gate: analyse + lint:check + refactor:check + test:types + test:unit
 composer test:unit       # pest (parallel)
 composer test:types      # pest --type-coverage --min=100
-composer test:coverage   # pest --coverage --min=100 (needs a coverage driver)
-composer test:mutate     # pest --mutate --min=100 (needs a coverage driver)
+composer test:coverage   # pest --coverage --min=100 (loads a coverage driver for the run)
+composer test:mutate     # pest --mutate --min=100 (loads a coverage driver for the run)
+composer test:browser    # builds the workbench, then the browser tests (needs npm ci and Playwright)
+composer test:assets     # typecheck, oxlint and Prettier over the control panel sources (needs npm ci)
+composer build           # builds the workbench
 composer analyse         # phpstan
 composer lint:check      # pint --test
 composer refactor:check  # rector --dry-run
