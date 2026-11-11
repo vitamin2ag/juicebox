@@ -43,7 +43,7 @@ The config file and key use the snake_case of the folder name (the base class se
 
 `Vitamin2\Juicebox\FeatureServiceProvider` is the base class. It extends laravel-features' `FeatureServiceProvider` and only sets the snake_case config file name and the publish tag prefix `juicebox-`; the config group `juicebox` is the Composer package name. It loads config, routes, views and translations; rely on it instead of calling `mergeConfigFrom`, `publishes`, `loadRoutesFrom` or `loadViewsFrom`. Config is merged in `register()` and offered for publishing in the console only.
 
-Do not register fieldsets, blueprints, tags, fieldtypes and the like by hand; the folders above are enough. Only what has no folder (middleware, say) goes in the provider's `bootFeature()`, which laravel-features runs once the folder conventions have booted.
+Do not register fieldsets, blueprints, tags, fieldtypes and the like by hand; the folders above are enough. Add middleware from `options()`: `statamic.middleware_groups` appends to a group, `statamic.prepend_middleware_groups` prepends, in the order listed (`['web' => [SetSecureHeaders::class]]`). laravel-features reads `options()` in `boot()`, after the feature's config is merged, so an option may depend on it; the Redirects feature adds its middleware only while it is enabled. Only what has neither a folder nor an option goes in the provider's `bootFeature()`, which laravel-features runs once the folder conventions have booted.
 
 Read stubs by path from the command that uses them, for example `dirname(__DIR__, 3).'/resources/stubs/<name>.stub'` from `src/Console/Commands`.
 
@@ -54,7 +54,7 @@ Steps marked **(enforced)** fail `composer test` when forgotten.
 1. Create `features/<Name>/src/ServiceProvider.php` in the namespace `Vitamin2\Juicebox\Features\<Name>` extending `Vitamin2\Juicebox\FeatureServiceProvider` **(enforced)**. The folder name equals the namespace segment; name it `Ai`, not `AI` (the slug is its kebab-case). Put the feature's own boot code in `bootFeature()` rather than overriding `boot()`; when you override `register()`, call the parent first.
 2. Run `composer dump-autoload` so the plugin picks up the new folder. Leave `extra.laravel.providers` with `Vitamin2\Juicebox\ServiceProvider` only **(enforced)**.
 3. Put feature code in `features/<Name>/src/` (`Http/Middleware/`, `Concerns/`, ...) and fieldsets, blueprints and stubs in `features/<Name>/resources/`. Keep everything inside `features/<Name>/`, except the Boost skill, the feature doc and the README entry below.
-4. Put classes in the folders listed under Layout so they register themselves; register the rest in `bootFeature()` (for example `pushMiddlewareToGroup`). Once it registers more than one thing, make `bootFeature()` a list of `$this->registerX()` calls, one private method per thing, each holding its own facade call and callback (`Permission::extend(...)`, `Nav::extend(...)`); `features/Redirects/src/ServiceProvider.php` shows it. Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
+4. Put classes in the folders listed under Layout so they register themselves; add middleware through `options()` and register the rest in `bootFeature()` (for example a Stache store). Once it registers more than one thing, make `bootFeature()` a list of `$this->registerX()` calls, one private method per thing, each holding its own facade call and callback (`Permission::extend(...)`, `Nav::extend(...)`); `features/Redirects/src/ServiceProvider.php` shows it. Register through methods, not property lists such as `$middlewareGroups`: mutation testing does not cover property defaults.
 5. If configurable, add `features/<Name>/config/<snake_name>.php`. Read env vars there only. Use `false` to switch a value off.
 6. Translate everything a user reads: labels, titles, flash and validation messages, command output. Use `__()` in PHP and Vue, `$fail('...')->translate()` in validation rules, and `trans_choice()` with a `:count` placeholder instead of `Str::plural()`. Statamic translates blueprint labels, navigation items and permission labels itself, but passes a string such as `PublishForm::title()` through untouched. Ship `features/<Name>/lang/{de,de_CH,fr}.json`, keyed by the English string, with the same keys in all three and only the keys Statamic does not already ship in `vendor/statamic/cms/lang` **(enforced)**. A feature without user-facing strings has no `lang` folder.
 
@@ -84,7 +84,6 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\RemovePoweredBy;
 
-use Illuminate\Routing\Router;
 use Override;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 use Vitamin2\Juicebox\Features\RemovePoweredBy\Http\Middleware\RemovePoweredHeader;
@@ -92,9 +91,9 @@ use Vitamin2\Juicebox\Features\RemovePoweredBy\Http\Middleware\RemovePoweredHead
 class ServiceProvider extends FeatureServiceProvider
 {
     #[Override]
-    protected function bootFeature(): void
+    protected function options(): array
     {
-        $this->app->make(Router::class)->pushMiddlewareToGroup('web', RemovePoweredHeader::class);
+        return ['statamic.middleware_groups' => ['web' => [RemovePoweredHeader::class]]];
     }
 }
 ```
