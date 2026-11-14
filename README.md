@@ -22,6 +22,7 @@ composer dump-autoload
 
 - [Redirects](docs/features/redirects.md): redirects requests that would otherwise return a 404 to a new URL.
 - [Secure Headers](docs/features/secure-headers.md): sets security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on every web response.
+- [Schema.org (JSON-LD)](docs/features/schema-org.md): renders one Schema.org JSON-LD `@graph` per page with `{{ juicebox::schema }}`.
 
 ## Development
 

@@ -1,0 +1,13 @@
+title: 'Entries – JSON-LD'
+fields:
+  -
+    handle: schema
+    field:
+      dictionary:
+        type: schemas
+        category: Entries
+      max_items: 1
+      type: dictionary
+      display: 'Schema Type'
+      instructions: 'Sets which structured data type is output for this entry. Overrides the default of the collection.'
+      instructions_position: below

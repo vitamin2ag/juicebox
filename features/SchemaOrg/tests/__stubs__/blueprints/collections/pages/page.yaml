@@ -1,0 +1,20 @@
+title: Page
+sections:
+  main:
+    display: Main
+    fields:
+      -
+        handle: title
+        field:
+          type: text
+      -
+        handle: image
+        field:
+          type: assets
+          container: assets
+          max_items: 1
+      -
+        handle: gallery
+        field:
+          type: assets
+          container: assets
