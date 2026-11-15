@@ -13,6 +13,7 @@ class QrCode
 {
     public function svg(string $text): string
     {
-        return new Writer(new ImageRenderer(new RendererStyle(400), new SvgImageBackEnd))->writeString($text);
+        return new Writer(new ImageRenderer(new RendererStyle(400), new SvgImageBackEnd))
+            ->writeString($text);
     }
 }

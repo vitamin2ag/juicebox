@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\Shortlinks\Data;
 
-use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
+use Override;
 use Statamic\Data\ExistsAsFile;
+use Statamic\Entries\Entry;
+use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site as Sites;
-use Statamic\Sites\Site;
-use UnexpectedValueException;
+use Statamic\Facades\URL;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 
 class Shortlink
@@ -26,6 +28,16 @@ class Shortlink
         private readonly ?string $utmCampaign = null,
         private readonly bool $enabled = true,
     ) {}
+
+    /**
+     * The entry an `entry::<id>` destination points to, or null for any other destination and for a missing entry.
+     */
+    public static function entryOf(?string $destination): ?Entry
+    {
+        return $destination !== null && str_starts_with($destination, 'entry::')
+            ? Entries::find(Str::after($destination, 'entry::'))
+            : null;
+    }
 
     /**
      * The Stache keys its items by id; the slug never changes, so it is the id.
@@ -93,13 +105,12 @@ class Shortlink
      */
     public function url(): string
     {
-        $site = Collection::wrap(Sites::default())->whereInstanceOf(Site::class)->firstOrFail()->absoluteUrl();
-
-        return Uri::of(is_string($site) ? $site : throw new UnexpectedValueException('Statamic returned no site URL.'))
+        return Uri::of(URL::makeAbsolute(Sites::default()->url()))
             ->withPath("s/{$this->slug}")
             ->value();
     }
 
+    #[Override]
     public function path(): string
     {
         return resolve(ShortlinkStore::class)->directory()."{$this->slug}.yaml";

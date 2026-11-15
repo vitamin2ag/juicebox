@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vitamin2\Juicebox\Features\Shortlinks\Qr\QrCode;
 
-mutates(QrCode::class);
+covers(QrCode::class);
 
 it('draws a QR code as an SVG document of 400 by 400 pixels', function (): void {
     $svg = new DOMDocument;

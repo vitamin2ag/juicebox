@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
-mutates(ShortlinkStore::class);
+covers(ShortlinkStore::class);
 
 beforeAll(function (): void {
     ShortlinkFixtures::enable();
@@ -56,6 +56,14 @@ it('reads :dataset as a disabled shortlink without a destination', function (str
             'enabled' => false,
         ]);
 })->with(['an empty file' => 'empty', 'a broken file' => 'broken']);
+
+it('reads a missing file, which Statamic passes as null, as a disabled shortlink', function (): void {
+    $shortlink = resolve(ShortlinkStore::class)->makeItemFromFile(ShortlinkFixtures::path('gone.yaml'), null);
+
+    expect($shortlink->slug())->toBe('gone')
+        ->and($shortlink->destination())->toBeNull()
+        ->and($shortlink->enabled())->toBeFalse();
+});
 
 it('writes :dataset back as the YAML it was read from', function (string $file): void {
     resolve(ShortlinkStore::class)->save(ShortlinkFixtures::read($file));

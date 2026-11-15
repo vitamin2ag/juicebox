@@ -5,8 +5,17 @@ declare(strict_types=1);
 use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
+use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
-mutates(Shortlink::class);
+covers(Shortlink::class);
+
+beforeAll(function (): void {
+    ShortlinkFixtures::enable();
+});
+
+afterAll(function (): void {
+    ShortlinkFixtures::disable();
+});
 
 it('is an enabled shortlink without UTM parameters by default', function (): void {
     expect(new Shortlink(slug: 'sale', destination: 'https://www.example.com')->fileData())->toBe([
@@ -96,6 +105,24 @@ it('copies itself with the values of the form, keeping its slug', function (): v
         ->and($edited->slug())->toBe('sale')
         ->and($shortlink->destination())->toBe('https://www.example.com');
 });
+
+it('finds the entry an entry destination points to', function (): void {
+    ShortlinkFixtures::page('team');
+
+    expect(Shortlink::entryOf('entry::team')?->id())->toBe('team');
+});
+
+it('has no entry for :dataset', function (?string $destination): void {
+    ShortlinkFixtures::page('team');
+
+    expect(Shortlink::entryOf($destination))->toBeNull();
+})->with([
+    'a missing entry' => 'entry::missing',
+    'a url' => '/team',
+    'a url that names an entry' => '/entry::team',
+    'the id of an entry' => 'team',
+    'no destination' => null,
+]);
 
 it('lives in the store directory, named by its slug', function (): void {
     expect(new Shortlink(slug: 'sale')->path())->toBe(resolve(ShortlinkStore::class)->directory().'sale.yaml');

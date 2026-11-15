@@ -5,14 +5,8 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\Shortlinks\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
-use Statamic\Entries\Entry;
-use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site as Sites;
-use Statamic\Sites\Site;
-use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkRepository;
 
@@ -46,27 +40,22 @@ class ShortlinkRedirectController
             return $destination;
         }
 
-        $url = Collection::wrap(Entries::find(Str::after($destination, 'entry::')))->whereInstanceOf(Entry::class)->first()?->absoluteUrl();
-
-        return is_string($url) ? $url : null;
+        return Shortlink::entryOf($destination)?->absoluteUrl();
     }
 
     private function withUtm(string $url, Shortlink $shortlink): string
     {
-        return Uri::of($url)->withQuery([
-            'utm_source' => $shortlink->utmSource(),
-            'utm_medium' => $shortlink->utmMedium(),
-            'utm_campaign' => $shortlink->utmCampaign(),
-        ])->value();
+        return Uri::of($url)
+            ->withQuery([
+                'utm_source' => $shortlink->utmSource(),
+                'utm_medium' => $shortlink->utmMedium(),
+                'utm_campaign' => $shortlink->utmCampaign(),
+            ])
+            ->value();
     }
 
-    /**
-     * Statamic's site URL is a string but declares no type.
-     */
     private function home(): string
     {
-        $url = Collection::wrap(Sites::default())->whereInstanceOf(Site::class)->firstOrFail()->url();
-
-        return is_string($url) ? $url : throw new UnexpectedValueException('Statamic returned no site URL.');
+        return Sites::default()->url();
     }
 }

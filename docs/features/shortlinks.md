@@ -2,7 +2,7 @@
 
 Short links on `/s/{slug}` that redirect to a URL or an entry, with optional UTM parameters and a QR code of the short link.
 
-The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it has no route, control panel pages, permissions or navigation item, but its config, its [control panel build](#control-panel), its blueprint and its German texts are still loaded, and the config and the build can be published.
+The feature is off by default; switch it on with `JUICEBOX_SHORTLINKS_ENABLED=true`. While it is off, it has no route, control panel pages, [control panel build](#control-panel), permissions or navigation item, but its config, its blueprint and its translations are still loaded, and the config can be published.
 
 ## Configuration
 
@@ -36,7 +36,9 @@ The QR code is an SVG of 400 × 400 pixels, generated on the server. It holds th
 
 ## Control panel
 
-While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slug, with their short URLs, destinations, descriptions and status. A menu per row edits a shortlink, downloads its QR code as `qr-<slug>.svg` or deletes it. The header links to the form.
+While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slug, a page at a time, each with its status, short URL, destination and description. The search finds shortlinks by slug, destination or description, and every column sorts the list. A menu per row edits a shortlink, downloads its QR code as `qr-<slug>.svg` or deletes it; select rows to delete several shortlinks at once, as for entries. The header links to the form.
+
+- A destination `entry::<id>` shows the title and status of the entry, which opens the entry in a stack to edit it without leaving the list, or *Missing entry* when the entry no longer exists. The description shows in one line, in full on hover.
 
 - The form has the fields `destination` (an entry or a URL), `slug`, `description` and `utm` with `utm_source`, `utm_medium` and `utm_campaign`; the sidebar has `enabled` (on by default) and the QR code.
 - `destination` is required: an entry, a URL that starts with `http://` or `https://`, or a path of the site such as `/kontakt`.
@@ -44,9 +46,9 @@ While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slu
 - The UTM fields show, and are required, only while `utm` is on.
 - The sidebar of a saved shortlink shows its QR code and a link that downloads it as `qr-<slug>.svg`.
 - The form is Statamic's publish form, built from the blueprint `shortlinks::shortlink`. Users who may configure fields find it under **Fields > Blueprints > Shortlinks**, while the feature is off as well; changes made there are saved to `resources/blueprints/vendor/shortlinks/shortlink.yaml`. The feature saves only its own fields, so keep their handles.
-- The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build while the feature is off as well, so it must be published either way. `statamic:install`, which a Statamic site runs after `composer install` and `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
-- To change the list, edit `features/Shortlinks/resources/js`, run `nvm use && npm ci && npm run build` in `features/Shortlinks` and commit `resources/dist`.
-- The control panel speaks German for users whose control panel language is `de` or `de_CH`, and English for every other language. The texts are in `features/Shortlinks/lang/de.json` and `de_CH.json`; a project overrides one in its own `lang/de.json` or `lang/de_CH.json`.
+- The list is a Vue page, built into `features/Shortlinks/resources/dist` and published to `public/vendor/shortlinks/dist`. The control panel loads the build only while the feature is on. While it is on, `statamic:install`, which a Statamic site runs after `composer install` and `composer update`, publishes it; to publish it by hand, run `php artisan vendor:publish --tag=shortlinks --force`.
+- To change the list, edit `features/Shortlinks/resources/js` (TypeScript and Vue, entry `resources/js/cp.ts`) and rebuild as [Adding a feature](../adding-a-feature.md) describes: `nvm use`, `npm ci` and `npm run build` in the package root, and `composer test:assets` for the type check, oxlint and Prettier. Then commit `features/Shortlinks/resources/dist`.
+- The control panel speaks German for users whose control panel language is `de` or `de_CH`, French for `fr`, and English for every other language. The texts are in `features/Shortlinks/lang/de.json`, `de_CH.json` and `fr.json`; a project overrides one in its own `lang/de.json`, `lang/de_CH.json` or `lang/fr.json`.
 
 ### Permissions
 
@@ -55,7 +57,7 @@ While the feature is enabled, **Tools > Shortlinks** lists the shortlinks by slu
 | `view shortlinks` | The list, the navigation item and downloading QR codes. |
 | `edit shortlinks` | Editing a shortlink. |
 | `create shortlinks` | Creating shortlinks. |
-| `delete shortlinks` | Deleting a shortlink. |
+| `delete shortlinks` | Deleting a shortlink or a selection of shortlinks. |
 
 `create shortlinks` and `delete shortlinks` sit under `edit shortlinks`, and that under `view shortlinks`, so the role editor grants a child only together with its parent.
 

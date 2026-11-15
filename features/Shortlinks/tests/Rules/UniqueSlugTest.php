@@ -8,7 +8,7 @@ use Vitamin2\Juicebox\Features\Shortlinks\Rules\UniqueSlug;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkRepository;
 use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
-mutates(UniqueSlug::class);
+covers(UniqueSlug::class);
 
 beforeAll(function (): void {
     ShortlinkFixtures::enable();
