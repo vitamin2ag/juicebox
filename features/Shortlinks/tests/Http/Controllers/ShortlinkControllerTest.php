@@ -8,12 +8,16 @@ use Inertia\Testing\AssertableInertia;
 use Statamic\Auth\File\User;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
 use Vitamin2\Juicebox\Features\Shortlinks\Http\Controllers\ShortlinkController;
+use Vitamin2\Juicebox\Features\Shortlinks\Http\EntryForm;
+use Vitamin2\Juicebox\Features\Shortlinks\Http\Resources\ShortlinkResource;
 use Vitamin2\Juicebox\Features\Shortlinks\Qr\QrCode;
+use Vitamin2\Juicebox\Features\Shortlinks\Rules\UniqueSlug;
+use Vitamin2\Juicebox\Features\Shortlinks\Rules\ValidDestination;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkRepository;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
-mutates(ShortlinkController::class);
+covers(ShortlinkController::class, ShortlinkResource::class, EntryForm::class, UniqueSlug::class, ValidDestination::class);
 
 beforeAll(function (): void {
     ShortlinkFixtures::enable();
@@ -46,10 +50,53 @@ function shortlinkForm(array $values = []): array
     ];
 }
 
-it('lists the shortlinks by slug with their short URLs', function (): void {
+/**
+ * @param  array<mixed>  $query
+ * @return array<mixed>
+ */
+function listedSlugs(array $query = []): array
+{
+    return test()->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index', $query))
+        ->assertOk()
+        ->collect('data.*.slug')
+        ->all();
+}
+
+function seedShortlinks(): void
+{
     $shortlinks = resolve(ShortlinkRepository::class);
-    $shortlinks->save(new Shortlink(slug: 'team', destination: 'entry::team', enabled: false));
-    $shortlinks->save(new Shortlink(
+    $shortlinks->save(new Shortlink(slug: 'team', destination: '/kontakt', description: 'Flyer', enabled: false));
+    $shortlinks->save(new Shortlink(slug: 'sale', destination: 'https://www.example.com/angebot', description: 'Kampagne'));
+    $shortlinks->save(new Shortlink(slug: 'event', destination: '/zeit', description: 'Abend'));
+}
+
+it('opens the list with the urls of the listing', function (): void {
+    seedShortlinks();
+
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->get(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('shortlinks::Index')
+            ->where('hasShortlinks', true)
+            ->where('listingUrl', ShortlinkFixtures::cpUrl('shortlinks.index'))
+            ->where('createUrl', ShortlinkFixtures::cpUrl('shortlinks.create'))
+            ->where('actionUrl', ShortlinkFixtures::cpUrl('shortlinks.actions.run'))
+            ->where('entryForm.formComponent', 'entry-publish-form')
+            ->where('entryForm.formComponentProps.initialValues', 'values')
+            ->where('entryForm.formStackSize', null)
+            ->has('entryForm', 3));
+});
+
+it('tells the list when there are no shortlinks', function (): void {
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->get(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('hasShortlinks', false));
+});
+
+it('lists the shortlinks as JSON with their fields and links', function (): void {
+    resolve(ShortlinkRepository::class)->save(new Shortlink(
         slug: 'sale',
         destination: 'https://www.example.com/angebot',
         description: 'Flyer',
@@ -60,43 +107,105 @@ it('lists the shortlinks by slug with their short URLs', function (): void {
     ));
 
     $this->actingAs(ShortlinkFixtures::superUser())
-        ->get(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index'))
         ->assertOk()
-        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('shortlinks::Index')
-            ->where('shortlinks', [
-                [
-                    'id' => 'sale',
-                    'slug' => 'sale',
-                    'destination' => 'https://www.example.com/angebot',
-                    'description' => 'Flyer',
-                    'utm' => true,
-                    'utm_source' => 'flyer',
-                    'utm_medium' => 'print',
-                    'utm_campaign' => 'autumn-sale',
-                    'enabled' => true,
-                    'url' => url('s/sale'),
-                    'edit_url' => ShortlinkFixtures::cpUrl('shortlinks.edit', 'sale'),
-                    'delete_url' => ShortlinkFixtures::cpUrl('shortlinks.destroy', 'sale'),
-                    'qr_url' => ShortlinkFixtures::cpUrl('shortlinks.qr', 'sale'),
-                ],
-                [
-                    'id' => 'team',
-                    'slug' => 'team',
-                    'destination' => 'entry::team',
-                    'description' => null,
-                    'utm' => false,
-                    'utm_source' => null,
-                    'utm_medium' => null,
-                    'utm_campaign' => null,
-                    'enabled' => false,
-                    'url' => url('s/team'),
-                    'edit_url' => ShortlinkFixtures::cpUrl('shortlinks.edit', 'team'),
-                    'delete_url' => ShortlinkFixtures::cpUrl('shortlinks.destroy', 'team'),
-                    'qr_url' => ShortlinkFixtures::cpUrl('shortlinks.qr', 'team'),
-                ],
-            ])
-            ->where('createUrl', ShortlinkFixtures::cpUrl('shortlinks.create')));
+        ->assertJsonPath('data.0', [
+            'id' => 'sale',
+            'slug' => 'sale',
+            'destination' => 'https://www.example.com/angebot',
+            'description' => 'Flyer',
+            'utm' => true,
+            'utm_source' => 'flyer',
+            'utm_medium' => 'print',
+            'utm_campaign' => 'autumn-sale',
+            'enabled' => true,
+            'url' => url('s/sale'),
+            'edit_url' => ShortlinkFixtures::cpUrl('shortlinks.edit', 'sale'),
+            'qr_url' => ShortlinkFixtures::cpUrl('shortlinks.qr', 'sale'),
+            'destination_entry' => null,
+        ])
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.columns', [
+            ['field' => 'slug', 'label' => 'Slug', 'visible' => true, 'sortable' => true],
+            ['field' => 'destination', 'label' => 'Destination', 'visible' => true, 'sortable' => true],
+            ['field' => 'description', 'label' => 'Description', 'visible' => true, 'sortable' => true],
+        ]);
+});
+
+it('shows the title, link and status of the entry a destination points to', function (): void {
+    $entry = ShortlinkFixtures::page('team');
+    $entry->set('title', 'Team');
+    $entry->save();
+    resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'team', destination: 'entry::team'));
+
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertJsonPath('data.0.destination_entry', ['title' => 'Team', 'edit_url' => $entry->editUrl(), 'status' => 'published']);
+});
+
+it('shows the status of a draft entry a destination points to', function (): void {
+    ShortlinkFixtures::page('team', published: false);
+    resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'team', destination: 'entry::team'));
+
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertJsonPath('data.0.destination_entry.status', 'draft');
+});
+
+it('titles an entry without a title by its destination', function (): void {
+    ShortlinkFixtures::page('team');
+    resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'team', destination: 'entry::team'));
+
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertJsonPath('data.0.destination_entry.title', 'entry::team');
+});
+
+it('has no entry for :dataset', function (?string $destination): void {
+    ShortlinkFixtures::page('team');
+    resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'team', destination: $destination));
+
+    $this->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index'))
+        ->assertJsonPath('data.0.destination_entry', null);
+})->with([
+    'a missing entry' => 'entry::missing',
+    'a url' => '/team',
+    'no destination' => null,
+]);
+
+it('sorts the list by slug unless asked otherwise', function (array $query, array $expected): void {
+    seedShortlinks();
+
+    expect(listedSlugs($query))->toBe($expected);
+})->with([
+    'default' => [[], ['event', 'sale', 'team']],
+    'descending' => [['order' => 'desc'], ['team', 'sale', 'event']],
+    'by destination' => [['sort' => 'destination'], ['team', 'event', 'sale']],
+    'by description' => [['sort' => 'description'], ['event', 'team', 'sale']],
+]);
+
+it('searches the slug, destination and description', function (string $search, array $expected): void {
+    seedShortlinks();
+
+    expect(listedSlugs(['search' => $search]))->toBe($expected);
+})->with([
+    'slug' => ['ven', ['event']],
+    'destination' => ['example', ['sale']],
+    'description' => ['flyer', ['team']],
+    'nothing' => ['gibt-es-nicht', []],
+    'empty' => ['', ['event', 'sale', 'team']],
+]);
+
+it('pages the list', function (): void {
+    seedShortlinks();
+
+    $response = $this->actingAs(ShortlinkFixtures::superUser())
+        ->getJson(ShortlinkFixtures::cpUrl('shortlinks.index', ['perPage' => 2, 'page' => 2]))
+        ->assertOk();
+
+    expect($response->json('data.*.slug'))->toBe(['team'])
+        ->and($response->json('meta.last_page'))->toBe(2);
 });
 
 it('shows the form to create a shortlink with the blueprint defaults and an editable slug', function (): void {
@@ -214,7 +323,9 @@ it('shows the form to edit a shortlink with its values, a read-only slug and its
 
 it('shows the forms in :dataset, the language of the user', function (string $locale): void {
     resolve(ShortlinkRepository::class)->save(new Shortlink(slug: 'sale', destination: '/kontakt'));
-    $user = Collection::wrap(ShortlinkFixtures::superUser())->whereInstanceOf(User::class)->firstOrFail();
+    $user = Collection::wrap(ShortlinkFixtures::superUser())
+        ->whereInstanceOf(User::class)
+        ->firstOrFail();
     $user->setPreference('locale', $locale);
     $user->save();
 
@@ -238,8 +349,11 @@ it('updates a shortlink and keeps its slug', function (): void {
         ->patchJson(ShortlinkFixtures::cpUrl('shortlinks.update', 'sale'), shortlinkForm(['slug' => 'Other slug', 'destination' => 'entry::team']))
         ->assertNoContent();
 
-    expect(resolve(ShortlinkRepository::class)->all()->map(fn (Shortlink $shortlink): array => [$shortlink->slug(), $shortlink->destination()])->all())
-        ->toBe([['sale', 'entry::team']]);
+    $shortlinks = resolve(ShortlinkRepository::class)->all()
+        ->map(fn (Shortlink $shortlink): array => [$shortlink->slug(), $shortlink->destination()])
+        ->all();
+
+    expect($shortlinks)->toBe([['sale', 'entry::team']]);
 });
 
 it('validates an update like a new shortlink', function (): void {

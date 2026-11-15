@@ -10,7 +10,7 @@ use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
 use function Pest\Laravel\get;
 
-mutates(ShortlinkRedirectController::class);
+covers(ShortlinkRedirectController::class);
 
 beforeAll(function (): void {
     ShortlinkFixtures::enable();

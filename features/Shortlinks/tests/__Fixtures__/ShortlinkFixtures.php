@@ -130,7 +130,7 @@ class ShortlinkFixtures
     /**
      * Saves an entry of a pages collection at /<slug>, with the slug as its id.
      */
-    public static function page(string $slug): void
+    public static function page(string $slug, bool $published = true): Entry
     {
         $pages = new Collection;
         $pages->handle('pages');
@@ -141,6 +141,9 @@ class ShortlinkFixtures
         $entry->id($slug);
         $entry->collection($pages);
         $entry->slug($slug);
+        $entry->published($published);
         $entry->save();
+
+        return $entry;
     }
 }

@@ -7,7 +7,7 @@ use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkRepository;
 use Vitamin2\Juicebox\Features\Shortlinks\Stache\ShortlinkStore;
 use Vitamin2\Juicebox\Features\Shortlinks\Tests\__Fixtures__\ShortlinkFixtures;
 
-mutates(ShortlinkRepository::class);
+covers(ShortlinkRepository::class);
 
 beforeAll(function (): void {
     ShortlinkFixtures::enable();

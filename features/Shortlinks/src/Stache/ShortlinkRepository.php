@@ -16,12 +16,16 @@ class ShortlinkRepository
      */
     public function all(): Collection
     {
-        return Collection::wrap($this->store->getItemsFromFiles())->whereInstanceOf(Shortlink::class)->values();
+        return Collection::wrap($this->store->getItemsFromFiles())
+            ->whereInstanceOf(Shortlink::class)
+            ->values();
     }
 
     public function find(string $slug): ?Shortlink
     {
-        return Collection::wrap($this->store->getItem($slug))->whereInstanceOf(Shortlink::class)->first();
+        return Collection::wrap($this->store->getItem($slug))
+            ->whereInstanceOf(Shortlink::class)
+            ->first();
     }
 
     public function save(Shortlink $shortlink): void

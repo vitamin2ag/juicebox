@@ -1,18 +1,32 @@
-<script setup>
-import { Head, Link, router } from '@statamic/cms/inertia';
-import { Button, DropdownItem, EmptyStateItem, EmptyStateMenu, Header, Listing, StatusIndicator } from '@statamic/cms/ui';
+<script setup lang="ts">
+import { InlineEditForm } from '@statamic/cms';
+import { Head, Link } from '@statamic/cms/inertia';
+import { Badge, Button, DropdownItem, EmptyStateItem, EmptyStateMenu, Header, Listing, StatusIndicator } from '@statamic/cms/ui';
+import { ref, useTemplateRef } from 'vue';
 
-defineProps({
-    shortlinks: { type: Array, required: true },
-    createUrl: { type: String, required: true },
-});
+interface Row {
+    id: string;
+    slug: string;
+    destination: string | null;
+    enabled: boolean;
+    url: string;
+    edit_url: string;
+    qr_url: string;
+    destination_entry: { title: string; edit_url: string; status: string } | null;
+}
 
-const columns = [
-    { field: 'slug', label: __('Slug'), visible: true, sortable: true },
-    { field: 'destination', label: __('Destination'), visible: true, sortable: true },
-    { field: 'description', label: __('Description'), visible: true, sortable: true },
-    { field: 'enabled', label: __('Status'), visible: true, sortable: true },
-];
+defineProps<{
+    hasShortlinks: boolean;
+    listingUrl: string;
+    createUrl: string;
+    actionUrl: string;
+    entryForm: { formComponent: string; formComponentProps: Record<string, string>; formStackSize: string | null };
+}>();
+
+// Not named like the ref in the template, or Vue binds the ref to this variable by name.
+const listingRef = useTemplateRef<{ refresh(): void }>('listing');
+// The entry of a destination open in a stack, as the entries fieldtype opens its entries.
+const editingEntry = ref<Row['destination_entry']>(null);
 </script>
 
 <template>
@@ -23,7 +37,7 @@ const columns = [
             <Button v-if="can('create shortlinks')" :text="__('Create Shortlink')" :href="createUrl" variant="primary" />
         </Header>
 
-        <EmptyStateMenu v-if="!shortlinks.length" :heading="__('Shortlinks lead from a short URL and its QR code to a page.')">
+        <EmptyStateMenu v-if="!hasShortlinks" :heading="__('Shortlinks lead from a short URL and its QR code to a page.')">
             <EmptyStateItem
                 v-if="can('create shortlinks')"
                 :href="createUrl"
@@ -33,39 +47,62 @@ const columns = [
             />
         </EmptyStateMenu>
 
-        <Listing v-else :items="shortlinks" :columns="columns" :allow-customizing-columns="false" @refreshing="router.reload()">
+        <Listing
+            v-else
+            ref="listing"
+            :url="listingUrl"
+            :allow-customizing-columns="false"
+            :allow-presets="false"
+            :allow-select-all-matching="false"
+            push-query
+            :allow-bulk-actions="can('delete shortlinks')"
+            :action-url="actionUrl"
+        >
             <template #cell-slug="{ row: shortlink }">
                 <div class="flex flex-col gap-0.5">
                     <Link v-if="can('edit shortlinks')" :href="shortlink.edit_url" class="title-index-field">
+                        <StatusIndicator :status="shortlink.enabled ? 'published' : 'hidden'" />
                         <span v-text="shortlink.slug" />
                     </Link>
-                    <span v-else class="title-index-field" v-text="shortlink.slug" />
+                    <span v-else class="title-index-field">
+                        <StatusIndicator :status="shortlink.enabled ? 'published' : 'hidden'" />
+                        <span v-text="shortlink.slug" />
+                    </span>
                     <a :href="shortlink.url" target="_blank" class="text-xs text-gray-500 hover:underline" v-text="shortlink.url" />
                 </div>
-
-                <resource-deleter :ref="`deleter_${shortlink.id}`" :resource="shortlink" :resource-title="shortlink.slug" reload />
             </template>
-            <template #cell-destination="{ value }">
-                <span v-if="value" v-text="value" />
+            <template #cell-destination="{ row: shortlink }">
+                <!-- With an href, Badge renders an Inertia link, which leaves the list whatever the click handler does. -->
+                <Badge v-if="shortlink.destination_entry" as="button" size="sm" @click="editingEntry = shortlink.destination_entry">
+                    <StatusIndicator :status="shortlink.destination_entry.status" class="h-1" />
+                    <span v-text="shortlink.destination_entry.title" />
+                </Badge>
+                <span
+                    v-else-if="shortlink.destination?.startsWith('entry::')"
+                    class="text-red-600 dark:text-red-400"
+                    :title="shortlink.destination"
+                    v-text="__('Missing entry')"
+                />
+                <span v-else-if="shortlink.destination" v-text="shortlink.destination" />
                 <span v-else class="text-gray-500">—</span>
             </template>
-            <template #cell-enabled="{ value }">
-                <span class="flex items-center gap-2">
-                    <StatusIndicator :status="value ? 'published' : 'hidden'" />
-                    <span v-text="value ? __('Enabled') : __('Disabled')" />
-                </span>
+            <template #cell-description="{ value }">
+                <span v-if="value" class="block max-w-xs truncate" :title="value" v-text="value" />
             </template>
             <template #prepended-row-actions="{ row: shortlink }">
                 <DropdownItem v-if="can('edit shortlinks')" :text="__('Edit')" icon="edit" :href="shortlink.edit_url" />
                 <DropdownItem :text="__('Download QR code')" icon="download" as="a" :href="shortlink.qr_url" />
-                <DropdownItem
-                    v-if="can('delete shortlinks')"
-                    :text="__('Delete')"
-                    icon="trash"
-                    variant="destructive"
-                    @click="$refs[`deleter_${shortlink.id}`].confirm()"
-                />
             </template>
         </Listing>
+
+        <InlineEditForm
+            v-if="editingEntry"
+            :item="editingEntry"
+            :component="entryForm.formComponent"
+            :component-props="entryForm.formComponentProps"
+            :stack-size="entryForm.formStackSize ?? undefined"
+            @updated="listingRef?.refresh()"
+            @closed="editingEntry = null"
+        />
     </div>
 </template>

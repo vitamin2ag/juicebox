@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Validator;
 use Vitamin2\Juicebox\Features\Shortlinks\Rules\ValidDestination;
 
-mutates(ValidDestination::class);
+covers(ValidDestination::class);
 
 it('accepts :dataset', function (string $destination): void {
     expect(Validator::make(['destination' => $destination], ['destination' => [new ValidDestination]])->passes())->toBeTrue();

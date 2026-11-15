@@ -22,6 +22,7 @@
     "Edit Shortlink": "Shortlink bearbeiten",
     "Shortlinks lead from a short URL and its QR code to a page.": "Shortlinks führen von einer Kurz-URL und ihrem QR-Code auf eine Seite.",
     "Get started by creating your first shortlink.": "Erstelle deinen ersten Shortlink.",
+    "Missing entry": "Fehlender Eintrag",
     "This slug is already taken.": "Dieser Slug ist bereits vergeben.",
     "Enter an entry, a URL that starts with http:// or https://, or a path that starts with /.": "Gib einen Eintrag, eine URL mit http:// oder https:// oder einen Pfad ein, der mit / beginnt.",
     "View Shortlinks": "Shortlinks anzeigen",

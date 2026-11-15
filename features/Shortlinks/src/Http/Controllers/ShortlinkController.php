@@ -6,18 +6,24 @@ namespace Vitamin2\Juicebox\Features\Shortlinks\Http\Controllers;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Fluent;
 use Inertia\Inertia;
 use Inertia\Response;
 use Statamic\CP\PublishForm;
+use Statamic\Data\DataCollection;
 use Statamic\Facades\Blueprint as Blueprints;
 use Statamic\Fields\Blueprint;
-use Statamic\Fields\Fields;
 use Statamic\Http\Controllers\CP\CpController;
+use Statamic\Http\Requests\FilteredRequest;
+use Statamic\Query\ItemQueryBuilder;
+use Statamic\Statamic;
 use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\Shortlinks\Data\Shortlink;
+use Vitamin2\Juicebox\Features\Shortlinks\Http\EntryForm;
+use Vitamin2\Juicebox\Features\Shortlinks\Http\Resources\ShortlinkResource;
 use Vitamin2\Juicebox\Features\Shortlinks\Qr\QrCode;
 use Vitamin2\Juicebox\Features\Shortlinks\Rules\UniqueSlug;
 use Vitamin2\Juicebox\Features\Shortlinks\Rules\ValidDestination;
@@ -30,24 +36,23 @@ class ShortlinkController extends CpController
         parent::__construct($request);
     }
 
-    public function index(): Response
+    /**
+     * The listing asks for its rows as JSON.
+     */
+    public function index(FilteredRequest $request): Response|AnonymousResourceCollection
     {
         $this->authorize('view shortlinks');
 
+        if ($request->wantsJson()) {
+            return $this->listing($request);
+        }
+
         return Inertia::render('shortlinks::Index', [
-            'shortlinks' => $this->shortlinks->all()
-                ->sortBy(fn (Shortlink $shortlink): string => $shortlink->slug())
-                ->map(fn (Shortlink $shortlink): array => [
-                    'id' => $shortlink->id(),
-                    'slug' => $shortlink->slug(),
-                    ...$shortlink->fileData(),
-                    'url' => $shortlink->url(),
-                    'edit_url' => cp_route('shortlinks.edit', $shortlink->slug()),
-                    'delete_url' => cp_route('shortlinks.destroy', $shortlink->slug()),
-                    'qr_url' => cp_route('shortlinks.qr', $shortlink->slug()),
-                ])
-                ->values(),
+            'hasShortlinks' => $this->shortlinks->all()->isNotEmpty(),
+            'listingUrl' => cp_route('shortlinks.index'),
             'createUrl' => cp_route('shortlinks.create'),
+            'actionUrl' => cp_route('shortlinks.actions.run'),
+            'entryForm' => new EntryForm()->toArray(),
         ]);
     }
 
@@ -130,7 +135,10 @@ class ShortlinkController extends CpController
      */
     private function form(Blueprint $blueprint, string $title, string $submitUrl, string $method): PublishForm
     {
-        return PublishForm::make($blueprint)->icon('link')->title($title)->submittingTo($submitUrl, $method);
+        return PublishForm::make($blueprint)
+            ->icon('link')
+            ->title($title)
+            ->submittingTo($submitUrl, $method);
     }
 
     /**
@@ -152,10 +160,10 @@ class ShortlinkController extends CpController
      */
     private function values(Blueprint $blueprint, array $rules = []): Fluent
     {
-        $fields = $this->fields($blueprint->fields()->addValues($this->request->all()));
+        $fields = $blueprint->fields()->addValues($this->request->all());
         $fields->validate(['destination' => [new ValidDestination], ...$rules]);
 
-        return new Fluent(Collection::wrap($this->fields($fields->process())->values())->all());
+        return new Fluent($fields->process()->values()->all());
     }
 
     /**
@@ -178,6 +186,53 @@ class ShortlinkController extends CpController
         return $shortlink;
     }
 
+    private function listing(FilteredRequest $request): AnonymousResourceCollection
+    {
+        $rows = $this->shortlinks->all()
+            ->map(fn (Shortlink $shortlink): array => [
+                'id' => $shortlink->id(),
+                'slug' => $shortlink->slug(),
+                ...$shortlink->fileData(),
+                'url' => $shortlink->url(),
+            ]);
+
+        $query = new ItemQueryBuilder;
+        $query->withItems(new DataCollection($rows->all()));
+        $search = $request->query('search');
+        $sort = $request->query('sort');
+
+        if (is_string($search)) {
+            $query->where(function (ItemQueryBuilder $nested) use ($search): void {
+                $nested->where('slug', 'like', "%{$search}%");
+                $nested->orWhere('destination', 'like', "%{$search}%");
+                $nested->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $query->orderBy(is_string($sort) ? $sort : 'slug', $request->query('order') === 'desc' ? 'desc' : 'asc');
+
+        $shortlinks = $query->paginate(Statamic::cpPerPage($request->query('perPage')));
+
+        return ShortlinkResource::collection($shortlinks)
+            ->additional(['meta' => ['columns' => $this->columns()]]);
+    }
+
+    /**
+     * @return Collection<int, array{field: string, label: string, visible: bool, sortable: bool}>
+     */
+    private function columns(): Collection
+    {
+        $columns = [
+            'slug' => __('Slug'),
+            'destination' => __('Destination'),
+            'description' => __('Description'),
+        ];
+
+        return collect($columns)
+            ->map(fn (string $label, string $field): array => ['field' => $field, 'label' => $label, 'visible' => true, 'sortable' => true])
+            ->values();
+    }
+
     private function find(string $slug): Shortlink
     {
         return $this->shortlinks->find($slug) ?? abort(404);
@@ -186,14 +241,6 @@ class ShortlinkController extends CpController
     private function blueprint(): Blueprint
     {
         return Blueprints::find('shortlinks::shortlink') ?? throw new UnexpectedValueException('The shortlink blueprint is missing.');
-    }
-
-    /**
-     * Statamic's field methods return Fields but declare no type.
-     */
-    private function fields(mixed $fields): Fields
-    {
-        return Collection::wrap($fields)->whereInstanceOf(Fields::class)->firstOrFail();
     }
 
     /**
