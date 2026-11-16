@@ -45,6 +45,9 @@
         "rector/rector": "^2.6",
         "spatie/laravel-ray": "^1.43"
     },
+    "conflict": {
+        "phpstan/phpstan": "2.3.6"
+    },
     "config": {
         "allow-plugins": {
             "edalzell/laravel-features-plugin": true,
