@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Vitamin2\Juicebox\Features\DeadLinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
@@ -49,6 +50,10 @@ it('sets the schedule through JUICEBOX_DEAD_LINKS_SCHEDULE', function (string $v
 
 it('schedules no check while the feature is disabled', function (): void {
     expect(DeadLinksFixtures::scheduledChecks())->toBeEmpty();
+});
+
+it('leaves the Dead Links utility out of the control panel while the feature is disabled', function (): void {
+    expect(Route::has('statamic.cp.utilities.dead-links'))->toBeFalse();
 });
 
 it('publishes the config with the juicebox-dead-links-config tag while the feature is disabled', function (): void {

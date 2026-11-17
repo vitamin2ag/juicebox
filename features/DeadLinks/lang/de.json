@@ -1,5 +1,18 @@
 {
     "Checked :count link|Checked :count links": ":count Link geprüft|:count Links geprüft",
     "found :count broken link|found :count broken links": ":count defekten Link gefunden|:count defekte Links gefunden",
-    "The dead link check is disabled: juicebox.dead_links.enabled is false.": "Die Prüfung defekter Links ist deaktiviert: juicebox.dead_links.enabled ist false."
+    "The dead link check is disabled: juicebox.dead_links.enabled is false.": "Die Prüfung defekter Links ist deaktiviert: juicebox.dead_links.enabled ist false.",
+    "Dead Links": "Defekte Links",
+    "Lists the broken links that the last check found in the content.": "Listet die defekten Links auf, die die letzte Prüfung im Inhalt gefunden hat.",
+    "Entry not found": "Eintrag nicht gefunden",
+    "Entry not published": "Eintrag nicht veröffentlicht",
+    "Asset not found": "Datei nicht gefunden",
+    "Page not found": "Seite nicht gefunden",
+    "HTTP error": "HTTP-Fehler",
+    "Connection failed": "Verbindung fehlgeschlagen",
+    "Invalid URL": "Ungültige URL",
+    "Missing entry": "Fehlender Eintrag",
+    "Missing term": "Fehlender Begriff",
+    "Missing global set": "Fehlendes globales Set",
+    "Missing navigation": "Fehlende Navigation"
 }

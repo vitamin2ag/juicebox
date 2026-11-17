@@ -6,7 +6,9 @@ namespace Vitamin2\Juicebox\Features\DeadLinks;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Override;
+use Statamic\Facades\Utility;
 use Vitamin2\Juicebox\Features\DeadLinks\Console\Commands\CheckDeadLinks;
+use Vitamin2\Juicebox\Features\DeadLinks\Http\DeadLinksPage;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
 class ServiceProvider extends FeatureServiceProvider
@@ -19,6 +21,7 @@ class ServiceProvider extends FeatureServiceProvider
         }
 
         $this->bootSchedule();
+        $this->bootUtility();
     }
 
     /**
@@ -34,6 +37,20 @@ class ServiceProvider extends FeatureServiceProvider
             }
 
             $schedule->command(CheckDeadLinks::class)->cron($expression)->withoutOverlapping();
+        });
+    }
+
+    /**
+     * Statamic grants the permission `access dead_links utility` for it.
+     */
+    private function bootUtility(): void
+    {
+        Utility::extend(function (): void {
+            $utility = Utility::register('dead_links');
+            $utility->title(__('Dead Links'));
+            $utility->description(__('Lists the broken links that the last check found in the content.'));
+            $utility->icon('link');
+            $utility->inertia('dead-links::Index', fn (): array => resolve(DeadLinksPage::class)->toArray());
         });
     }
 }

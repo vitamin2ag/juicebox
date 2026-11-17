@@ -1,0 +1,14 @@
+tabs:
+  main:
+    sections:
+      -
+        fields:
+          -
+            handle: title
+            field:
+              type: text
+          -
+            handle: link
+            field:
+              type: link
+              display: 'Weiterführender Link'

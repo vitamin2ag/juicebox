@@ -25,3 +25,13 @@ it('chooses the plural forms of the summary in :dataset', function (string $loca
     'French none' => ['fr', 0, '0 lien vérifié, 0 lien mort trouvé'],
     'French many' => ['fr', 2, '2 liens vérifiés, 2 liens morts trouvés'],
 ])->coversNothing();
+
+it('translates the strings of the utility into :dataset', function (string $locale, string $title, string $reason, string $missing): void {
+    app()->setLocale($locale);
+
+    expect([__('Dead Links'), __('Page not found'), __('Missing global set')])->toBe([$title, $reason, $missing]);
+})->with([
+    'German' => ['de', 'Defekte Links', 'Seite nicht gefunden', 'Fehlendes globales Set'],
+    'Swiss German' => ['de_CH', 'Defekte Links', 'Seite nicht gefunden', 'Fehlendes globales Set'],
+    'French' => ['fr', 'Liens morts', 'Page introuvable', 'Jeu de globales manquant'],
+])->coversNothing();
