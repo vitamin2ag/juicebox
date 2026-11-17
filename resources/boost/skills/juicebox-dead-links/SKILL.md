@@ -17,7 +17,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - Laravel's scheduler runs the check every night, without a queue, and skips a run while the previous one is still going. The server needs the scheduler's cron entry, which Statamic already needs for scheduled entries: `* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1`.
 - Where the scheduler cannot run, put `0 3 * * * cd /path/to/project && php please juicebox:dead-links:check >> /dev/null 2>&1` in the hosting's cron and set `JUICEBOX_DEAD_LINKS_SCHEDULE=false`.
 - Each check overwrites one JSON file, `juicebox/dead-links.json` on the `local` disk (`storage/app/private/juicebox/dead-links.json` by default).
-- **Utilities > Dead Links** (`/cp/utilities/dead-links`) shows the last check: its time, the number of links checked, and each broken link with its reason and the entries, terms, global sets or navigations that hold it, linked to their edit pages, with site and field. A source deleted since the check shows as missing, such as `Missing entry`. Editors need the permission `access dead_links utility`; there is no button to start a check from the control panel.
+- **Utilities > Dead Links** (`/cp/utilities/dead-links`) shows the last check: its time, the number of links checked, and each broken link with its reason and the entries, terms, global sets or navigations that hold it, linked to their edit pages, with site and field. A source deleted since the check shows as missing, such as `Missing entry`. Before the first check the page says that no check has run yet and names the command. Editors need the permission `access dead_links utility`; there is no button to start a check from the control panel.
 
 ## What counts as broken
 

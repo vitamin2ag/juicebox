@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
+
 it('translates the error of the disabled check into :dataset', function (string $locale, string $expected): void {
     app()->setLocale($locale);
 
@@ -34,4 +36,15 @@ it('translates the strings of the utility into :dataset', function (string $loca
     'German' => ['de', 'Defekte Links', 'Seite nicht gefunden', 'Fehlendes globales Set'],
     'Swiss German' => ['de_CH', 'Defekte Links', 'Seite nicht gefunden', 'Fehlendes globales Set'],
     'French' => ['fr', 'Liens morts', 'Page introuvable', 'Jeu de globales manquant'],
+])->coversNothing();
+
+it('translates the strings of the control panel page into :dataset', function (string $locale, string $empty, string $none): void {
+    app()->setLocale($locale);
+    $strings = Collection::wrap(resolve('translator')->toJson());
+
+    expect([$strings->get('*.No check has run yet'), $strings->get('*.The last check found no broken links.')])->toBe([$empty, $none]);
+})->with([
+    'German' => ['de', 'Noch keine Prüfung durchgeführt', 'Die letzte Prüfung hat keine defekten Links gefunden.'],
+    'Swiss German' => ['de_CH', 'Noch keine Prüfung durchgeführt', 'Die letzte Prüfung hat keine defekten Links gefunden.'],
+    'French' => ['fr', 'Aucune vérification effectuée pour le moment', "La dernière vérification n'a trouvé aucun lien mort."],
 ])->coversNothing();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\DeadLinks\ServiceProvider;
@@ -54,4 +55,21 @@ it('lists the Dead Links utility in the control panel', function (): void {
                 'icon' => Statamic::svg('icons/link'),
                 'url' => DeadLinksFixtures::cpUrl('utilities.dead-links'),
             ]));
+});
+
+it('registers the control panel build with Vite', function (): void {
+    $feature = dirname(__DIR__);
+
+    expect(Statamic::availableVites(request()))->toHaveKey('dead-links', [
+        'hotFile' => "{$feature}/resources/hot",
+        'buildDirectory' => 'vendor/dead-links/dist',
+        'input' => 'resources/js/cp.ts',
+    ]);
+});
+
+it('publishes the control panel build with the dead-links tag', function (): void {
+    $feature = dirname(__DIR__);
+    $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'dead-links');
+
+    expect($paths)->toBe(["{$feature}/resources/dist/" => public_path('vendor/dead-links/dist/')]);
 });
