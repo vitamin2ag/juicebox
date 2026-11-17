@@ -17,6 +17,7 @@ use Statamic\Facades\AssetContainer as AssetContainerFacade;
 use Statamic\Facades\Blink;
 use Statamic\Facades\Cascade;
 use Statamic\Facades\Collection;
+use Statamic\Facades\URL;
 use Statamic\Fields\BlueprintRepository;
 use Statamic\Globals\GlobalSet;
 use Statamic\Taxonomies\LocalizedTerm;
@@ -60,7 +61,7 @@ final class SchemaOrgFixtures
      */
     public static function forgetBuiltState(): void
     {
-        Blink::forget('juicebox-schema-graph');
+        Blink::forget('juicebox-schema-graph:'.URL::getCurrent());
         Cache::flush();
     }
 

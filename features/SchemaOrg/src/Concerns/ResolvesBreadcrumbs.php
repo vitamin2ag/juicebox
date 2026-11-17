@@ -12,6 +12,7 @@ use Spatie\SchemaOrg\ListItem;
 use Spatie\SchemaOrg\Schema;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Blink;
+use Statamic\Facades\URL;
 use Statamic\Structures\Page;
 use Statamic\Tags\Nav;
 use Statamic\Taxonomies\LocalizedTerm;
@@ -82,7 +83,7 @@ trait ResolvesBreadcrumbs
     /** @return Collection<int, array{title: string, url: string}> */
     private function breadcrumbCrumbs(): Collection
     {
-        $cached = Blink::once('juicebox-schema-breadcrumb-crumbs', fn (): array => $this->resolveCrumbs());
+        $cached = Blink::once('juicebox-schema-breadcrumb-crumbs:'.URL::getCurrent(), fn (): array => $this->resolveCrumbs());
 
         return collect(is_array($cached) ? $cached : [])
             ->filter(fn (mixed $crumb): bool => is_array($crumb) && is_string($crumb['title'] ?? null) && is_string($crumb['url'] ?? null))
