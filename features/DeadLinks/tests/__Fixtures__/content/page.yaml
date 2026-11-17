@@ -1,0 +1,76 @@
+title: 'Über uns'
+link: 'entry::kontakt'
+download: 'asset::assets::docs/preise.pdf'
+website: 'https://example.com/team'
+home: /
+body: |
+  Read [our offer](/angebot) or visit https://example.org/news.
+  Write to [us](mailto:info@example.com).
+content:
+  -
+    type: paragraph
+    content:
+      -
+        type: text
+        marks:
+          -
+            type: link
+            attrs:
+              href: 'statamic://entry::angebot'
+              rel: null
+              target: null
+              title: null
+        text: Angebot
+      -
+        type: text
+        text: ' und '
+      -
+        type: text
+        marks:
+          -
+            type: link
+            attrs:
+              href: www.example.net
+              rel: 'noopener noreferrer'
+              target: _blank
+              title: null
+        text: Partner
+      -
+        type: text
+        marks:
+          -
+            type: link
+            attrs:
+              href: 'tel:+41711234567'
+              rel: null
+              target: null
+              title: null
+        text: Anrufen
+  -
+    type: image
+    attrs:
+      src: 'asset::assets::bilder/team.jpg'
+      alt: Team
+  -
+    type: set
+    attrs:
+      id: lx1abc2d
+      values:
+        type: button
+        button_link: 'https://example.com/bard'
+sections:
+  -
+    id: m1a2b3c4
+    type: teaser
+    enabled: true
+    button_link: 'https://example.com/team'
+    text: '<p>See <a href="/standorte">our locations</a>.</p>'
+  -
+    id: m4c5d6e7
+    type: cards
+    enabled: true
+    cards:
+      -
+        id: n7e8f9a0
+        link: 'entry::team'
+        label: Team
