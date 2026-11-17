@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Spatie\SchemaOrg\BreadcrumbList;
+use Spatie\SchemaOrg\Schema;
 use Statamic\Entries\Entry as EntryContract;
 use Statamic\Facades\Blink;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 use Statamic\Structures\Page;
@@ -218,4 +220,49 @@ it('resolves the crumbs of each url separately', function (): void {
 
     expect(array_column(breadcrumbsItems(breadcrumbsList($team, '/team')), 'name'))->toContain('Team')
         ->not->toContain('About');
+});
+
+function breadcrumbsInheritedTitleEntry(): EntryContract
+{
+    config(['statamic.system.multisite' => true]);
+    Site::setSites([
+        'default' => ['name' => 'English', 'url' => 'http://site.test/', 'locale' => 'en_US'],
+        'de' => ['name' => 'Deutsch', 'url' => 'http://site.test/de/', 'locale' => 'de_CH'],
+    ]);
+
+    $collection = Collection::make('pages');
+    $collection->routes('/{slug}');
+    $collection->sites(['default', 'de']);
+    $collection->save();
+
+    $origin = Fixtures::entry('pages', 'about', ['title' => 'About']);
+    $localization = $origin->makeLocalization('de');
+
+    if (! $localization instanceof EntryContract) {
+        throw new RuntimeException('Entry has no de localization.');
+    }
+
+    $localization->save();
+
+    return $localization;
+}
+
+it('names a crumb by the title its localization inherits', function (): void {
+    $localization = breadcrumbsInheritedTitleEntry();
+    breadcrumbsNavReturning([$localization]);
+
+    expect(array_column(breadcrumbsItems(breadcrumbsList($localization, '/de/about')), 'name'))->toBe(['About']);
+});
+
+it('names the page node by the title its localization inherits', function (): void {
+    $localization = breadcrumbsInheritedTitleEntry();
+
+    $trait = new class
+    {
+        use ResolvesBreadcrumbs {
+            identifyAsWebPage as public;
+        }
+    };
+
+    expect($trait->identifyAsWebPage(Schema::webPage(), $localization)->getProperty('name'))->toBe('About');
 });

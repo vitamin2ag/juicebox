@@ -18,7 +18,7 @@ class {{ class }} extends EntrySchema
 
     public function schema(): {{ type }}Type
     {
-        $title = $this->entry->get('title');
+        $title = $this->entry->value('title');
 
         $node = Schema::{{ factory }}();
         $node->addProperties([

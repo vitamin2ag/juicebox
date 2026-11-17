@@ -65,7 +65,7 @@ class Article extends EntrySchema
 
     public function schema(): ArticleType
     {
-        $title = $this->entry->get('title');
+        $title = $this->entry->value('title');
         $date = $this->entry->date();
 
         $article = Schema::article();

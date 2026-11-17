@@ -48,7 +48,7 @@ trait ResolvesBreadcrumbs
         $url = Ids::entryUrl($entry);
 
         $node->addProperties(collect([
-            'name' => $entry->get('title'),
+            'name' => $entry->value('title'),
             'url' => $url,
             'inLanguage' => Ids::language(),
             'datePublished' => $entry->date(),
@@ -129,7 +129,7 @@ trait ResolvesBreadcrumbs
         }
 
         $url = $crumb->absoluteUrl();
-        $title = $crumb instanceof Taxonomy ? $crumb->title() : $crumb->get('title');
+        $title = $crumb instanceof Taxonomy ? $crumb->title() : $crumb->value('title');
 
         return is_string($url) ? ['title' => is_string($title) ? $title : '', 'url' => $url] : null;
     }
