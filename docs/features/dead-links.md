@@ -4,7 +4,7 @@ Checks the links in the content of the site every night and lists the broken one
 
 The check reads the content instead of crawling the pages: entries of every collection and site, taxonomy terms, globals and navigation trees, nested sets included. So it knows the entry and the field of every link. Links written into the templates are not checked. It runs as an artisan command from Laravel's scheduler, without a queue, and keeps its result in one JSON file on the `local` disk; the control panel lists it under **Utilities > Dead Links**.
 
-The feature is off by default; switch it on with `JUICEBOX_DEAD_LINKS_ENABLED=true`. While it is off, its config can still be published.
+The feature is off by default; switch it on with `JUICEBOX_DEAD_LINKS_ENABLED=true`. While it is off, nothing is scheduled, the command stops with an error and the config can still be published.
 
 ## Broken links
 
@@ -18,13 +18,35 @@ Each link is checked once, however often it appears.
 
 A site that blocks bots with a status outside 1xx–5xx, as LinkedIn does with 999, counts as a failed connection; add it to `exclude`.
 
+## Command
+
+Run a check by hand:
+
+``` bash
+php please juicebox:dead-links:check
+```
+
+It reads the content, checks the links, saves the report and prints a summary such as `Checked 181 links, found 12 broken links.` It exits with `0` even when links are broken; while the feature is off it prints an error and exits with `1`. The same command runs as `php artisan statamic:juicebox:dead-links:check`.
+
+A check of a large site can take minutes: every external request may take up to `timeout` seconds, and one that gets an error with `HEAD` is sent again with `GET`.
+
 ## Scheduler
 
-The check runs from Laravel's scheduler, at the time `schedule` sets (every night at 03:00 by default). The scheduler runs only when the server calls it every minute, which Statamic already needs for scheduled entries. Add this cron entry on the server if it is missing:
+The check runs from Laravel's scheduler, at the time `schedule` sets (every night at 03:00 by default). A scheduled check is skipped while the previous one still runs. The scheduler runs only when the server calls it every minute, which Statamic already needs for scheduled entries. Add this cron entry on the server if it is missing:
 
 ``` bash
 * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+Where the scheduler cannot run, call the command from the hosting's cron instead, and set `JUICEBOX_DEAD_LINKS_SCHEDULE=false` so a scheduler set up later does not run the check twice:
+
+``` bash
+0 3 * * * cd /path/to/project && php please juicebox:dead-links:check >> /dev/null 2>&1
+```
+
+## Report
+
+Each check overwrites one JSON file, `juicebox/dead-links.json` on the `local` disk, which is `storage/app/private/juicebox/dead-links.json` in a default Laravel app. It holds the time of the check, the number of links checked and every broken link with its reason, its HTTP status and the places it is stored. It stays out of `content/`, so the nightly check makes no git commits, and out of the cache, which a deploy clears. Before the first check there is no file; a file that cannot be read counts as missing.
 
 ## Configuration
 

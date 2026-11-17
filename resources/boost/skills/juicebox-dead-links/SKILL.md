@@ -11,10 +11,12 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 
 ## How it works
 
-- The feature is off by default. Set `JUICEBOX_DEAD_LINKS_ENABLED=true` in the project's `.env` to switch it on. While it is off, the config can still be published.
+- The feature is off by default. Set `JUICEBOX_DEAD_LINKS_ENABLED=true` in the project's `.env` to switch it on. While it is off, nothing is scheduled, the command stops with an error, and the config can still be published.
 - The check reads the content, not the rendered pages: entries of every collection and site, taxonomy terms, globals and navigation trees, nested sets included. Links hard-coded in Antlers or Blade templates are not checked.
-- Laravel's scheduler runs the check every night, without a queue. The server needs the scheduler's cron entry, which Statamic already needs for scheduled entries: `* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1`.
-- The result is one JSON file on the `local` disk. The control panel lists the broken links under **Utilities > Dead Links**.
+- `php please juicebox:dead-links:check` runs a check and prints a summary such as `Checked 181 links, found 12 broken links.` It exits with `0` even when links are broken. A large site can take minutes, since each external request may take up to `timeout` seconds.
+- Laravel's scheduler runs the check every night, without a queue, and skips a run while the previous one is still going. The server needs the scheduler's cron entry, which Statamic already needs for scheduled entries: `* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1`.
+- Where the scheduler cannot run, put `0 3 * * * cd /path/to/project && php please juicebox:dead-links:check >> /dev/null 2>&1` in the hosting's cron and set `JUICEBOX_DEAD_LINKS_SCHEDULE=false`.
+- Each check overwrites one JSON file, `juicebox/dead-links.json` on the `local` disk (`storage/app/private/juicebox/dead-links.json` by default). The control panel lists the broken links under **Utilities > Dead Links**.
 
 ## What counts as broken
 

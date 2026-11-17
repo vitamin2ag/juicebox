@@ -1,0 +1,5 @@
+{
+    "Checked :count link|Checked :count links": ":count Link geprüft|:count Links geprüft",
+    "found :count broken link|found :count broken links": ":count defekten Link gefunden|:count defekte Links gefunden",
+    "The dead link check is disabled: juicebox.dead_links.enabled is false.": "Die Prüfung defekter Links ist deaktiviert: juicebox.dead_links.enabled ist false."
+}
