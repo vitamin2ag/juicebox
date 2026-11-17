@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Collection;
 use Statamic\Facades\Blink;
+use Statamic\Facades\URL;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tags\Schema;
 use Vitamin2\Juicebox\Features\SchemaOrg\Tests\Concerns\SchemaOrgFixtures as Fixtures;
 
@@ -68,11 +69,11 @@ it('renders nothing when disabled via config', function (): void {
 it('caches the built graph via blink', function (): void {
     renderSchemaTag([]);
 
-    expect(Blink::has('juicebox-schema-graph'))->toBeTrue();
+    expect(Blink::has('juicebox-schema-graph:'.URL::getCurrent()))->toBeTrue();
 });
 
 it('renders nothing when the cached graph is not a graph', function (): void {
-    Blink::put('juicebox-schema-graph');
+    Blink::put('juicebox-schema-graph:'.URL::getCurrent());
 
     expect(renderSchemaTag([]))->toBeEmpty();
 });

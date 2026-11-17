@@ -6,6 +6,7 @@ namespace Vitamin2\Juicebox\Features\SchemaOrg\Tags;
 
 use Spatie\SchemaOrg\Graph;
 use Statamic\Facades\Blink;
+use Statamic\Facades\URL;
 use Statamic\Tags\Tags;
 use Vitamin2\Juicebox\Features\SchemaOrg\Graph\GraphBuilder;
 
@@ -17,7 +18,7 @@ class Schema extends Tags
             return '';
         }
 
-        $graph = Blink::once('juicebox-schema-graph', fn (): Graph => resolve(GraphBuilder::class)->build());
+        $graph = Blink::once('juicebox-schema-graph:'.URL::getCurrent(), fn (): Graph => resolve(GraphBuilder::class)->build());
 
         if (! $graph instanceof Graph) {
             return '';

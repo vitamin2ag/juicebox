@@ -7,6 +7,7 @@ use Spatie\SchemaOrg\BreadcrumbList;
 use Statamic\Entries\Entry as EntryContract;
 use Statamic\Facades\Blink;
 use Statamic\Facades\Site;
+use Statamic\Facades\URL;
 use Statamic\Structures\Page;
 use Statamic\Tags\Nav;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesBreadcrumbs;
@@ -195,7 +196,8 @@ it('ignores malformed cached crumbs', function (): void {
     $about = breadcrumbsMakeEntry('pages', 'about', 'About');
     $about->save();
 
-    Blink::put('juicebox-schema-breadcrumb-crumbs', [
+    app()->instance('request', Request::create('/about'));
+    Blink::put('juicebox-schema-breadcrumb-crumbs:'.URL::getCurrent(), [
         'not an array',
         ['title' => 'No url'],
         ['url' => 'https://example.test/no-title'],
@@ -203,4 +205,17 @@ it('ignores malformed cached crumbs', function (): void {
     ]);
 
     expect(array_column(breadcrumbsItems(breadcrumbsList($about, '/about')), 'name'))->toBe(['Valid']);
+});
+
+it('resolves the crumbs of each url separately', function (): void {
+    Fixtures::collection('pages', ['default' => '/{slug}']);
+    $about = breadcrumbsMakeEntry('pages', 'about', 'About');
+    $about->save();
+    $team = breadcrumbsMakeEntry('pages', 'team', 'Team');
+    $team->save();
+
+    breadcrumbsList($about, '/about');
+
+    expect(array_column(breadcrumbsItems(breadcrumbsList($team, '/team')), 'name'))->toContain('Team')
+        ->not->toContain('About');
 });
