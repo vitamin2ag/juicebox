@@ -82,3 +82,10 @@ it('returns null when the augmented field is not a value', function (): void {
 
     expect(localDateOf($entry, 'starts_on'))->toBeNull();
 });
+
+it('uses the app timezone when no display timezone is set', function (): void {
+    config(['statamic.system.display_timezone' => null]);
+    $entry = Fixtures::entry('pages', 'p', ['title' => 'P', 'starts_on' => '2026-11-02 23:00']);
+
+    expect(localDateOf($entry, 'starts_on')?->toIso8601String())->toBe('2026-11-02T23:00:00+00:00');
+});

@@ -11,6 +11,7 @@ use Statamic\Entries\Entry;
 use Statamic\Fields\Value;
 use Statamic\Query\OrderedQueryBuilder;
 use Statamic\Query\StatusQueryBuilder;
+use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ConvertsToPlainText;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesBreadcrumbs;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesGeneralGlobals;
@@ -81,7 +82,7 @@ abstract class EntrySchema implements Schema
         $date = $augmented instanceof Value ? $augmented->value() : null;
 
         return $date instanceof CarbonInterface
-            ? $date->copy()->setTimezone(config()->string('statamic.system.display_timezone'))
+            ? $date->copy()->setTimezone(Statamic::displayTimezone())
             : null;
     }
 }

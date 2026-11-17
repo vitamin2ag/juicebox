@@ -123,7 +123,7 @@ class Article extends EntrySchema
   ```
 
 - **Several nodes:** return an array from `schema()` when the page holds more than one thing, for example a `Course` plus a `FAQPage` built from the FAQ entries it shows, or one `Event` per upcoming date. Give each node its own `@id` fragment.
-- **Dates:** date fields are stored in UTC and shown in `config('statamic.system.display_timezone')`. A full datetime can be passed as it is (`'datePublished' => $this->entry->date()`); it is written with its offset. Convert only before formatting a date-only value, or a date stored as local midnight shifts by a day: `$this->localDate('start_date', $run)?->toDateString()`. Combine a separate free-text time field (`18:30 - 19:30 Uhr`) with the date to get a full `startDate`/`endDate`.
+- **Dates:** date fields are stored in the app timezone (usually UTC) and shown in the display timezone (`Statamic::displayTimezone()`: `statamic.system.display_timezone`, else `app.timezone`). A full datetime can be passed as it is (`'datePublished' => $this->entry->date()`); it is written with its offset. Convert only before formatting a date-only value, or a date stored as local midnight shifts by a day: `$this->localDate('start_date', $run)?->toDateString()`. Combine a separate free-text time field (`18:30 - 19:30 Uhr`) with the date to get a full `startDate`/`endDate`.
 - **Free text:** normalise values before using them. A price such as `1'190` becomes `1190`, and a word such as `Kostenlos` becomes price `0`; leave out what you cannot parse instead of passing it through. Compare text case-insensitively (`Online` vs `online`).
 
 #### Map every visible field
