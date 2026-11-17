@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Override;
 use Statamic\Statamic;
 use Vitamin2\Juicebox\Install\IgnorePublishedAssets;
+use Vitamin2\Juicebox\Tags\Juicebox;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -22,7 +23,17 @@ class ServiceProvider extends LaravelServiceProvider
 
     public function boot(): void
     {
+        $this->bootProxyTag();
         $this->bootIgnoredAssets();
+    }
+
+    /**
+     * statamic-features only registers the tags inside feature folders, so the
+     * core proxy tag in `src/Tags` is registered here.
+     */
+    private function bootProxyTag(): void
+    {
+        Juicebox::register();
     }
 
     private function bootIgnoredAssets(): void
