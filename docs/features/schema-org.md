@@ -77,13 +77,13 @@ It writes `app/Schemas/Entries/Article.php`. When the name is a Schema.org type 
 
 No further registration needed — it's picked up automatically and listed alphabetically by its `label()`, which the picker passes through `__()`, so return the English label and translate it in the app's `lang/<locale>.json`. Abstract classes (shared bases) are excluded from the picker.
 
-If your entry/listing type's schema implements `Spatie\SchemaOrg\Contracts\WebPageContract` (e.g. `CollectionPage`, `ProfilePage`), `GraphBuilder` suppresses its own automatic `WebPage` node for that entry — so wrap the return value of `schema()` in `$this->identifyAsWebPage(..., $this->entry)` (from the `ResolvesBreadcrumbs` trait `EntrySchema` already uses) to give it the same `@id` and `breadcrumb` reference that node would have had:
+If your entry/listing type's schema implements `Spatie\SchemaOrg\Contracts\WebPageContract` (e.g. `CollectionPage`, `ProfilePage`), `GraphBuilder` suppresses its own automatic `WebPage` node for that entry — so wrap the return value of `schema()` in `$this->identifyAsWebPage(..., $this->entry)` (from the `ResolvesBreadcrumbs` trait `EntrySchema` already uses) to give it the `@id`, `breadcrumb` reference and properties that node would have had (`name`, `url`, `inLanguage`, `datePublished`, `dateModified`, `isPartOf`). Properties the node already has are kept:
 
 ```php
 public function schema(): CollectionPage
 {
     return $this->identifyAsWebPage(
-        Schema::collectionPage()->name($this->plainText($this->entry->augmentedValue('title'))),
+        Schema::collectionPage()->mainEntity(Schema::itemList()->itemListElement($items)),
         $this->entry,
     );
 }

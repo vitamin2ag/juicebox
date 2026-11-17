@@ -83,6 +83,28 @@ it('suppresses the automatic web page node when a page node implements web page 
         ->and($profilePage)->not->toHaveKey('breadcrumb');
 });
 
+it('gives a page node the properties of the suppressed web page node but keeps its own', function (): void {
+    graphBuilderSite();
+    Fixtures::collection('pages', ['default' => '/{slug}'], dated: true);
+    Fixtures::generalGlobal([]);
+    $entry = Fixtures::entry('pages', 'jane', [
+        'title' => 'Jane',
+        'updated_at' => 1_700_000_000,
+        'json_ld_schema' => 'FakeWebPageSchema',
+    ], date: '2024-03-05');
+    Cascade::withContent($entry);
+
+    $profilePage = Fixtures::nodeOfType(Fixtures::build(), 'ProfilePage');
+
+    expect($profilePage)->toMatchArray([
+        'name' => 'Profile of Jane',
+        'url' => Fixtures::entryUrl($entry),
+        'inLanguage' => 'de',
+        'isPartOf' => Ids::ref(Ids::website()),
+    ])->and($profilePage['datePublished'])->toStartWith('2024-03-05')
+        ->and($profilePage['dateModified'])->toStartWith('2023-11-14');
+});
+
 it('still adds breadcrumb list when the automatic web page node is suppressed', function (): void {
     config(['juicebox.schema_org.breadcrumbs_enabled' => true]);
     Fixtures::collection('pages', ['default' => '/{slug}']);

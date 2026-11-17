@@ -13,8 +13,8 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Tests\__Fixtures__\TitledEntrySchema;
 /**
  * Emits a type implementing `WebPageContract`, used to prove the graph
  * builder suppresses its automatic generic WebPage node in that case, and
- * that `identifyAsWebPage()` still gives it the same `@id` and breadcrumb
- * reference that node would have had.
+ * that `identifyAsWebPage()` still gives it the same `@id`, properties and
+ * breadcrumb reference that node would have had, keeping its own name.
  */
 class FakeWebPageSchema extends TitledEntrySchema
 {
@@ -28,7 +28,7 @@ class FakeWebPageSchema extends TitledEntrySchema
     public function schema(): BaseType&ThingContract
     {
         return $this->identifyAsWebPage(
-            Schema::profilePage()->name($this->title()),
+            Schema::profilePage()->name('Profile of '.$this->title()),
             $this->entry,
         );
     }

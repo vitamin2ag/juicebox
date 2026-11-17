@@ -89,7 +89,7 @@ class Article extends EntrySchema
   - `$this->plainText($value)` turns a bard/text value (or `Value`) into a clean string or `null`.
   - `$this->imageUrl('field')` returns the first asset's absolute URL of an `assets` field, or `null`.
   - `$this->entries('field')` returns the entries of an `entries` field (single or multi) as a `Collection<int, Entry>`, in field order and published only; empty for any other field.
-  - `$this->identifyAsWebPage($node, $this->entry)` (see below).
+  - `$this->identifyAsWebPage($node, $this->entry)` turns a `WebPageContract` node into the page node (see step 4).
   - `$this->generalGlobals()` returns the `general` global's variables for the current site (or `null`), for site-wide values such as `json_ld_entity_name`.
   - `$this->entityType()` returns the short class name chosen as the site entity (for example `Organization`), or `null` when none is set.
 - Reference the site's WebSite with `Ids::ref(Ids::website())`. Reference the site entity only when one is configured, otherwise the reference points at a node that is not in the graph:
@@ -170,13 +170,13 @@ To skip the schema for particular entries of a collection that has a default, ma
 
 ### 4. Pages that are themselves a WebPage type (listings, profiles)
 
-If `schema()` returns a type implementing `WebPageContract` (`CollectionPage`, `ProfilePage`, `AboutPage`, ...), the addon drops its automatic `WebPage` node. Wrap the node so it keeps the same `@id` and breadcrumb reference:
+If `schema()` returns a type implementing `WebPageContract` (`CollectionPage`, `ProfilePage`, `AboutPage`, ...), the addon drops its automatic `WebPage` node. Wrap the node in `identifyAsWebPage()`: it gets that node's `@id`, breadcrumb reference and properties (`name`, `url`, `inLanguage`, `datePublished`, `dateModified`, `isPartOf` the WebSite). Properties you set yourself are kept, so set only what differs:
 
 ```php
 public function schema(): CollectionPage
 {
     return $this->identifyAsWebPage(
-        Schema::collectionPage()->name($this->plainText($this->entry->augmentedValue('title'))),
+        Schema::collectionPage()->mainEntity(Schema::itemList()->itemListElement($items)),
         $this->entry,
     );
 }

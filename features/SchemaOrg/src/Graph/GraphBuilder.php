@@ -147,19 +147,7 @@ class GraphBuilder
 
     private function webPageNode(Entry $entry): WebPage
     {
-        $webPage = Schema::webPage();
-
-        $webPage->addProperties([
-            'name' => $entry->get('title'),
-            'url' => $entry->absoluteUrl(),
-            'inLanguage' => Ids::language(),
-            'datePublished' => $entry->date(),
-            'dateModified' => $entry->lastModified(),
-        ]);
-
-        $webPage->setProperty('isPartOf', Ids::ref(Ids::website()));
-
-        return $this->identifyAsWebPage($webPage, $entry);
+        return $this->identifyAsWebPage(Schema::webPage(), $entry);
     }
 
     /** @return list<BaseType&ThingContract> */
