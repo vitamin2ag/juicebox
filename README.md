@@ -20,6 +20,7 @@ composer dump-autoload
 
 ## Features
 
+- [Dead Links](docs/features/dead-links.md): checks the links in the content every night and lists the broken ones in the control panel.
 - [Redirects](docs/features/redirects.md): redirects requests that would otherwise return a 404 to a new URL.
 - [Secure Headers](docs/features/secure-headers.md): sets security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on every web response.
 
