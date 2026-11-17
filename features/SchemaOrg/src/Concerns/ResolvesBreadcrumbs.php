@@ -117,7 +117,7 @@ trait ResolvesBreadcrumbs
         }
 
         $url = $crumb->absoluteUrl();
-        $title = $crumb->get('title');
+        $title = $crumb instanceof Taxonomy ? $crumb->title() : $crumb->get('title');
 
         return is_string($url) ? ['title' => is_string($title) ? $title : '', 'url' => $url] : null;
     }
