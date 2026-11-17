@@ -16,6 +16,14 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - Laravel's scheduler runs the check every night, without a queue. The server needs the scheduler's cron entry, which Statamic already needs for scheduled entries: `* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1`.
 - The result is one JSON file on the `local` disk. The control panel lists the broken links under **Utilities > Dead Links**.
 
+## What counts as broken
+
+- A reference `entry::<id>` to a missing or unpublished entry (a draft, or a dated entry that is private for now), or `asset::<container>::<path>` to a missing asset.
+- A URL of the sites (a path such as `/kontakt`, or a URL on a site's domain) that Statamic resolves to an unpublished entry. One Statamic does not know is requested like an external URL; a path on the domain of the default site.
+- An external URL whose request fails or times out, or answers a 4xx or 5xx. It is requested with `HEAD`, then `GET` when `HEAD` gets an error, following redirects. 401, 403 and 429 are not reported (bot protection).
+- A value that is no URL, such as `www.example.com` or `https::/example.com`.
+- A site that answers bots with a non-standard status (LinkedIn: 999) counts as a failed connection; add it to `exclude`.
+
 ## Configure
 
 Publish the config, then edit `config/juicebox/dead_links.php`:

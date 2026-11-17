@@ -6,6 +6,18 @@ The check reads the content instead of crawling the pages: entries of every coll
 
 The feature is off by default; switch it on with `JUICEBOX_DEAD_LINKS_ENABLED=true`. While it is off, its config can still be published.
 
+## Broken links
+
+Each link is checked once, however often it appears.
+
+- `entry::<id>`: broken when the entry is missing or not published (a draft, or a dated entry that is private for now). An anchor or query after the id is ignored.
+- `asset::<container>::<path>`: broken when the asset is missing.
+- A path such as `/kontakt`, or a URL on the domain of a site, is looked up in Statamic first: a published entry or a term is fine, an unpublished entry is broken. A URL Statamic does not know (a Laravel route, a file, a redirect) is requested like any other URL; a path on the domain of the default site.
+- Any other `http(s)` URL is requested with `HEAD`, and again with `GET` when `HEAD` gets an error, following redirects, ten at a time and within `timeout` seconds each. It is broken when the connection fails or times out, or when the answer is a 4xx or 5xx. 401, 403 and 429 are not reported: bot protection answers them to pages that work.
+- A value that is no URL, such as `www.example.com`, `https::/example.com` or `kontakt`, is broken as an invalid URL.
+
+A site that blocks bots with a status outside 1xx–5xx, as LinkedIn does with 999, counts as a failed connection; add it to `exclude`.
+
 ## Scheduler
 
 The check runs from Laravel's scheduler, at the time `schedule` sets (every night at 03:00 by default). The scheduler runs only when the server calls it every minute, which Statamic already needs for scheduled entries. Add this cron entry on the server if it is missing:

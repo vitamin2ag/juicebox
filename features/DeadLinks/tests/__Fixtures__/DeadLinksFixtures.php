@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use Statamic\Assets\AssetContainer;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\YAML;
 use Statamic\Globals\GlobalSet;
 use Statamic\Globals\Variables;
+use Statamic\Structures\CollectionTree;
 use Statamic\Structures\Nav;
 use Statamic\Structures\NavTree;
 use Statamic\Taxonomies\Taxonomy;
@@ -42,7 +45,7 @@ class DeadLinksFixtures
      *
      * @param  array<mixed>  $data
      */
-    public static function entry(string $id, array $data, string $site = 'de', ?string $origin = null): Entry
+    public static function entry(string $id, array $data, string $site = 'de', ?string $origin = null, bool $published = true): Entry
     {
         $pages = new Collection;
         $pages->handle('pages');
@@ -56,6 +59,7 @@ class DeadLinksFixtures
         $entry->locale($site);
         $entry->slug($id);
         $entry->data($data);
+        $entry->published($published);
 
         if ($origin !== null) {
             $entry->origin($origin);
@@ -64,6 +68,50 @@ class DeadLinksFixtures
         $entry->save();
 
         return $entry;
+    }
+
+    /**
+     * Gives the pages collection a structure that holds the given entries in the default site, so Statamic finds
+     * them by their URL as pages of the structure.
+     *
+     * @param  array<int, string>  $ids
+     */
+    public static function structure(array $ids): void
+    {
+        $pages = new Collection;
+        $pages->handle('pages');
+        $pages->sites(['de', 'en']);
+        $pages->routes('/{slug}');
+        $pages->structureContents(['root' => false]);
+        $pages->save();
+
+        $tree = new CollectionTree;
+        $tree->handle('pages');
+        $tree->locale('de');
+        $tree->tree(array_map(fn (string $id): array => ['entry' => $id], $ids));
+        $tree->syncOriginal();
+        $tree->save();
+    }
+
+    /**
+     * Saves an asset container on a fake disk that holds the given files.
+     *
+     * @param  array<int, string>  $paths
+     */
+    public static function assets(string $handle, array $paths): AssetContainer
+    {
+        Storage::fake($handle);
+
+        foreach ($paths as $path) {
+            Storage::disk($handle)->put($path, '');
+        }
+
+        $container = new AssetContainer;
+        $container->handle($handle);
+        $container->disk($handle);
+        $container->save();
+
+        return $container;
     }
 
     /**
