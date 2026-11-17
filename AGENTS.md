@@ -14,7 +14,7 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 
 ## Quality Bar
 
-- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts. A type Statamic leaves out (`mixed` from a facade, an untyped `handle()`) goes in the PHPStan stub `.phpstan/stubs/statamic.stub`; do not add a helper or a `Collection::wrap(...)->whereInstanceOf(...)` just to narrow it. Add a type to the stub only when the code uses the value, not to allow a style such as a fluent chain: a stub can drift from Statamic, so code that needs no stub is better. Values that are really unknown (request input, parsed YAML, config, validation values) are narrowed where they are used.
+- PHPStan runs at `level: max` over `src`, `features` and `tests`. Fix the underlying type instead of using `@phpstan-ignore`, baselines, `assert()` or casts. A type Statamic leaves out (`mixed` from a facade, an untyped `handle()`) goes in the PHPStan stub `.phpstan/stubs/statamic.stub`; do not add a helper or a `Collection::wrap(...)->whereInstanceOf(...)` just to narrow it. Such a chain is fine when it does more than narrow, for example folding a single value, `null` and a query result into one list. Add a type to the stub only when the code uses the value, not to allow a style such as a fluent chain: a stub can drift from Statamic, so code that needs no stub is better. Values that are really unknown (request input, parsed YAML, config, validation values) are narrowed where they are used.
 - Keep type coverage, code coverage and mutation score (`composer test:mutate`) at 100%.
 
 ## Git & Commits
@@ -33,10 +33,11 @@ This repository is the core Statamic addon used by VITAMIN 2 (a Laravel package)
 - `features/<Name>/`: feature modules (`config/<snake_name>.php`, `src/ServiceProvider.php`, `resources/`, `tests/`, ...). Place files where laravel-features and [`edalzell/statamic-features`](https://github.com/edalzell/statamic-features) expect them (see the former's Boost skill in `vendor/edalzell/laravel-features/resources/boost/skills/` and the latter's README).
 - `src/FeatureServiceProvider.php`: base for feature providers (extends laravel-features' `FeatureServiceProvider`; only sets the config file name and publish tag). `src/ServiceProvider.php` registers all features by discovery; `composer.json` lists only `Vitamin2\Juicebox\ServiceProvider`.
 - `package.json`, `tsconfig.json`, `scripts/build-control-panel.ts`, `types/`: the one control panel build of every feature, explained in `docs/adding-a-feature.md`.
+- `src/Tags/Juicebox.php`: the core `juicebox` proxy tag; it resolves `Features/<Name>/Tags/<Tag>` classes, so a feature needs no change to it.
 - `resources/boost/skills/`: consumer-facing Boost skills (ships with the package; `.agents/` and `docs/` do not).
 - `docs/features/<slug>.md`: user documentation of one feature, linked from the README's `Features` list.
 - `.phpstan/stubs/statamic.stub`: the types PHPStan needs that Statamic and Laravel leave out.
-- `features/<Name>/tests/` covers a feature; `tests/Feature/` holds the cross-cutting tests that boot the app (discovery, the base provider, Boost skills); the rest of `tests/` holds checks that need no app (conventions, architecture). Fixtures live in `__Fixtures__/` folders.
+- `features/<Name>/tests/` covers a feature; `tests/Feature/` holds the cross-cutting tests that boot the app (discovery, the base provider, Boost skills); the rest of `tests/` holds checks that need no app (conventions, architecture). Fixtures live in `__Fixtures__/` folders. `tests/Feature/Tags/` covers the core tag.
 - `workbench/`: Statamic 6 site for manual checks (`composer serve`, then e.g. `curl -I http://127.0.0.1:8000`).
 
 ## Releases
