@@ -25,7 +25,7 @@ trait ResolvesGeneralGlobals
      */
     protected function entityType(): ?string
     {
-        $name = $this->generalGlobals()?->get('json_ld_entity');
+        $name = $this->generalGlobals()?->value('json_ld_entity');
 
         return is_string($name) ? $name : null;
     }
