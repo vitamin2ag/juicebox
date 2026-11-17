@@ -85,7 +85,7 @@ it('renders organization common and organization specific fields', function (): 
 
     renderWithDataExpectCommonFields($data, 'Organization');
     expect($data['legalName'])->toBe('Acme GmbH & Co. KG')
-        ->and($data['foundingDate'])->toBe('2026-06-19T00:00:00+00:00')
+        ->and($data['foundingDate'])->toBe('2026-06-19')
         ->and($data['vatID'])->toBe('CHE-123.456.789 MWST');
 });
 
@@ -94,7 +94,7 @@ it('renders corporation common and corporation specific fields', function (): vo
 
     renderWithDataExpectCommonFields($data, 'Corporation');
     expect($data['legalName'])->toBe('Acme GmbH & Co. KG')
-        ->and($data['foundingDate'])->toBe('2026-06-19T00:00:00+00:00')
+        ->and($data['foundingDate'])->toBe('2026-06-19')
         ->and($data['vatID'])->toBe('CHE-123.456.789 MWST')
         ->and($data['tickerSymbol'])->toBe('NASDAQ:ACME');
 });
@@ -235,4 +235,11 @@ it('has no price range when none is chosen', function (): void {
     Fixtures::generalGlobal(['json_ld_entity_name' => 'Acme']);
 
     expect((new LocalBusiness)->schema()->toArray())->not->toHaveKey('priceRange');
+});
+
+it('keeps the founding day in an app timezone other than UTC', function (): void {
+    config(['app.timezone' => 'Europe/Zurich']);
+    Fixtures::generalGlobal(['json_ld_entity_founding_date' => '2026-06-19']);
+
+    expect((new Organization)->schema()->toArray()['foundingDate'] ?? null)->toBe('2026-06-19');
 });

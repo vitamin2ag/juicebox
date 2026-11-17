@@ -41,7 +41,10 @@ class Organization implements Contract
         $schema->addProperties([
             'legalName' => $data?->json_ld_entity_legal_name,
             'logo' => $this->logoUrl($data?->json_ld_entity_logo),
-            'foundingDate' => $data?->json_ld_entity_founding_date,
+            'foundingDate' => $data?->json_ld_entity_founding_date
+                ?->copy()
+                ->setTimezone(config()->string('app.timezone'))
+                ->toDateString(),
             'vatID' => $data?->json_ld_entity_vat_id,
         ]);
 
