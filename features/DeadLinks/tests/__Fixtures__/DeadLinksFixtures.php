@@ -9,8 +9,10 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Statamic\Assets\AssetContainer;
+use Statamic\Auth\File\User;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
+use Statamic\Facades\Blueprint;
 use Statamic\Facades\Site;
 use Statamic\Facades\YAML;
 use Statamic\Globals\GlobalSet;
@@ -20,6 +22,7 @@ use Statamic\Structures\Nav;
 use Statamic\Structures\NavTree;
 use Statamic\Taxonomies\Taxonomy;
 use Statamic\Taxonomies\Term;
+use Statamic\Testing\Concerns\FakesRoles;
 
 class DeadLinksFixtures
 {
@@ -37,8 +40,8 @@ class DeadLinksFixtures
     {
         config(['statamic.system.multisite' => true]);
         Site::setSites([
-            'de' => ['url' => '/', 'locale' => 'de_CH'],
-            'en' => ['url' => '/en/', 'locale' => 'en_US'],
+            'de' => ['name' => 'Deutsch', 'url' => '/', 'locale' => 'de_CH'],
+            'en' => ['name' => 'English', 'url' => '/en/', 'locale' => 'en_US'],
         ]);
     }
 
@@ -198,5 +201,53 @@ class DeadLinksFixtures
         }
 
         return $nav;
+    }
+
+    /**
+     * Reads the blueprints of the pages collection, the tags taxonomy and the footer global set from
+     * __Fixtures__/blueprints.
+     */
+    public static function blueprints(): void
+    {
+        Blueprint::setDirectory(__DIR__.'/blueprints');
+    }
+
+    /**
+     * Statamic's cp_route() declares no return type, so the tests build control panel URLs with route().
+     */
+    public static function cpUrl(string $name, mixed $parameters = []): string
+    {
+        return route("statamic.cp.{$name}", $parameters);
+    }
+
+    public static function superUser(): User
+    {
+        $user = new User;
+        $user->email('super@example.com');
+        $user->makeSuper();
+        $user->save();
+
+        return $user;
+    }
+
+    /**
+     * Saves a control panel user whose only role has these permissions. The role is faked, so no roles file is
+     * written.
+     */
+    public static function userWith(string ...$permissions): User
+    {
+        new class
+        {
+            use FakesRoles {
+                setTestRoles as public;
+            }
+        }->setTestRoles(['dead-links' => ['access cp', ...$permissions]]);
+
+        $user = new User;
+        $user->email('editor@example.com');
+        $user->assignRole('dead-links');
+        $user->save();
+
+        return $user;
     }
 }

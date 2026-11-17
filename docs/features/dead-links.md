@@ -4,7 +4,7 @@ Checks the links in the content of the site every night and lists the broken one
 
 The check reads the content instead of crawling the pages: entries of every collection and site, taxonomy terms, globals and navigation trees, nested sets included. So it knows the entry and the field of every link. Links written into the templates are not checked. It runs as an artisan command from Laravel's scheduler, without a queue, and keeps its result in one JSON file on the `local` disk; the control panel lists it under **Utilities > Dead Links**.
 
-The feature is off by default; switch it on with `JUICEBOX_DEAD_LINKS_ENABLED=true`. While it is off, nothing is scheduled, the command stops with an error and the config can still be published.
+The feature is off by default; switch it on with `JUICEBOX_DEAD_LINKS_ENABLED=true`. While it is off, nothing is scheduled, the control panel has no utility, the command stops with an error and the config can still be published.
 
 ## Broken links
 
@@ -47,6 +47,12 @@ Where the scheduler cannot run, call the command from the hosting's cron instead
 ## Report
 
 Each check overwrites one JSON file, `juicebox/dead-links.json` on the `local` disk, which is `storage/app/private/juicebox/dead-links.json` in a default Laravel app. It holds the time of the check, the number of links checked and every broken link with its reason, its HTTP status and the places it is stored. It stays out of `content/`, so the nightly check makes no git commits, and out of the cache, which a deploy clears. Before the first check there is no file; a file that cannot be read counts as missing.
+
+## Control panel
+
+**Utilities > Dead Links** (`/cp/utilities/dead-links`) shows the report of the last check: when it ran, how many links it checked and every broken link with its reason, with the HTTP status where there is one, such as `Page not found (404)`. Under each link it lists the places that hold it: the title of the entry, term, global set or navigation, linked to its edit page in that site, the site when there is more than one, and the field. A place deleted since the check is shown as missing, such as `Missing entry`. Before the first check the page says that no check has run yet.
+
+Users need the permission `access dead_links utility`, which Statamic lists with the other utilities in the role editor; super users have it. The page has no button to start a check, since a check can take longer than a web request may run; use the command instead.
 
 ## Configuration
 

@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Collection;
+use Inertia\Testing\AssertableInertia;
+use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\DeadLinks\ServiceProvider;
 use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
 
@@ -40,3 +43,15 @@ it('schedules no check when schedule is :dataset', function (mixed $schedule): v
     'empty' => '',
     'null' => null,
 ]);
+
+it('lists the Dead Links utility in the control panel', function (): void {
+    $this->actingAs(DeadLinksFixtures::superUser())
+        ->get(DeadLinksFixtures::cpUrl('utilities.index'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('utilities', fn (Collection $utilities): bool => $utilities->firstWhere('title', 'Dead Links') === [
+                'title' => 'Dead Links',
+                'description' => 'Lists the broken links that the last check found in the content.',
+                'icon' => Statamic::svg('icons/link'),
+                'url' => DeadLinksFixtures::cpUrl('utilities.dead-links'),
+            ]));
+});
