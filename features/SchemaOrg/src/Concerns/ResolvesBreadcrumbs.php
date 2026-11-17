@@ -32,8 +32,9 @@ trait ResolvesBreadcrumbs
      * Makes $node the page node for $entry: it gets the same `@id` and
      * properties `GraphBuilder`'s own automatic WebPage node would have
      * (name, url, language, dates, `isPartOf` the WebSite) and references
-     * the BreadcrumbList (if one resolves) via `breadcrumb`. Properties
-     * $node already has are kept. Shared by `GraphBuilder` itself and by
+     * the BreadcrumbList (if one resolves) via `breadcrumb`. Of the copied
+     * properties, the ones $node already has are kept; `@id` and
+     * `breadcrumb` are always set. Shared by `GraphBuilder` itself and by
      * `EntrySchema` subclasses whose type already implements
      * `WebPageContract` and so suppress that automatic node (see
      * `GraphBuilder::build()`).
@@ -47,14 +48,18 @@ trait ResolvesBreadcrumbs
     {
         $url = Ids::entryUrl($entry);
 
-        $node->addProperties(collect([
+        $properties = collect([
             'name' => $entry->value('title'),
             'url' => $url,
             'inLanguage' => Ids::language(),
             'datePublished' => $entry->date(),
             'dateModified' => $entry->lastModified(),
             'isPartOf' => Ids::ref(Ids::website()),
-        ])->reject(fn (mixed $value, string $property): bool => $node->getProperty($property) !== null)->all());
+        ]);
+
+        $node->addProperties($properties
+            ->reject(fn (mixed $value, string $property): bool => $node->getProperty($property) !== null)
+            ->all());
 
         $node->identifier(Ids::webPage($url));
 
