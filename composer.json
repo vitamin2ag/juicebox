@@ -39,14 +39,11 @@
         "pestphp/pest-plugin-laravel": "^5.0",
         "pestphp/pest-plugin-phpstan": "^5.2",
         "pestphp/pest-plugin-rector": "^5.0",
-        "pestphp/pest-plugin-type-coverage": "^5.0",
+        "pestphp/pest-plugin-type-coverage": "^5.1.1",
         "phpstan/extension-installer": "^1.4.3",
         "phpunit/phpunit": "^13.0",
         "rector/rector": "^2.6",
         "spatie/laravel-ray": "^1.43"
-    },
-    "conflict": {
-        "phpstan/phpstan": "2.3.6"
     },
     "config": {
         "allow-plugins": {
