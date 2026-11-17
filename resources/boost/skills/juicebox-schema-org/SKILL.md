@@ -88,6 +88,7 @@ class Article extends EntrySchema
 - Helpers on `EntrySchema`:
   - `$this->plainText($value)` turns a bard/text value (or `Value`) into a clean string or `null`.
   - `$this->imageUrl('field')` returns the first asset's absolute URL of an `assets` field, or `null`.
+  - `$this->localDate('field')` returns a `date` field as a Carbon date in the display timezone, or `null`; pass an entry as second argument to read a related entry's field (`$this->localDate('start_date', $run)`). See **Dates** below.
   - `$this->entries('field')` returns the entries of an `entries` field (single or multi) as a `Collection<int, Entry>`, in field order and published only; empty for any other field.
   - `$this->identifyAsWebPage($node, $this->entry)` turns a `WebPageContract` node into the page node (see step 4).
   - `$this->generalGlobals()` returns the `general` global's variables for the current site (or `null`), for site-wide values such as `json_ld_entity_name`.
@@ -122,7 +123,7 @@ class Article extends EntrySchema
   ```
 
 - **Several nodes:** return an array from `schema()` when the page holds more than one thing, for example a `Course` plus a `FAQPage` built from the FAQ entries it shows, or one `Event` per upcoming date. Give each node its own `@id` fragment.
-- **Dates:** date fields are stored in UTC and shown in `config('statamic.system.display_timezone')`. A full datetime can be passed as it is (`'datePublished' => $this->entry->date()`); it is written with its offset. Convert only before formatting a date-only value, or a date stored as local midnight shifts by a day: `$date->copy()->setTimezone(config('statamic.system.display_timezone'))->toDateString()`. Combine a separate free-text time field (`18:30 - 19:30 Uhr`) with the date to get a full `startDate`/`endDate`.
+- **Dates:** date fields are stored in UTC and shown in `config('statamic.system.display_timezone')`. A full datetime can be passed as it is (`'datePublished' => $this->entry->date()`); it is written with its offset. Convert only before formatting a date-only value, or a date stored as local midnight shifts by a day: `$this->localDate('start_date', $run)?->toDateString()`. Combine a separate free-text time field (`18:30 - 19:30 Uhr`) with the date to get a full `startDate`/`endDate`.
 - **Free text:** normalise values before using them. A price such as `1'190` becomes `1190`, and a word such as `Kostenlos` becomes price `0`; leave out what you cannot parse instead of passing it through. Compare text case-insensitively (`Online` vs `online`).
 
 #### Map every visible field
