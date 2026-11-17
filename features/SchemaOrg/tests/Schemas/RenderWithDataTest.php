@@ -230,3 +230,9 @@ it('has no geo coordinates unless both latitude and longitude are set', function
 
     expect((new LocalBusiness)->schema()->toArray())->not->toHaveKey('geo');
 })->with(['latitude only' => ['json_ld_entity_latitude'], 'longitude only' => ['json_ld_entity_longitude']]);
+
+it('has no price range when none is chosen', function (): void {
+    Fixtures::generalGlobal(['json_ld_entity_name' => 'Acme']);
+
+    expect((new LocalBusiness)->schema()->toArray())->not->toHaveKey('priceRange');
+});

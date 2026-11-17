@@ -32,7 +32,7 @@ class LocalBusiness implements Contract
         $schema = $this->applyCommonFields(Schema::localBusiness(), $data);
         $schema->addProperties([
             'logo' => $this->logoUrl($data?->json_ld_entity_logo),
-            'priceRange' => $data?->json_ld_entity_price_range,
+            'priceRange' => $data?->value('json_ld_entity_price_range'),
             'geo' => $this->geo($data),
             'openingHoursSpecification' => $this->openingHours($data)->all() ?: null,
         ]);
