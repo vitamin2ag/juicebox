@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SchemaOrg\Schemas;
 
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Statamic\Assets\Asset;
 use Statamic\Entries\Entry;
@@ -66,5 +67,21 @@ abstract class EntrySchema implements Schema
         return Collection::wrap($entries)
             ->whereInstanceOf(Entry::class)
             ->values();
+    }
+
+    /**
+     * Resolves a `date` field of $entry (default: the rendered entry) to a
+     * date in the display timezone. Statamic stores dates in UTC, so a date
+     * saved as local midnight is the previous day in UTC; format this
+     * value, not the raw one, when only the calendar day is needed.
+     */
+    protected function localDate(string $field, ?Entry $entry = null): ?CarbonInterface
+    {
+        $augmented = ($entry ?? $this->entry)->augmentedValue($field);
+        $date = $augmented instanceof Value ? $augmented->value() : null;
+
+        return $date instanceof CarbonInterface
+            ? $date->copy()->setTimezone(config()->string('statamic.system.display_timezone'))
+            : null;
     }
 }

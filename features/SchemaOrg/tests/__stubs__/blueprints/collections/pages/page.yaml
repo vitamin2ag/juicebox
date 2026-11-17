@@ -31,3 +31,7 @@ sections:
           collections:
             - pages
           max_items: 1
+      -
+        handle: starts_on
+        field:
+          type: date
