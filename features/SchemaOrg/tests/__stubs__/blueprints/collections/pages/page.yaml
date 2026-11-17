@@ -1,0 +1,37 @@
+title: Page
+sections:
+  main:
+    display: Main
+    fields:
+      -
+        handle: title
+        field:
+          type: text
+      -
+        handle: image
+        field:
+          type: assets
+          container: assets
+          max_items: 1
+      -
+        handle: gallery
+        field:
+          type: assets
+          container: assets
+      -
+        handle: related
+        field:
+          type: entries
+          collections:
+            - pages
+      -
+        handle: parent_page
+        field:
+          type: entries
+          collections:
+            - pages
+          max_items: 1
+      -
+        handle: starts_on
+        field:
+          type: date

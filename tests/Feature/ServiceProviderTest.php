@@ -61,3 +61,9 @@ describe('after the install command', function (): void {
         expect($this->site.'/.gitignore')->not->toBeFile();
     });
 });
+
+it('registers the juicebox tag so a template can render it', function (): void {
+    $view = view()->file(__DIR__.'/__Fixtures__/views/schema.antlers.html');
+
+    expect($view->render())->toStartWith('<script type="application/ld+json">');
+});
