@@ -29,12 +29,14 @@ use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
 trait ResolvesBreadcrumbs
 {
     /**
-     * Stamps $node with the same `@id` `GraphBuilder`'s own automatic
-     * WebPage node would use for $entry, and references the
-     * BreadcrumbList (if one resolves) via `breadcrumb`. Shared by
-     * `GraphBuilder` itself and by `EntrySchema` subclasses whose type
-     * already implements `WebPageContract` and so suppress that
-     * automatic node (see `GraphBuilder::build()`).
+     * Makes $node the page node for $entry: it gets the same `@id` and
+     * properties `GraphBuilder`'s own automatic WebPage node would have
+     * (name, url, language, dates, `isPartOf` the WebSite) and references
+     * the BreadcrumbList (if one resolves) via `breadcrumb`. Properties
+     * $node already has are kept. Shared by `GraphBuilder` itself and by
+     * `EntrySchema` subclasses whose type already implements
+     * `WebPageContract` and so suppress that automatic node (see
+     * `GraphBuilder::build()`).
      *
      * @template TNode of BaseType&ThingContract
      *
@@ -44,6 +46,15 @@ trait ResolvesBreadcrumbs
     protected function identifyAsWebPage(BaseType&ThingContract $node, Entry $entry): BaseType&ThingContract
     {
         $url = Ids::entryUrl($entry);
+
+        $node->addProperties(collect([
+            'name' => $entry->get('title'),
+            'url' => $url,
+            'inLanguage' => Ids::language(),
+            'datePublished' => $entry->date(),
+            'dateModified' => $entry->lastModified(),
+            'isPartOf' => Ids::ref(Ids::website()),
+        ])->reject(fn (mixed $value, string $property): bool => $node->getProperty($property) !== null)->all());
 
         $node->identifier(Ids::webPage($url));
 
