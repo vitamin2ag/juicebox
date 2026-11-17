@@ -183,10 +183,10 @@ it('renders structure pages, terms and taxonomies as crumbs', function (): void 
 
     $items = breadcrumbsItems(breadcrumbsList($about, '/about'));
 
-    // `Taxonomy::get()` never returns a title, so its crumb has a url only.
     expect($items)->toHaveCount(3)
         ->and($items[0]['name'])->toBe('About')
         ->and($items[1]['name'])->toBe('PHP')
+        ->and($items[2]['name'])->toBe('Topics')
         ->and($items[2]['item'])->toEndWith('/topics');
 });
 
