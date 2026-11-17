@@ -14,5 +14,13 @@
     "Missing entry": "Entrée manquante",
     "Missing term": "Terme manquant",
     "Missing global set": "Jeu de globales manquant",
-    "Missing navigation": "Navigation manquante"
+    "Missing navigation": "Navigation manquante",
+    "Last check": "Dernière vérification",
+    "Links checked": "Liens vérifiés",
+    "Broken links": "Liens morts",
+    "No check has run yet": "Aucune vérification effectuée pour le moment",
+    "Run the check with this command on the server:": "Lancez la vérification avec cette commande sur le serveur :",
+    "The last check found no broken links.": "La dernière vérification n'a trouvé aucun lien mort.",
+    "Reason": "Motif",
+    "Found in": "Trouvé dans"
 }

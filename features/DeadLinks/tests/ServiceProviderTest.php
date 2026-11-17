@@ -56,6 +56,16 @@ it('leaves the Dead Links utility out of the control panel while the feature is 
     expect(Route::has('statamic.cp.utilities.dead-links'))->toBeFalse();
 });
 
+/*
+ * Statamic keeps the builds it knows in a static list, which a test that boots the feature enabled leaves behind,
+ * so this test asks the provider for its options.
+ */
+it('registers no control panel build while the feature is disabled', function (): void {
+    $options = new ReflectionMethod(ServiceProvider::class, 'options')->invoke(app()->getProvider(ServiceProvider::class));
+
+    expect($options)->toBe([]);
+});
+
 it('publishes the config with the juicebox-dead-links-config tag while the feature is disabled', function (): void {
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-dead-links-config');
 

@@ -14,5 +14,13 @@
     "Missing entry": "Fehlender Eintrag",
     "Missing term": "Fehlender Begriff",
     "Missing global set": "Fehlendes globales Set",
-    "Missing navigation": "Fehlende Navigation"
+    "Missing navigation": "Fehlende Navigation",
+    "Last check": "Letzte Prüfung",
+    "Links checked": "Geprüfte Links",
+    "Broken links": "Defekte Links",
+    "No check has run yet": "Noch keine Prüfung durchgeführt",
+    "Run the check with this command on the server:": "Führe die Prüfung mit diesem Befehl auf dem Server aus:",
+    "The last check found no broken links.": "Die letzte Prüfung hat keine defekten Links gefunden.",
+    "Reason": "Grund",
+    "Found in": "Gefunden in"
 }

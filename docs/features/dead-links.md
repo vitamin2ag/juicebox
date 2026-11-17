@@ -50,7 +50,7 @@ Each check overwrites one JSON file, `juicebox/dead-links.json` on the `local` d
 
 ## Control panel
 
-**Utilities > Dead Links** (`/cp/utilities/dead-links`) shows the report of the last check: when it ran, how many links it checked and every broken link with its reason, with the HTTP status where there is one, such as `Page not found (404)`. Under each link it lists the places that hold it: the title of the entry, term, global set or navigation, linked to its edit page in that site, the site when there is more than one, and the field. A place deleted since the check is shown as missing, such as `Missing entry`. Before the first check the page says that no check has run yet.
+**Utilities > Dead Links** (`/cp/utilities/dead-links`) shows the report of the last check: when it ran, how many links it checked and every broken link with its reason, with the HTTP status where there is one, such as `Page not found (404)`. Under each link it lists the places that hold it: the title of the entry, term, global set or navigation, linked to its edit page in that site, the site when there is more than one, and the field. A place deleted since the check is shown as missing, such as `Missing entry`. Before the first check the page says that no check has run yet and names the command that runs one; after a check that found nothing, it says that no broken links were found.
 
 Users need the permission `access dead_links utility`, which Statamic lists with the other utilities in the role editor; super users have it. The page has no button to start a check, since a check can take longer than a web request may run; use the command instead.
 
