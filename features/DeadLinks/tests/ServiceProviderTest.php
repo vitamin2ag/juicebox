@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Vitamin2\Juicebox\Features\DeadLinks\ServiceProvider;
+use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
 
 covers(ServiceProvider::class);
 
@@ -45,6 +46,10 @@ it('sets the schedule through JUICEBOX_DEAD_LINKS_SCHEDULE', function (string $v
     'a cron expression' => ['30 2 * * 1', '30 2 * * 1'],
     'false' => ['false', false],
 ]);
+
+it('schedules no check while the feature is disabled', function (): void {
+    expect(DeadLinksFixtures::scheduledChecks())->toBeEmpty();
+});
 
 it('publishes the config with the juicebox-dead-links-config tag while the feature is disabled', function (): void {
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-dead-links-config');

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__;
 
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Statamic\Assets\AssetContainer;
@@ -160,6 +162,20 @@ class DeadLinksFixtures
         }
 
         return $set;
+    }
+
+    /**
+     * The cron expression and the overlap switch of every scheduled event that runs the check.
+     *
+     * @return array<int, array{string, bool}>
+     */
+    public static function scheduledChecks(): array
+    {
+        return collect(resolve(Schedule::class)->events())
+            ->filter(fn (Event $event): bool => str_ends_with($event->command ?? '', 'statamic:juicebox:dead-links:check'))
+            ->map(fn (Event $event): array => [$event->expression, $event->withoutOverlapping])
+            ->values()
+            ->all();
     }
 
     /**
