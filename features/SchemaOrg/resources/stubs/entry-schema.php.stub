@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Spatie\SchemaOrg\{{ type }} as {{ type }}Type;
+use Spatie\SchemaOrg\Schema;
+use Vitamin2\Juicebox\Features\SchemaOrg\Graph\Ids;
+use Vitamin2\Juicebox\Features\SchemaOrg\Schemas\EntrySchema;
+
+class {{ class }} extends EntrySchema
+{
+    public static function label(): string
+    {
+        return '{{ label }}';
+    }
+
+    public function schema(): {{ type }}Type
+    {
+        $title = $this->entry->get('title');
+
+        $node = Schema::{{ factory }}();
+        $node->addProperties([
+            '@id' => Ids::forEntry($this->entry, '{{ fragment }}'),
+            'name' => is_string($title) ? $title : null,
+        ]);
+
+        return $node;
+    }
+}

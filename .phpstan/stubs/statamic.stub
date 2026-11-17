@@ -5,6 +5,19 @@
  * needs here instead of checking the value at runtime.
  */
 
+namespace Illuminate\Foundation;
+
+class Application
+{
+    /**
+     * @template TProvider of \Illuminate\Support\ServiceProvider
+     *
+     * @param  class-string<TProvider>  $provider
+     * @return array<int, TProvider>
+     */
+    public function getProviders($provider) {}
+}
+
 namespace Statamic\Sites;
 
 class Site
@@ -13,7 +26,16 @@ class Site
     public function handle() {}
 
     /** @return string */
+    public function name() {}
+
+    /** @return string */
+    public function shortLocale() {}
+
+    /** @return string */
     public function url() {}
+
+    /** @return string */
+    public function absoluteUrl() {}
 
     /**
      * @param  string  $url
@@ -167,6 +189,15 @@ class Fields
     public function values() {}
 }
 
+/** For the property types of Statamic\Globals\Variables below. */
+class Values {}
+
+class Tab
+{
+    /** @return string */
+    public function display() {}
+}
+
 namespace Statamic\Fieldtypes;
 
 abstract class Relationship
@@ -180,3 +211,89 @@ abstract class Relationship
     /** @return string|null */
     protected function getFormStackSize() {}
 }
+
+namespace Statamic\Contracts\Globals;
+
+interface GlobalSet
+{
+    /** @return \Statamic\Globals\Variables|null */
+    public function inCurrentSite();
+}
+
+namespace Statamic\Globals;
+
+class GlobalSet
+{
+    /** @return \Illuminate\Support\Collection<string, \Statamic\Globals\Variables> */
+    public function localizations() {}
+
+    /** @return \Statamic\Globals\Variables|null */
+    public function inCurrentSite() {}
+
+    /**
+     * @param  string  $site
+     * @return \Statamic\Globals\Variables
+     */
+    public function makeLocalization($site) {}
+}
+
+/**
+ * The fields of the "general" global set that the SchemaOrg feature reads; Variables resolves them from the blueprint.
+ *
+ * @property-read \Statamic\Dictionaries\Item|null $json_ld_entity
+ * @property-read string|null $json_ld_entity_name
+ * @property-read string|null $json_ld_entity_alternate_name
+ * @property-read string|null $json_ld_entity_description
+ * @property-read string|null $json_ld_entity_url
+ * @property-read string|null $json_ld_entity_email
+ * @property-read string|null $json_ld_entity_telephone
+ * @property-read array<int, string>|null $json_ld_entity_same_as
+ * @property-read string|null $json_ld_entity_address_street
+ * @property-read string|null $json_ld_entity_address_zip
+ * @property-read string|null $json_ld_entity_address_city
+ * @property-read string|null $json_ld_entity_address_region
+ * @property-read string|null $json_ld_entity_address_country
+ * @property-read string|null $json_ld_entity_latitude
+ * @property-read string|null $json_ld_entity_longitude
+ * @property-read \Statamic\Assets\Asset|null $json_ld_entity_logo
+ * @property-read string|null $json_ld_entity_legal_name
+ * @property-read \Illuminate\Support\Carbon|null $json_ld_entity_founding_date
+ * @property-read string|null $json_ld_entity_vat_id
+ * @property-read string|null $json_ld_entity_ticker_symbol
+ * @property-read string|null $json_ld_entity_price_range
+ * @property-read array<int, \Statamic\Fields\Values>|null $json_ld_entity_opening_hours
+ * @property-read string|null $json_ld_website_name
+ * @property-read string|null $json_ld_website_alternate_name
+ * @property-read string|null $json_ld_website_description
+ * @property-read string|null $json_ld_website_search_url
+ */
+class Variables {}
+
+namespace Statamic\Dictionaries;
+
+/** For the property types of Statamic\Globals\Variables above. */
+class Item {}
+
+namespace Statamic\Assets;
+
+class Asset
+{
+    /** @return string|null */
+    public function absoluteUrl() {}
+}
+
+namespace Illuminate\Support;
+
+/** For the property types of Statamic\Globals\Variables above. */
+class Carbon {}
+
+/** For the template bound of Illuminate\Foundation\Application::getProviders() above. */
+abstract class ServiceProvider {}
+
+namespace Statamic\Modifiers;
+
+/**
+ * @method $this bardText()
+ * @method $this stripTags()
+ */
+class Modify {}

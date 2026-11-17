@@ -15,3 +15,9 @@ it('registers the provider of a discovered feature', function (): void {
 it('loads statamic-features so feature routes and blueprints are registered like in an application', function (): void {
     expect(app()->getProviders(StatamicFeaturesServiceProvider::class))->toHaveCount(1);
 });
+
+it('registers the juicebox tag so a template can render it', function (): void {
+    $view = view()->file(__DIR__.'/__Fixtures__/views/schema.antlers.html');
+
+    expect($view->render())->toStartWith('<script type="application/ld+json">');
+});
