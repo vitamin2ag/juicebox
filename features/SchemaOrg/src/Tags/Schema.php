@@ -17,7 +17,7 @@ class Schema extends Tags
             return '';
         }
 
-        $graph = Blink::once('juicebox-schema-graph', fn (): ?Graph => resolve(GraphBuilder::class)->build());
+        $graph = Blink::once('juicebox-schema-graph', fn (): Graph => resolve(GraphBuilder::class)->build());
 
         if (! $graph instanceof Graph) {
             return '';

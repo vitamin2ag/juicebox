@@ -38,11 +38,12 @@ class GraphBuilder
 
     private const string CATEGORY_ENTRIES = 'Entries';
 
-    public function build(): ?Graph
+    public function build(): Graph
     {
         $entry = $this->currentEntry();
         $pageNodes = $entry instanceof Entry ? $this->pageNodes($entry) : [];
-        $suppressWebPage = collect($pageNodes)->contains(fn (BaseType&ThingContract $node): bool => $node instanceof WebPageContract);
+        $suppressWebPage = collect($pageNodes)
+            ->contains(fn (BaseType&ThingContract $node): bool => $node instanceof WebPageContract);
 
         $graph = new Graph;
 
@@ -65,7 +66,7 @@ class GraphBuilder
             $this->addNode($graph, $node);
         }
 
-        return $graph->getNodes() ? $graph : null;
+        return $graph;
     }
 
     private function currentEntry(): ?Entry
@@ -218,6 +219,6 @@ class GraphBuilder
     {
         $id = $node->getProperty('@id') ?? $node->getProperty('identifier');
 
-        $graph->set($node, is_string($id) ? $id : (string) spl_object_id($node));
+        $graph->set($node, is_string($id) ? $id : spl_object_hash($node));
     }
 }

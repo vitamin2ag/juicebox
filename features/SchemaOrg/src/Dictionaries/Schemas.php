@@ -88,7 +88,12 @@ class Schemas extends BasicDictionary
     private function subdirectoriesOf(string $namespace): Collection
     {
         return $this->resolveNamespaceDirectories($namespace)
-            ->flatMap(fn (string $directory): array => iterator_to_array(Finder::create()->directories()->depth(0)->in($directory)))
+            ->flatMap(fn (string $directory): array => iterator_to_array(
+                Finder::create()
+                    ->directories()
+                    ->depth(0)
+                    ->in($directory),
+            ))
             ->map(fn (SplFileInfo $path): string => $path->getFilename())
             ->values();
     }
