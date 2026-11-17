@@ -260,7 +260,6 @@ class GlobalSet
  * @property-read \Illuminate\Support\Carbon|null $json_ld_entity_founding_date
  * @property-read string|null $json_ld_entity_vat_id
  * @property-read string|null $json_ld_entity_ticker_symbol
- * @property-read string|null $json_ld_entity_price_range
  * @property-read array<int, \Statamic\Fields\Values>|null $json_ld_entity_opening_hours
  * @property-read string|null $json_ld_website_name
  * @property-read string|null $json_ld_website_alternate_name
