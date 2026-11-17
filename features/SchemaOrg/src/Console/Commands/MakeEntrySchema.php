@@ -7,6 +7,7 @@ namespace Vitamin2\Juicebox\Features\SchemaOrg\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 use Override;
+use ReflectionMethod;
 use Spatie\SchemaOrg\Schema as SpatieSchema;
 use Statamic\Console\RunsInPlease;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,7 +30,7 @@ class MakeEntrySchema extends GeneratorCommand
     {
         $type = $this->option('type');
 
-        if (is_string($type) && ! $this->isSchemaType(Str::studly($type))) {
+        if (is_string($type) && $this->schemaType($type) === null) {
             $this->components->error(__('[:type] is not a Schema.org type.', ['type' => $type]));
 
             return self::FAILURE;
@@ -85,7 +86,7 @@ class MakeEntrySchema extends GeneratorCommand
     {
         $class = class_basename($name);
         $requested = $this->option('type');
-        $type = is_string($requested) ? Str::studly($requested) : ($this->isSchemaType($class) ? $class : 'Thing');
+        $type = $this->schemaType(is_string($requested) ? $requested : $class) ?? 'Thing';
 
         return str_replace(
             ['{{ type }}', '{{ factory }}', '{{ label }}', '{{ fragment }}'],
@@ -94,9 +95,17 @@ class MakeEntrySchema extends GeneratorCommand
         );
     }
 
-    /** Every Schema.org type has a static factory of its own name on Spatie's `Schema` (method names are case-insensitive). */
-    private function isSchemaType(string $type): bool
+    /**
+     * Every Schema.org type has a static factory of its own name on Spatie's
+     * `Schema`. Method names are case-insensitive, so the type is read back
+     * from the factory to get its casing (`webpage` is `WebPage`).
+     */
+    private function schemaType(string $type): ?string
     {
-        return method_exists(SpatieSchema::class, $type);
+        $type = Str::studly($type);
+
+        return method_exists(SpatieSchema::class, $type)
+            ? ucfirst(new ReflectionMethod(SpatieSchema::class, $type)->getName())
+            : null;
     }
 }

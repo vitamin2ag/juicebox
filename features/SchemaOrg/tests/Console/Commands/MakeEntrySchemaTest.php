@@ -58,6 +58,18 @@ it('uses the Schema.org type given with --type', function (): void {
         ->toContain("Ids::forEntry(\$this->entry, 'article')");
 });
 
+/** @param array<string, string> $arguments */
+it('writes the Schema.org type in its own casing', function (string $name, array $arguments): void {
+    expect(Artisan::call(MAKE_SCHEMA_COMMAND, ['name' => $name, ...$arguments]))->toBe(0)
+        ->and((string) file_get_contents(generatedSchemaPath($name)))
+        ->toContain('use Spatie\SchemaOrg\WebPage as WebPageType;')
+        ->toContain('Schema::webPage()')
+        ->toContain("Ids::forEntry(\$this->entry, 'web-page')");
+})->with([
+    '--type' => ['Info', ['--type' => 'webpage']],
+    'class name' => ['Webpage', []],
+]);
+
 it('rejects a --type that is not a Schema.org type', function (): void {
     expect(Artisan::call(MAKE_SCHEMA_COMMAND, ['name' => 'BlogPost', '--type' => 'Nope']))->toBe(1)
         ->and(Artisan::output())->toContain('[Nope] is not a Schema.org type.')
