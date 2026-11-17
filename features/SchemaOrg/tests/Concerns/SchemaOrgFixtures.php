@@ -254,7 +254,7 @@ final class SchemaOrgFixtures
 
     public static function build(): Graph
     {
-        return resolve(GraphBuilder::class)->build() ?? throw new RuntimeException('Graph was not built.');
+        return resolve(GraphBuilder::class)->build();
     }
 
     /**
