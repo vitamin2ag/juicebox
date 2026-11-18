@@ -93,7 +93,7 @@
         ],
         "test:audit": [
             "@composer audit",
-            "npm audit"
+            "npx audit-ci --config audit-ci.jsonc"
         ],
         "test:assets": [
             "npm run typecheck",
