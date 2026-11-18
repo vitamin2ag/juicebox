@@ -5,6 +5,9 @@ import type { Component } from 'vue';
 declare global {
     const Statamic: {
         booting(callback: () => void): void;
+        $components: {
+            register(name: string, component: Component): void;
+        };
         $inertia: {
             register(name: string, component: Component): void;
         };
@@ -20,6 +23,7 @@ declare module 'vue' {
 
 // The package exports its core components at the root, as `src/index.js` does, but types them under `core` only.
 declare module '@statamic/cms' {
+    export const Fieldtype: typeof core.Fieldtype;
     export const InlineEditForm: typeof core.InlineEditForm;
 }
 

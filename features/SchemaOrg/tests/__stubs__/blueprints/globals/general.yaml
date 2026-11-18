@@ -1,0 +1,6 @@
+title: General
+sections:
+  -
+    fields:
+      -
+        import: 'schema-org::globals_json_ld'
