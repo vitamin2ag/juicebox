@@ -4,6 +4,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import statamic from '@statamic/cms/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 import laravel from 'laravel-vite-plugin';
 import { build, createServer, type InlineConfig } from 'vite';
 
@@ -20,6 +21,7 @@ const config = (feature: string): InlineConfig => ({
     configFile: false,
     plugins: [
         statamic(),
+        tailwindcss(),
         laravel({
             input: ['resources/js/cp.ts'],
             publicDirectory: 'resources',
