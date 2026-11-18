@@ -31,11 +31,13 @@ beforeEach(function (): void {
         'json_ld_entity_url' => 'https://acme.test',
         'json_ld_entity_email' => 'info@acme.test',
         'json_ld_entity_telephone' => '+41 44 123 45 67',
-        'json_ld_entity_address_street' => 'Musterstrasse 1',
-        'json_ld_entity_address_zip' => '8000',
-        'json_ld_entity_address_city' => 'Zürich',
-        'json_ld_entity_address_region' => 'ZH',
-        'json_ld_entity_address_country' => 'CH',
+        'json_ld_entity_address' => [
+            'street' => 'Musterstrasse 1',
+            'zip' => '8000',
+            'city' => 'Zürich',
+            'region' => 'ZH',
+            'country' => 'CH',
+        ],
         'json_ld_entity_same_as' => [
             'https://www.facebook.com/acme',
             'https://www.instagram.com/acme',
@@ -45,8 +47,7 @@ beforeEach(function (): void {
         'json_ld_entity_vat_id' => 'CHE-123.456.789 MWST',
         'json_ld_entity_ticker_symbol' => 'NASDAQ:ACME',
         'json_ld_entity_price_range' => '$$',
-        'json_ld_entity_latitude' => '0',
-        'json_ld_entity_longitude' => '0',
+        'json_ld_entity_geo' => ['latitude' => 47.3769, 'longitude' => 8.5417],
         'json_ld_entity_opening_hours' => [
             ['day' => 'monday', 'opening' => '09:00', 'closing' => '18:00'],
             ['day' => 'tuesday', 'opening' => '09:00', 'closing' => '18:00'],
@@ -106,8 +107,8 @@ it('renders local business common and local business specific fields', function 
     expect($data['priceRange'])->toBe('$$')
         ->and($data['geo'])->toBe([
             '@type' => 'GeoCoordinates',
-            'latitude' => '0',
-            'longitude' => '0',
+            'latitude' => 47.3769,
+            'longitude' => 8.5417,
         ])
         ->and($data['openingHoursSpecification'])->toBe([
             [
@@ -229,10 +230,10 @@ it('has no logo when the asset container is private', function (): void {
 });
 
 it('has no geo coordinates unless both latitude and longitude are set', function (string $key): void {
-    Fixtures::generalGlobal([$key => '47.37']);
+    Fixtures::generalGlobal(['json_ld_entity_geo' => [$key => 47.37]]);
 
     expect((new LocalBusiness)->schema()->toArray())->not->toHaveKey('geo');
-})->with(['latitude only' => ['json_ld_entity_latitude'], 'longitude only' => ['json_ld_entity_longitude']]);
+})->with(['latitude only' => ['latitude'], 'longitude only' => ['longitude']]);
 
 it('has no price range when none is chosen', function (): void {
     Fixtures::generalGlobal(['json_ld_entity_name' => 'Acme']);

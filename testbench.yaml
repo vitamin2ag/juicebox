@@ -32,6 +32,7 @@ workbench:
   assets:
     - statamic-cp
     - redirects
+    - schema-org
   sync:
     - from: storage
       to: workbench/storage

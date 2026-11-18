@@ -20,6 +20,14 @@ afterEach(function (): void {
     File::deleteDirectory($this->site);
 });
 
+/**
+ * The lines for the features with a built `resources/dist`; a new such feature adds its line here.
+ */
+function publishedAssetLines(): string
+{
+    return "/public/vendor/redirects/\n/public/vendor/schema-org/\n";
+}
+
 function runIgnorePublishedAssets(): string
 {
     (new IgnorePublishedAssets)();
@@ -28,16 +36,13 @@ function runIgnorePublishedAssets(): string
 }
 
 it('ignores the assets a feature publishes and nothing else', function (): void {
-    expect(runIgnorePublishedAssets())->toBe("/public/vendor/redirects/\n");
+    expect(runIgnorePublishedAssets())->toBe(publishedAssetLines());
 });
 
 it('keeps what the site already ignores, with or without a final line break', function (string $contents): void {
     File::put(base_path('.gitignore'), $contents);
 
-    expect(runIgnorePublishedAssets())->toBe('/vendor
-/storage
-/public/vendor/redirects/
-');
+    expect(runIgnorePublishedAssets())->toBe("/vendor\n/storage\n".publishedAssetLines());
 })->with(['/vendor
 /storage
 ', '/vendor
@@ -46,16 +51,14 @@ it('keeps what the site already ignores, with or without a final line break', fu
 it('adds a line only once', function (): void {
     runIgnorePublishedAssets();
 
-    expect(runIgnorePublishedAssets())->toBe("/public/vendor/redirects/\n");
+    expect(runIgnorePublishedAssets())->toBe(publishedAssetLines());
 });
 
 it('leaves a site alone that already ignores the path, also by a broader rule', function (string $contents): void {
     File::put(base_path('.gitignore'), $contents);
 
     expect(runIgnorePublishedAssets())->toBe($contents);
-})->with(['/public/vendor/redirects/  
-', '/public/vendor
-']);
+})->with(["/public/vendor/redirects/  \n/public/vendor/schema-org/\n", "/public/vendor\n"]);
 
 it('writes nothing when the site is no git repository', function (): void {
     File::deleteDirectory(base_path('.git'));
