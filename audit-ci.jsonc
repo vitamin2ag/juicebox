@@ -1,0 +1,6 @@
+{
+    // npm audit fails the build on high advisories. picomatch has one with no patched release yet; it reaches us
+    // only through the build tools (vite, tinyglobby), never through shipped code. Remove it once picomatch is patched.
+    "high": true,
+    "allowlist": ["GHSA-fc5q-39xc-vjpf"]
+}
