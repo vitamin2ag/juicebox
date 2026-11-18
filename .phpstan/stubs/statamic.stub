@@ -18,6 +18,20 @@ class Application
     public function getProviders($provider) {}
 }
 
+namespace Statamic\Fields;
+
+class Field
+{
+    /** @return string */
+    public function handle() {}
+}
+
+class Fieldtype
+{
+    /** @var Field */
+    protected $field;
+}
+
 namespace Statamic\Sites;
 
 class Site
