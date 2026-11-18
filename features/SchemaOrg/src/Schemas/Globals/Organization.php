@@ -38,9 +38,13 @@ class Organization implements Contract
     protected function organization(BaseType&OrganizationContract&ThingContract $schema, ?Variables $data): BaseType&OrganizationContract&ThingContract
     {
         $schema = $this->applyCommonFields($schema, $data);
+        $logo = $this->logoUrl($data?->json_ld_entity_logo);
+
+        // Google expects `image` on an organization too; the logo is its image.
         $schema->addProperties([
             'legalName' => $data?->json_ld_entity_legal_name,
-            'logo' => $this->logoUrl($data?->json_ld_entity_logo),
+            'logo' => $logo,
+            'image' => $logo,
             'foundingDate' => $data?->json_ld_entity_founding_date
                 ?->copy()
                 ->setTimezone(config()->string('app.timezone'))

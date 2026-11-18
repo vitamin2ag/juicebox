@@ -30,8 +30,12 @@ class LocalBusiness implements Contract
         $data = $this->generalGlobals();
 
         $schema = $this->applyCommonFields(Schema::localBusiness(), $data);
+        $logo = $this->logoUrl($data?->json_ld_entity_logo);
+
+        // Google expects `image` on an organization too; the logo is its image.
         $schema->addProperties([
-            'logo' => $this->logoUrl($data?->json_ld_entity_logo),
+            'logo' => $logo,
+            'image' => $logo,
             'priceRange' => $data?->value('json_ld_entity_price_range'),
             'geo' => $this->geo($data),
             'openingHoursSpecification' => $this->openingHours($data)->all() ?: null,

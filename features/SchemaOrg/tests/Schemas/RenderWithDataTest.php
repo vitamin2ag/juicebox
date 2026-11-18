@@ -195,8 +195,11 @@ it('renders the logo on every global schema', function (Organization|Corporation
     expect(renderWithDataOrganizationAfterLogo('logo.svg', schema: $schema)[$property] ?? null)->toBe(Ids::site().'/assets/logo.svg');
 })->with([
     'organization' => [new Organization, 'logo'],
+    'organization image' => [new Organization, 'image'],
     'corporation' => [new Corporation, 'logo'],
+    'corporation image' => [new Corporation, 'image'],
     'local business' => [new LocalBusiness, 'logo'],
+    'local business image' => [new LocalBusiness, 'image'],
     'person' => [new Person, 'image'],
 ]);
 
