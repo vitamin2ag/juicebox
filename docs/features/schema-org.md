@@ -54,7 +54,9 @@ If an entry shouldn't emit its collection's default, have the schema class retur
 | `Organization` | `legalName`, `logo`, `foundingDate`, `vatID` |
 | `Corporation` | `legalName`, `logo`, `foundingDate`, `vatID`, `tickerSymbol` |
 | `Person` | `image` |
-| `LocalBusiness` | `logo`, `priceRange`, `geo` (from latitude/longitude), `openingHoursSpecification` |
+| `LocalBusiness` | `logo`, `priceRange`, `geo` (from the coordinates field), `openingHoursSpecification` |
+
+The JSON-LD tab groups the fields into Identity, Contact, Address & Location, Business Details and Website. The address is one `json_ld_entity_address` group (`street`, `zip`, `city`, `region`, `country`). The coordinates of a local business are picked on an OpenStreetMap map, or typed in, and stored in `json_ld_entity_geo` (`latitude`, `longitude`); the editor's browser loads the map tiles from openstreetmap.org.
 
 Common fields (all types): `name`/`url` (fall back to the site's name/URL), `alternateName`, `description`, `email`, `telephone`, `address`, `sameAs`.
 

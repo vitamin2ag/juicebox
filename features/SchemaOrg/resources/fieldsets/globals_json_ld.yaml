@@ -1,8 +1,8 @@
 title: 'Globals – JSON-LD'
 sections:
   -
-    display: 'Organization / Person'
-    instructions: 'Basic information about the organization or person this website represents.'
+    display: Identity
+    instructions: 'Who this website represents.'
     fields:
       -
         handle: json_ld_entity
@@ -54,106 +54,6 @@ sections:
           if:
             json_ld_entity: 'not empty'
       -
-        handle: json_ld_entity_email
-        field:
-          type: text
-          display: Email
-          instructions: 'General contact email address. (`email`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-          validate:
-            - email
-      -
-        handle: json_ld_entity_telephone
-        field:
-          type: text
-          display: Telephone
-          instructions: 'General contact phone number. (`telephone`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_address_street
-        field:
-          type: text
-          display: Street
-          instructions: 'Street and house number. (`streetAddress`)'
-          instructions_position: below
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_address_zip
-        field:
-          type: text
-          display: 'Postal Code'
-          instructions: 'Postal code. (`postalCode`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_address_city
-        field:
-          type: text
-          display: Locality
-          instructions: 'Town or city. (`addressLocality`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_address_region
-        field:
-          type: text
-          display: 'State / Region'
-          instructions: 'State, canton or region. (`addressRegion`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_address_country
-        field:
-          type: text
-          display: Country
-          width: 50
-          instructions: '[ISO 3166 country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) (`addressCountry`)'
-          instructions_position: below
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_latitude
-        field:
-          type: text
-          display: Latitude
-          width: 50
-          instructions: 'Find coordinates on [latlong.net](https://www.latlong.net/) (`latitude`)'
-          instructions_position: below
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_longitude
-        field:
-          type: text
-          display: Longitude
-          instructions: 'Find coordinates on [latlong.net](https://www.latlong.net/) (`longitude`)'
-          instructions_position: below
-          width: 50
-          if:
-            json_ld_entity: 'not empty'
-      -
-        handle: json_ld_entity_same_as
-        field:
-          type: list
-          display: 'Same As'
-          instructions: 'Social media profiles or other URLs that represent this organization. (`sameAs`)'
-          add_row: 'Add URL'
-          if:
-            json_ld_entity: 'not empty'
-      -
         handle: json_ld_entity_logo
         field:
           type: assets
@@ -180,6 +80,108 @@ sections:
             - url
           if:
             json_ld_entity: 'not empty'
+  -
+    display: Contact
+    instructions: 'How to reach the organization or person.'
+    fields:
+      -
+        handle: json_ld_entity_email
+        field:
+          type: text
+          display: Email
+          instructions: 'General contact email address. (`email`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+          validate:
+            - email
+      -
+        handle: json_ld_entity_telephone
+        field:
+          type: text
+          display: Telephone
+          instructions: 'General contact phone number. (`telephone`)'
+          instructions_position: below
+          width: 50
+          if:
+            json_ld_entity: 'not empty'
+      -
+        handle: json_ld_entity_same_as
+        field:
+          type: list
+          display: 'Same As'
+          instructions: 'Social media profiles or other URLs that represent this organization. (`sameAs`)'
+          add_row: 'Add URL'
+          if:
+            json_ld_entity: 'not empty'
+  -
+    display: 'Address & Location'
+    instructions: 'Where the organization or person is based.'
+    fields:
+      -
+        handle: json_ld_entity_address
+        field:
+          type: group
+          display: Address
+          instructions: 'The postal address. Leave the street empty to output no address. (`address`)'
+          instructions_position: below
+          fullscreen: false
+          if:
+            json_ld_entity: 'not empty'
+          fields:
+            -
+              handle: street
+              field:
+                type: text
+                display: Street
+                instructions: 'Street and house number. (`streetAddress`)'
+                instructions_position: below
+            -
+              handle: zip
+              field:
+                type: text
+                display: 'Postal Code'
+                instructions: 'Postal code. (`postalCode`)'
+                instructions_position: below
+                width: 33
+            -
+              handle: city
+              field:
+                type: text
+                display: Locality
+                instructions: 'Town or city. (`addressLocality`)'
+                instructions_position: below
+                width: 67
+            -
+              handle: region
+              field:
+                type: text
+                display: 'State / Region'
+                instructions: 'State, canton or region. (`addressRegion`)'
+                instructions_position: below
+                width: 50
+            -
+              handle: country
+              field:
+                type: text
+                display: Country
+                instructions: '[ISO 3166 country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) (`addressCountry`)'
+                instructions_position: below
+                width: 50
+      -
+        handle: json_ld_entity_geo
+        field:
+          type: geo_coordinates
+          display: Coordinates
+          instructions: 'Click the map, drag the marker or enter the coordinates. (`geo`)'
+          instructions_position: below
+          if:
+            json_ld_entity: 'equals LocalBusiness'
+  -
+    display: Business Details
+    instructions: 'Company facts, shown for the types they apply to.'
+    fields:
       -
         handle: json_ld_entity_founding_date
         field:

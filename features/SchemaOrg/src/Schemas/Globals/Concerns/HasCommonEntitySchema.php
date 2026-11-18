@@ -12,6 +12,7 @@ use Spatie\SchemaOrg\Schema;
 use Statamic\Assets\Asset;
 use Statamic\Facades\Site;
 use Statamic\Facades\URL;
+use Statamic\Fields\Values;
 use Statamic\Globals\Variables;
 use Vitamin2\Juicebox\Features\SchemaOrg\Concerns\ResolvesGeneralGlobals;
 
@@ -59,17 +60,19 @@ trait HasCommonEntitySchema
 
     protected function address(?Variables $data): ?PostalAddress
     {
-        if (! $data?->json_ld_entity_address_street) {
+        $fields = $data?->json_ld_entity_address;
+
+        if (! $fields instanceof Values || blank($fields->raw('street'))) {
             return null;
         }
 
         $address = Schema::postalAddress();
         $address->addProperties([
-            'streetAddress' => $data->json_ld_entity_address_street,
-            'postalCode' => $data->json_ld_entity_address_zip,
-            'addressLocality' => $data->json_ld_entity_address_city,
-            'addressRegion' => $data->json_ld_entity_address_region,
-            'addressCountry' => $data->json_ld_entity_address_country,
+            'streetAddress' => $fields->raw('street'),
+            'postalCode' => $fields->raw('zip'),
+            'addressLocality' => $fields->raw('city'),
+            'addressRegion' => $fields->raw('region'),
+            'addressCountry' => $fields->raw('country'),
         ]);
 
         return $address;
@@ -77,15 +80,14 @@ trait HasCommonEntitySchema
 
     protected function geo(?Variables $data): ?GeoCoordinates
     {
-        $latitude = $data?->json_ld_entity_latitude;
-        $longitude = $data?->json_ld_entity_longitude;
+        $coordinates = $data?->json_ld_entity_geo;
 
-        if (blank($latitude) || blank($longitude)) {
+        if (! is_array($coordinates) || blank($coordinates['latitude'] ?? null) || blank($coordinates['longitude'] ?? null)) {
             return null;
         }
 
         $geo = Schema::geoCoordinates();
-        $geo->addProperties(['latitude' => $latitude, 'longitude' => $longitude]);
+        $geo->addProperties(['latitude' => $coordinates['latitude'], 'longitude' => $coordinates['longitude']]);
 
         return $geo;
     }
