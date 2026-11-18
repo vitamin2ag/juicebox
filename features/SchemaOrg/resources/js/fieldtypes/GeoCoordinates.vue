@@ -18,7 +18,7 @@ const value = (props.value ?? {}) as Partial<Coordinates>;
 const latitude = ref(value.latitude === null || value.latitude === undefined ? '' : String(value.latitude));
 const longitude = ref(value.longitude === null || value.longitude === undefined ? '' : String(value.longitude));
 
-const element = useTemplateRef<HTMLDivElement>('map');
+const element = useTemplateRef<HTMLDivElement>('mapElement');
 let map: L.Map | undefined;
 let marker: L.Marker | undefined;
 
@@ -72,7 +72,22 @@ function place(pan: boolean): void {
 }
 
 onMounted(() => {
-    map = L.map(element.value!, { center: [20, 0], zoom: 2, scrollWheelZoom: false });
+    // Eastern Switzerland, until a position is set.
+    map = L.map(element.value!, { center: [47.334169, 9.133759], zoom: 9, scrollWheelZoom: false });
+
+    // Like Google Maps: the wheel zooms only with Ctrl or Cmd held, so scrolling the form never gets caught
+    // by the map. This listener is added before Leaflet's own, which exists only while the handler is enabled.
+    element.value!.addEventListener(
+        'wheel',
+        (event: WheelEvent) => {
+            if (event.ctrlKey || event.metaKey) {
+                map!.scrollWheelZoom.enable();
+            } else {
+                map!.scrollWheelZoom.disable();
+            }
+        },
+        { capture: true },
+    );
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -90,7 +105,6 @@ onBeforeUnmount(() => map?.remove());
 
 <template>
     <div class="space-y-4">
-        <div ref="map" class="relative z-0 h-72 w-full overflow-hidden rounded-lg border" />
         <div class="grid grid-cols-2 gap-4">
             <Field :label="__('Latitude')">
                 <Input v-model="latitude" type="number" step="any" min="-90" max="90" :read-only="isReadOnly" @update:model-value="typed" />
@@ -107,6 +121,7 @@ onBeforeUnmount(() => map?.remove());
                 />
             </Field>
         </div>
+        <div ref="mapElement" class="relative z-0 h-72 w-full overflow-hidden rounded-lg border" />
     </div>
 </template>
 

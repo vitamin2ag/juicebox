@@ -10,7 +10,7 @@
     "Alternate Name": "Alternativer Name",
     "Business Details": "Unternehmensdetails",
     "Category": "Kategorie",
-    "Click the map, drag the marker or enter the coordinates. (`geo`)": "Auf die Karte klicken, den Marker ziehen oder die Koordinaten eingeben. (`geo`)",
+    "Click the map, drag the marker or enter the coordinates. Hold Ctrl or Cmd and scroll to zoom. (`geo`)": "Auf die Karte klicken, den Marker ziehen oder die Koordinaten eingeben. Zum Zoomen Ctrl oder Cmd gedrückt halten und scrollen. (`geo`)",
     "Closes": "Bis",
     "Closing time. (`closes`)": "Schließzeit. (`closes`)",
     "Company facts, shown for the types they apply to.": "Unternehmensangaben, die nur für die passenden Typen angezeigt werden.",

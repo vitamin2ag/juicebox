@@ -174,7 +174,7 @@ sections:
         field:
           type: geo_coordinates
           display: Coordinates
-          instructions: 'Click the map, drag the marker or enter the coordinates. (`geo`)'
+          instructions: 'Click the map, drag the marker or enter the coordinates. Hold Ctrl or Cmd and scroll to zoom. (`geo`)'
           instructions_position: below
           if:
             json_ld_entity: 'equals LocalBusiness'

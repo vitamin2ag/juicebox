@@ -1,3 +1,4 @@
+import '../css/cp.css';
 import GeoCoordinates from './fieldtypes/GeoCoordinates.vue';
 
 Statamic.booting(() => {
