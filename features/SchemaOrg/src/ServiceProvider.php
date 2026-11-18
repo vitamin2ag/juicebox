@@ -18,6 +18,14 @@ class ServiceProvider extends FeatureServiceProvider
         $this->bootInstall();
     }
 
+    #[Override]
+    protected function options(): array
+    {
+        return [
+            'statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+        ];
+    }
+
     /**
      * Creates the general global and its blueprint tab after `statamic:install`, which composer runs on every
      * install and update. Only the local environment writes them: a deployed checkout gets both files from git.

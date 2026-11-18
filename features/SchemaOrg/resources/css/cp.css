@@ -1,0 +1,4 @@
+@import '@statamic/cms/tailwind.css';
+
+/* The classes of this feature's own Vue components; Statamic's build only has the ones it uses itself. */
+@source '../js';

@@ -42,7 +42,7 @@ describe('after the install command', function (): void {
         new ServiceProvider(app())->boot();
         Statamic::runAfterInstalledCallbacks(Mockery::mock(Command::class)->shouldIgnoreMissing());
 
-        expect(File::get($this->site.'/.gitignore'))->toBe("/public/vendor/redirects/\n");
+        expect(File::get($this->site.'/.gitignore'))->toBe("/public/vendor/redirects/\n/public/vendor/schema-org/\n");
     });
 
     it('registers nothing outside the local environment', function (): void {
