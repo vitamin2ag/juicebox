@@ -12,7 +12,7 @@ Each link is checked once, however often it appears.
 
 - `entry::<id>`: broken when the entry is missing or not published (a draft, or a dated entry that is private for now). An anchor or query after the id is ignored.
 - `asset::<container>::<path>`: broken when the asset is missing.
-- A path such as `/kontakt`, or a URL on the domain of a site, is looked up in Statamic first: a published entry or a term is fine, an unpublished entry is broken. A URL Statamic does not know (a Laravel route, a file, a redirect) is requested like any other URL; a path on the domain of the default site.
+- A path such as `/kontakt`, or a URL on the domain of a site, is looked up in Statamic first: a published entry or a term is fine, an unpublished entry is broken. A URL Statamic does not know (a Laravel route, a file, a redirect) is requested like any other URL. A path is checked on the domain of the site whose content holds it; where that is not the default site's domain, the report shows it as a full URL on that domain.
 - Any other `http(s)` URL is requested with `HEAD`, and again with `GET` when `HEAD` gets an error, following redirects, ten at a time and within `timeout` seconds each. It is broken when the connection fails or times out, or when the answer is a 4xx or 5xx. 401, 403 and 429 are not reported: bot protection answers them to pages that work.
 - A value that is no URL, such as `www.example.com`, `https::/example.com` or `kontakt`, is broken as an invalid URL.
 
@@ -67,7 +67,7 @@ php artisan vendor:publish --tag=juicebox-dead-links-config
 | `enabled` | `false` | `true`, `false` |
 | `schedule` | `'0 3 * * *'` | a cron expression, or `false` for no scheduled check |
 | `timeout` | `10` | seconds an external link may take to answer before it counts as broken |
-| `exclude` | `[]` | URL prefixes that are never checked, such as `['https://intranet.example.com/', '/members/']` |
+| `exclude` | `[]` | URL prefixes that are never checked, such as `['https://intranet.example.com/', '/members/']`; they match a link as the report shows it, so a path in a site on another domain matches as its full URL |
 
 ## Environment variables
 

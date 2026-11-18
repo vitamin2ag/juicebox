@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\DeadLinks\Console\Commands\CheckDeadLinks;
 use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
 
@@ -69,6 +70,37 @@ it('checks every link of the content once and saves the broken ones with their s
                     'reason' => 'missing_entry',
                     'status' => null,
                     'sources' => [['type' => 'global', 'id' => 'footer', 'site' => 'de', 'field' => 'imprint']],
+                ],
+            ],
+        ]);
+
+    Http::assertSentCount(3);
+});
+
+it('checks a path on the domain of the site that holds it', function (): void {
+    Site::setSites([
+        'de' => ['url' => 'https://example.ch/', 'locale' => 'de_CH'],
+        'en' => ['url' => 'https://example.com/', 'locale' => 'en_US'],
+    ]);
+    DeadLinksFixtures::entry('kontakt', ['title' => 'Kontakt', 'prices' => '/preise.pdf']);
+    DeadLinksFixtures::entry('contact', ['title' => 'Contact', 'prices' => '/preise.pdf'], 'en', 'kontakt');
+    Http::fake([
+        'https://example.ch/preise.pdf' => Http::response(),
+        'https://example.com/preise.pdf' => Http::response(status: 404),
+    ]);
+
+    Artisan::call('statamic:juicebox:dead-links:check');
+
+    expect(Artisan::output())->toBe("Checked 2 links, found 1 broken link.\n")
+        ->and(savedDeadLinksReport())->toBe([
+            'checked_at' => '2026-11-17T03:00:00+00:00',
+            'checked' => 2,
+            'links' => [
+                [
+                    'url' => 'https://example.com/preise.pdf',
+                    'reason' => 'page_not_found',
+                    'status' => 404,
+                    'sources' => [['type' => 'entry', 'id' => 'contact', 'site' => 'en', 'field' => 'prices']],
                 ],
             ],
         ]);

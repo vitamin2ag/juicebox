@@ -18,6 +18,7 @@ use Statamic\Structures\Nav as Navigation;
 use Statamic\Structures\NavTree;
 use Statamic\Taxonomies\LocalizedTerm;
 use UnexpectedValueException;
+use Vitamin2\Juicebox\Features\DeadLinks\Checking\SiteDomain;
 use Vitamin2\Juicebox\Features\DeadLinks\Data\Link;
 use Vitamin2\Juicebox\Features\DeadLinks\Data\Source;
 
@@ -27,7 +28,10 @@ use Vitamin2\Juicebox\Features\DeadLinks\Data\Source;
  */
 class ContentScanner
 {
-    public function __construct(private readonly LinkExtractor $extractor) {}
+    public function __construct(
+        private readonly LinkExtractor $extractor,
+        private readonly SiteDomain $domain,
+    ) {}
 
     /**
      * Every link once, with every place it is stored, except those that start with an excluded prefix.
@@ -142,6 +146,26 @@ class ContentScanner
         $site = is_string($site) ? $site : throw new UnexpectedValueException("A {$type} has no site.");
 
         return $this->extractor->extract($values)
-            ->map(fn (array $link): Link => new Link($link['url'], [new Source($type, $id, $site, $link['field'])]));
+            ->map(fn (array $link): Link => new Link(
+                $this->onSiteDomain($link['url'], $site),
+                [new Source($type, $id, $site, $link['field'])],
+            ));
+    }
+
+    /**
+     * A path is checked on the domain of the site that holds it: in a site on another domain than the default site's
+     * it becomes a URL on that domain. Elsewhere, and in a site that is not configured, it stays as typed.
+     */
+    private function onSiteDomain(string $url, string $handle): string
+    {
+        $site = Site::all()->get($handle);
+
+        if ($site === null || preg_match('~^/(?!/)~', $url) !== 1) {
+            return $url;
+        }
+
+        $domain = $this->domain->of($site);
+
+        return $domain === $this->domain->of(Site::default()) ? $url : $domain.$url;
     }
 }
