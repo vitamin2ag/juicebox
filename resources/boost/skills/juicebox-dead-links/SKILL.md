@@ -22,7 +22,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 ## What counts as broken
 
 - A reference `entry::<id>` to a missing or unpublished entry (a draft, or a dated entry that is private for now), or `asset::<container>::<path>` to a missing asset.
-- A URL of the sites (a path such as `/kontakt`, or a URL on a site's domain) that Statamic resolves to an unpublished entry. One Statamic does not know is requested like an external URL; a path on the domain of the default site.
+- A URL of the sites (a path such as `/kontakt`, or a URL on a site's domain) that Statamic resolves to an unpublished entry. One Statamic does not know is requested like an external URL. A path is checked on the domain of the site that holds it; where that is not the default site's domain, the report shows it as a full URL.
 - An external URL whose request fails or times out, or answers a 4xx or 5xx. It is requested with `HEAD`, then `GET` when `HEAD` gets an error, following redirects. 401, 403 and 429 are not reported (bot protection).
 - A value that is no URL, such as `www.example.com` or `https::/example.com`.
 - A site that answers bots with a non-standard status (LinkedIn: 999) counts as a failed connection; add it to `exclude`.
@@ -40,7 +40,7 @@ php artisan vendor:publish --tag=juicebox-dead-links-config
 | `enabled` | `true`, `false`. Master switch, off by default, also set by the `JUICEBOX_DEAD_LINKS_ENABLED` env variable. |
 | `schedule` | A cron expression for the scheduled check, default `'0 3 * * *'`; `false` runs no scheduled check. Also set by the `JUICEBOX_DEAD_LINKS_SCHEDULE` env variable. |
 | `timeout` | Seconds an external link may take to answer before it counts as broken. Default `10`. |
-| `exclude` | URL prefixes that are never checked, such as `['https://intranet.example.com/', '/members/']`. Default `[]`. |
+| `exclude` | URL prefixes that are never checked, such as `['https://intranet.example.com/', '/members/']`. Default `[]`. A prefix matches a link as the report shows it, so a path in a site on another domain matches as its full URL. |
 
 - Read the config as `config('juicebox.dead_links.<key>')`. Only touch `env()` inside the published config file.
 

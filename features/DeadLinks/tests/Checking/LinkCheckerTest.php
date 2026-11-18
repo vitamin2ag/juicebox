@@ -11,9 +11,10 @@ use Statamic\Facades\Site;
 use Vitamin2\Juicebox\Features\DeadLinks\Checking\CheckResult;
 use Vitamin2\Juicebox\Features\DeadLinks\Checking\LinkChecker;
 use Vitamin2\Juicebox\Features\DeadLinks\Checking\Reason;
+use Vitamin2\Juicebox\Features\DeadLinks\Checking\SiteDomain;
 use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
 
-covers(LinkChecker::class, CheckResult::class, Reason::class);
+covers(LinkChecker::class, CheckResult::class, Reason::class, SiteDomain::class);
 
 beforeEach(function (): void {
     DeadLinksFixtures::sites();

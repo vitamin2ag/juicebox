@@ -14,7 +14,6 @@ use Statamic\Facades\Asset;
 use Statamic\Facades\Data;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site;
-use Statamic\Facades\URL;
 use Statamic\Structures\Page;
 
 /**
@@ -23,6 +22,8 @@ use Statamic\Structures\Page;
  */
 class LinkChecker
 {
+    public function __construct(private readonly SiteDomain $domain) {}
+
     /**
      * The result of every link, keyed by its URL. A URL that is a number, such as `2024`, is an integer key.
      *
@@ -47,7 +48,7 @@ class LinkChecker
             return $url;
         }
 
-        return Str::match('~^https?://[^/]+~i', URL::makeAbsolute(Site::default()->url())).$url;
+        return $this->domain->of(Site::default()).$url;
     }
 
     /**

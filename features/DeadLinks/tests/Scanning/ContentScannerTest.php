@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use Statamic\Facades\Site;
+use Vitamin2\Juicebox\Features\DeadLinks\Checking\SiteDomain;
 use Vitamin2\Juicebox\Features\DeadLinks\Data\Link;
 use Vitamin2\Juicebox\Features\DeadLinks\Data\Source;
 use Vitamin2\Juicebox\Features\DeadLinks\Scanning\ContentScanner;
 use Vitamin2\Juicebox\Features\DeadLinks\Tests\__Fixtures__\DeadLinksFixtures;
 
-covers(ContentScanner::class, Link::class, Source::class);
+covers(ContentScanner::class, Link::class, Source::class, SiteDomain::class);
 
 beforeEach(function (): void {
     DeadLinksFixtures::sites();
@@ -82,6 +84,57 @@ it('lists the links of a localization from its own values, not from its origin',
     DeadLinksFixtures::entry('about', ['title' => 'About'], 'en', 'ueber-uns');
 
     expect(scannedDeadLinks())->toBe(['/kontakt' => ['entry ueber-uns de link']]);
+});
+
+it('turns a path in a site on another domain than the default site into a URL on that domain', function (): void {
+    config(['juicebox.dead_links.exclude' => ['https://example.com/intern']]);
+    Site::setSites([
+        'de' => ['url' => 'https://example.ch/', 'locale' => 'de_CH'],
+        'en' => ['url' => 'https://example.com/', 'locale' => 'en_US'],
+    ]);
+    DeadLinksFixtures::entry('kontakt', ['link' => '/preise.pdf']);
+    DeadLinksFixtures::entry('contact', [
+        'link' => '/preise.pdf',
+        'text' => '<a href="//cdn.example.com/a.js">CDN</a>',
+        'home' => 'entry::kontakt',
+        'partner' => 'https://example.org/',
+        'intern' => '/intern/team',
+    ], 'en', 'kontakt');
+    DeadLinksFixtures::nav('main', ['en' => [['id' => 'n1', 'title' => 'Prices', 'url' => 'https://example.com/preise.pdf']]]);
+
+    expect(scannedDeadLinks())->toBe([
+        '//cdn.example.com/a.js' => ['entry contact en text'],
+        '/preise.pdf' => ['entry kontakt de link'],
+        'entry::kontakt' => ['entry contact en home'],
+        'https://example.com/preise.pdf' => ['entry contact en link', 'nav main en url'],
+        'https://example.org/' => ['entry contact en partner'],
+    ]);
+});
+
+it('keeps a path as typed in a site on the domain of the default site', function (): void {
+    Site::setSites([
+        'de' => ['url' => 'https://example.ch/', 'locale' => 'de_CH'],
+        'en' => ['url' => 'https://example.ch/en/', 'locale' => 'en_US'],
+    ]);
+    DeadLinksFixtures::entry('kontakt', ['link' => '/kontakt']);
+    DeadLinksFixtures::entry('contact', ['link' => '/en/contact'], 'en', 'kontakt');
+
+    expect(scannedDeadLinks())->toBe([
+        '/en/contact' => ['entry contact en link'],
+        '/kontakt' => ['entry kontakt de link'],
+    ]);
+});
+
+it('keeps a path as typed in a site that is no longer configured', function (): void {
+    Site::setSites([
+        'de' => ['url' => 'https://example.ch/', 'locale' => 'de_CH'],
+        'en' => ['url' => 'https://example.com/', 'locale' => 'en_US'],
+    ]);
+    DeadLinksFixtures::entry('kontakt', ['link' => '/kontakt']);
+    DeadLinksFixtures::entry('contact', ['link' => '/kontakt'], 'en', 'kontakt');
+    Site::setSites(['de' => ['url' => 'https://example.ch/', 'locale' => 'de_CH']]);
+
+    expect(scannedDeadLinks())->toBe(['/kontakt' => ['entry contact en link', 'entry kontakt de link']]);
 });
 
 it('lists every place of a link once', function (): void {
