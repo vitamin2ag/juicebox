@@ -21,6 +21,7 @@ composer dump-autoload
 ## Features
 
 - [Redirects](docs/features/redirects.md): redirects requests that would otherwise return a 404 to a new URL.
+- [Search & Replace](docs/features/search-replace.md): finds a term in the text of the content and replaces the selected matches through the scheduler.
 - [Secure Headers](docs/features/secure-headers.md): sets security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on every web response.
 
 ## Development

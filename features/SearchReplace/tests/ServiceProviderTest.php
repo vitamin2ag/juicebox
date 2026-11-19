@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
+
+covers(ServiceProvider::class);
+
+afterEach(function (): void {
+    putenv('JUICEBOX_SEARCH_REPLACE_ENABLED');
+    putenv('JUICEBOX_SEARCH_REPLACE_SCHEDULE');
+});
+
+it('registers the provider through feature discovery', function (): void {
+    expect(app()->getProviders(ServiceProvider::class))->toHaveCount(1);
+});
+
+it('disables the feature by default', function (): void {
+    expect(config('juicebox.search_replace.enabled'))->toBeFalse();
+});
+
+it('merges the config at juicebox.search_replace with its defaults', function (): void {
+    expect(config('juicebox.search_replace'))->toBe([
+        'enabled' => false,
+        'schedule' => '* * * * *',
+    ]);
+});
+
+it('enables the feature through JUICEBOX_SEARCH_REPLACE_ENABLED', function (): void {
+    putenv('JUICEBOX_SEARCH_REPLACE_ENABLED=true');
+    config(['juicebox.search_replace' => require __DIR__.'/../config/search_replace.php']);
+
+    expect(config('juicebox.search_replace.enabled'))->toBeTrue();
+});
+
+it('sets the schedule through JUICEBOX_SEARCH_REPLACE_SCHEDULE', function (string $value, string|false $schedule): void {
+    putenv("JUICEBOX_SEARCH_REPLACE_SCHEDULE=$value");
+    config(['juicebox.search_replace' => require __DIR__.'/../config/search_replace.php']);
+
+    expect(config('juicebox.search_replace.schedule'))->toBe($schedule);
+})->with([
+    'a cron expression' => ['*/5 * * * *', '*/5 * * * *'],
+    'false' => ['false', false],
+]);
+
+it('publishes the config with the juicebox-search-replace-config tag while the feature is disabled', function (): void {
+    $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-search-replace-config');
+
+    expect(config('juicebox.search_replace.enabled'))->toBeFalse()
+        ->and(array_values($paths))->toBe([config_path('juicebox/search_replace.php')]);
+});
