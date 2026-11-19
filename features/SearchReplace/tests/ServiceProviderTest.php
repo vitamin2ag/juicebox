@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
@@ -48,6 +49,13 @@ it('sets the schedule through JUICEBOX_SEARCH_REPLACE_SCHEDULE', function (strin
 it('schedules nothing while the feature is disabled', function (): void {
     expect(SearchReplaceFixtures::scheduledApplies())->toBeEmpty();
 });
+
+it('leaves the Search & Replace utility and its route out of the control panel while the feature is disabled', function (string $route): void {
+    expect(Route::has($route))->toBeFalse();
+})->with([
+    'page' => 'statamic.cp.utilities.search-replace',
+    'replacement' => 'statamic.cp.utilities.search-replace.replace',
+]);
 
 it('publishes the config with the juicebox-search-replace-config tag while the feature is disabled', function (): void {
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-search-replace-config');

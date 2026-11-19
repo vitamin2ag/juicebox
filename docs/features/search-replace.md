@@ -6,6 +6,16 @@ Finds a term in the text of the content and replaces it with another one, from t
 
 The feature is off by default; switch it on with `JUICEBOX_SEARCH_REPLACE_ENABLED=true`. While it is off, nothing is scheduled, the command stops with an error and the config can still be published.
 
+## Control panel
+
+**Utilities > Search & Replace** (`/cp/utilities/search-replace`) searches for the term as it is typed, spaces at its start or end included, and optionally matches its case. It lists up to 500 matches by entry, term or global set: its title, linked to its edit page, the site when there is more than one, and for each match its field and the text around it. When the search finds more than 500, the page says so; narrow the search to see the rest.
+
+The selected matches and the replacement, which may be empty to delete them, are saved as a batch, and the page says that they will be replaced at the next scheduled run. Before it saves the batch, the search runs again: a selected match that is gone, or whose field changed since the search, is left out, and when none is left, no batch is saved and the page asks to search again.
+
+Below the search, the page lists the latest 10 batches: when and by whom, the search and the replacement, whether the batch is pending or applied, how many matches and items it replaced, and the items it skipped with the reason (`Deleted`, `Has unpublished changes`, `Changed since the search`). An item deleted since is shown as missing, such as `Missing entry`.
+
+Users need the permission `access search_replace utility`, which Statamic lists with the other utilities in the role editor; super users have it. The search lists, and a batch holds, only the entries, terms and global sets the user may edit.
+
 ## Command
 
 Apply the pending batches by hand:

@@ -135,6 +135,11 @@ class SearchReplaceFixtures
         return $set;
     }
 
+    public static function cpUrl(string $name, mixed $parameters = []): string
+    {
+        return route("statamic.cp.{$name}", $parameters);
+    }
+
     public static function superUser(): User
     {
         $user = new User;
