@@ -1,0 +1,10 @@
+tabs:
+  main:
+    sections:
+      -
+        fields:
+          -
+            handle: social
+            field:
+              type: link
+              display: 'Social Media'

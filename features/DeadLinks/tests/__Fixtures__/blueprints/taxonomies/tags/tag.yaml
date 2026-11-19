@@ -1,0 +1,14 @@
+tabs:
+  main:
+    sections:
+      -
+        fields:
+          -
+            handle: title
+            field:
+              type: text
+          -
+            handle: body
+            field:
+              type: markdown
+              display: Beschreibung
