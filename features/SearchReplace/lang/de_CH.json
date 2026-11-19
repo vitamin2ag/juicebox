@@ -1,0 +1,6 @@
+{
+    "Applied :count batch|Applied :count batches": ":count Auftrag angewendet|:count Aufträge angewendet",
+    "replaced :count match|replaced :count matches": ":count Treffer ersetzt|:count Treffer ersetzt",
+    "skipped :count item|skipped :count items": ":count Element übersprungen|:count Elemente übersprungen",
+    "Search & Replace is disabled: juicebox.search_replace.enabled is false.": "Suchen & Ersetzen ist deaktiviert: juicebox.search_replace.enabled ist false."
+}

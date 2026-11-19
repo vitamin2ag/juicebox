@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
+use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
 covers(ServiceProvider::class);
 
@@ -43,6 +44,10 @@ it('sets the schedule through JUICEBOX_SEARCH_REPLACE_SCHEDULE', function (strin
     'a cron expression' => ['*/5 * * * *', '*/5 * * * *'],
     'false' => ['false', false],
 ]);
+
+it('schedules nothing while the feature is disabled', function (): void {
+    expect(SearchReplaceFixtures::scheduledApplies())->toBeEmpty();
+});
 
 it('publishes the config with the juicebox-search-replace-config tag while the feature is disabled', function (): void {
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-search-replace-config');

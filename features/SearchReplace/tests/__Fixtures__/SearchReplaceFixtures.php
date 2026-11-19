@@ -4,18 +4,29 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
 use Statamic\Auth\File\User;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Entry as Entries;
+use Statamic\Facades\GlobalVariables;
 use Statamic\Facades\Site;
+use Statamic\Facades\Term as Terms;
 use Statamic\Facades\YAML;
 use Statamic\Globals\GlobalSet;
 use Statamic\Globals\Variables;
+use Statamic\Revisions\Revision;
+use Statamic\Taxonomies\LocalizedTerm;
 use Statamic\Taxonomies\Taxonomy;
 use Statamic\Taxonomies\Term;
 use Statamic\Testing\Concerns\FakesRoles;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Patch;
+use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 
 class SearchReplaceFixtures
 {
@@ -153,5 +164,102 @@ class SearchReplaceFixtures
         $user->save();
 
         return $user;
+    }
+
+    /**
+     * Saves a user that may edit everything, with a fixed id that a batch can name.
+     */
+    public static function editor(): string
+    {
+        $user = new User;
+        $user->id('editor-1');
+        $user->email('editor-1@example.com');
+        $user->makeSuper();
+        $user->save();
+
+        return 'editor-1';
+    }
+
+    /**
+     * A pending batch that replaces every match of the search, made as the control panel makes it.
+     */
+    public static function batch(
+        string $search = 'Team',
+        string $replacement = 'Praxis',
+        ?string $user = null,
+        string $id = '9d3c1f2a-0b4e-4c6d-8e7f-000000000001',
+        string $createdAt = '2026-11-19 10:00:00',
+    ): Batch {
+        $occurrences = resolve(Searcher::class)->search($search, self::superUser())->occurrences;
+
+        return new Batch(
+            $id,
+            $user,
+            $search,
+            $replacement,
+            false,
+            CarbonImmutable::parse($createdAt),
+            Patch::fromOccurrences($occurrences, $replacement),
+        );
+    }
+
+    /**
+     * The values an entry, term or global set holds in one site, without those it inherits, as the Stache has them.
+     *
+     * @param  'entry'|'term'|'global'  $type
+     * @return array<mixed>
+     */
+    public static function values(string $type, string $id, string $site = 'de'): array
+    {
+        $content = match ($type) {
+            'entry' => Entries::find($id),
+            'term' => Terms::all()
+                ->toBase()
+                ->whereInstanceOf(LocalizedTerm::class)
+                ->first(fn (LocalizedTerm $term): bool => $term->id() === $id && $term->locale() === $site),
+            'global' => GlobalVariables::find("{$id}::{$site}"),
+        };
+
+        $data = $content?->data();
+
+        return $data instanceof \Illuminate\Support\Collection ? $data->all() : [];
+    }
+
+    /**
+     * Saves unpublished changes of the entry, as the control panel does for a collection with revisions.
+     */
+    public static function workingCopy(Entry $entry): void
+    {
+        $revision = $entry->makeWorkingCopy();
+
+        if ($revision instanceof Revision) {
+            $revision->save();
+        }
+    }
+
+    /**
+     * The values of an entry as its file holds them.
+     *
+     * @return array<mixed>
+     */
+    public static function savedEntry(string $id): array
+    {
+        $path = Entries::find($id)?->path();
+
+        return is_string($path) ? YAML::parse(File::get($path)) : [];
+    }
+
+    /**
+     * The cron expression of every scheduled run of the apply command, and whether it may overlap.
+     *
+     * @return array<int, array{string, bool}>
+     */
+    public static function scheduledApplies(): array
+    {
+        return collect(resolve(Schedule::class)->events())
+            ->filter(fn (Event $event): bool => str_ends_with($event->command ?? '', 'statamic:juicebox:search-replace:apply'))
+            ->map(fn (Event $event): array => [$event->expression, $event->withoutOverlapping])
+            ->values()
+            ->all();
     }
 }

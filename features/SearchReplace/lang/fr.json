@@ -1,0 +1,6 @@
+{
+    "Applied :count batch|Applied :count batches": ":count lot appliqué|:count lots appliqués",
+    "replaced :count match|replaced :count matches": ":count occurrence remplacée|:count occurrences remplacées",
+    "skipped :count item|skipped :count items": ":count élément ignoré|:count éléments ignorés",
+    "Search & Replace is disabled: juicebox.search_replace.enabled is false.": "Rechercher & remplacer est désactivé : juicebox.search_replace.enabled vaut false."
+}
