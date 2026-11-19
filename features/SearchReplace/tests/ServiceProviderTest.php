@@ -57,6 +57,16 @@ it('leaves the Search & Replace utility and its route out of the control panel w
     'replacement' => 'statamic.cp.utilities.search-replace.replace',
 ]);
 
+/*
+ * Statamic keeps the builds it knows in a static list, which a test that boots the feature enabled leaves behind,
+ * so this test asks the provider for its options.
+ */
+it('registers no control panel build while the feature is disabled', function (): void {
+    $options = new ReflectionMethod(ServiceProvider::class, 'options')->invoke(app()->getProvider(ServiceProvider::class));
+
+    expect($options)->toBe([]);
+});
+
 it('publishes the config with the juicebox-search-replace-config tag while the feature is disabled', function (): void {
     $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'juicebox-search-replace-config');
 

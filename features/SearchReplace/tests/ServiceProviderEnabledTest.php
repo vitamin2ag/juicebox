@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Statamic;
 use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
@@ -55,3 +56,20 @@ it('schedules nothing when schedule is :dataset', function (mixed $schedule): vo
     'empty' => '',
     'null' => null,
 ]);
+
+it('registers the control panel build with Vite', function (): void {
+    $feature = dirname(__DIR__);
+
+    expect(Statamic::availableVites(request()))->toHaveKey('search-replace', [
+        'hotFile' => "{$feature}/resources/hot",
+        'buildDirectory' => 'vendor/search-replace/dist',
+        'input' => 'resources/js/cp.ts',
+    ]);
+});
+
+it('publishes the control panel build with the search-replace tag', function (): void {
+    $feature = dirname(__DIR__);
+    $paths = LaravelServiceProvider::pathsToPublish(ServiceProvider::class, 'search-replace');
+
+    expect($paths)->toBe(["{$feature}/resources/dist/" => public_path('vendor/search-replace/dist/')]);
+});

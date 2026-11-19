@@ -16,6 +16,7 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
+use Vitamin2\Juicebox\Features\SearchReplace\Searching\TextFields;
 use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
@@ -52,13 +53,15 @@ function searchReplacePageIds(string $term): array
 }
 
 /**
- * The props of the page for the query, as the signed-in user sees them.
+ * The props of the page for the query, as the signed-in user sees them once Inertia has called the closures.
  *
  * @return array<string, mixed>
  */
 function searchReplacePageProps(string $query = ''): array
 {
-    return resolve(SearchReplacePage::class)->toArray(Request::create("/cp/utilities/search-replace?{$query}"));
+    return collect(resolve(SearchReplacePage::class)->toArray(Request::create("/cp/utilities/search-replace?{$query}")))
+        ->map(fn (mixed $prop): mixed => $prop instanceof Closure ? $prop() : $prop)
+        ->all();
 }
 
 /**
@@ -205,6 +208,22 @@ it('keeps the spaces a search starts or ends with, which the control panel trims
             ->where('results.items.0.occurrences.0.before', 'Das')
             ->where('results.items.0.occurrences.0.match', '  ')
             ->where('results.items.0.occurrences.0.after', 'Team'));
+});
+
+it('searches only when the page asks for the results, not when it reloads the batches', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Team']);
+    resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch());
+    $searcher = Mockery::mock(Searcher::class, [resolve(TextFields::class)])->makePartial();
+    $searcher->shouldReceive('search')->once()->passthru();
+    $this->instance(Searcher::class, $searcher);
+
+    $this->actingAs(SearchReplaceFixtures::superUser())
+        ->get(SearchReplaceFixtures::cpUrl('utilities.search-replace', ['search' => 'team']))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('results.items', 1)
+            ->reloadOnly('batches', fn (AssertableInertia $reload): AssertableInertia => $reload
+                ->missing('results')
+                ->has('batches', 1)));
 });
 
 it('treats :dataset as no search', function (string $query): void {

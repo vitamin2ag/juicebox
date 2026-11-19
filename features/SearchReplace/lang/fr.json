@@ -12,5 +12,20 @@
     "Changed since the search": "Modifié depuis la recherche",
     "Missing entry": "Entrée manquante",
     "Missing term": "Terme manquant",
-    "Missing global set": "Jeu de globales manquant"
+    "Missing global set": "Jeu de globales manquant",
+    "Replace with": "Remplacer par",
+    "Match case": "Respecter la casse",
+    "Matches": "Occurrences",
+    "No text field contains the search term.": "Aucun champ texte ne contient le terme recherché.",
+    "The search found more than 500 matches and lists the first 500. Narrow the search to see the others.": "La recherche a trouvé plus de 500 occurrences et affiche les 500 premières. Affinez la recherche pour voir les autres.",
+    "Selected": "Sélectionnées",
+    "Replace selected": "Remplacer la sélection",
+    "The search has changed. Search again to replace its matches.": "La recherche a changé. Relancez-la pour remplacer ses occurrences.",
+    "The selected matches are replaced at the next scheduled run.": "Les occurrences sélectionnées seront remplacées lors de la prochaine exécution planifiée.",
+    "Batches": "Lots",
+    "Replacement": "Remplacement",
+    "Pending": "En attente",
+    "Applied": "Appliqué",
+    "Replaced": "Remplacées",
+    "Skipped": "Ignorés"
 }

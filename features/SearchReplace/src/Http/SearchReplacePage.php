@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SearchReplace\Http;
 
+use Closure;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -26,7 +27,8 @@ use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 /**
  * The props of the Search & Replace utility: the matches of the search in the query, by item, and the latest batches
  * with what the command did with them. Every item is looked up, so the page shows its edit link and site; a skipped
- * item that no longer exists is titled as missing.
+ * item that no longer exists is titled as missing. The results are a closure, so the page reloading only the batches
+ * while one is pending does not search again.
  */
 class SearchReplacePage
 {
@@ -37,7 +39,7 @@ class SearchReplacePage
     ) {}
 
     /**
-     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, results: array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}|null, batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}>}
+     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}>}
      */
     public function toArray(Request $request): array
     {
@@ -49,7 +51,7 @@ class SearchReplacePage
             'matchCase' => $matchCase,
             'searchUrl' => route('statamic.cp.utilities.search-replace'),
             'replaceUrl' => route('statamic.cp.utilities.search-replace.replace'),
-            'results' => $search === '' ? null : $this->results($search, $matchCase),
+            'results' => fn (): ?array => $search === '' ? null : $this->results($search, $matchCase),
             'batches' => $this->batches
                 ->latest(10)
                 ->map($this->batch(...))

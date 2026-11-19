@@ -28,6 +28,18 @@ class ServiceProvider extends FeatureServiceProvider
         $this->bootUtility();
     }
 
+    #[Override]
+    protected function options(): array
+    {
+        if (! config('juicebox.search_replace.enabled')) {
+            return [];
+        }
+
+        return [
+            'statamic.vite' => ['input' => 'resources/js/cp.ts', 'publicDirectory' => 'resources', 'buildDirectory' => 'dist'],
+        ];
+    }
+
     /**
      * Any schedule that is not a cron expression, such as false from the env, schedules nothing.
      */

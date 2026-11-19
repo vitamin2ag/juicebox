@@ -12,5 +12,20 @@
     "Changed since the search": "Seit der Suche geändert",
     "Missing entry": "Fehlender Eintrag",
     "Missing term": "Fehlender Begriff",
-    "Missing global set": "Fehlendes globales Set"
+    "Missing global set": "Fehlendes globales Set",
+    "Replace with": "Ersetzen durch",
+    "Match case": "Gross-/Kleinschreibung beachten",
+    "Matches": "Treffer",
+    "No text field contains the search term.": "Kein Textfeld enthält den Suchbegriff.",
+    "The search found more than 500 matches and lists the first 500. Narrow the search to see the others.": "Die Suche hat mehr als 500 Treffer gefunden und zeigt die ersten 500. Grenze die Suche ein, um die übrigen zu sehen.",
+    "Selected": "Ausgewählt",
+    "Replace selected": "Auswahl ersetzen",
+    "The search has changed. Search again to replace its matches.": "Die Suche wurde geändert. Suche erneut, um ihre Treffer zu ersetzen.",
+    "The selected matches are replaced at the next scheduled run.": "Die ausgewählten Treffer werden beim nächsten geplanten Lauf ersetzt.",
+    "Batches": "Aufträge",
+    "Replacement": "Ersetzung",
+    "Pending": "Ausstehend",
+    "Applied": "Angewendet",
+    "Replaced": "Ersetzt",
+    "Skipped": "Übersprungen"
 }
