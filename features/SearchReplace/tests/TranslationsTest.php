@@ -28,6 +28,18 @@ it('chooses the plural forms of the summary in :dataset', function (string $loca
     'French many' => ['fr', 2, '2 lots appliqués, 2 occurrences remplacées, 2 éléments ignorés'],
 ])->coversNothing();
 
+it('chooses the plural forms of the pruned batches in :dataset', function (string $locale, int $count, string $expected): void {
+    app()->setLocale($locale);
+
+    expect(trans_choice('Deleted :count old batch.|Deleted :count old batches.', $count))->toBe($expected);
+})->with([
+    'German one' => ['de', 1, '1 alter Auftrag gelöscht.'],
+    'German many' => ['de', 2, '2 alte Aufträge gelöscht.'],
+    'Swiss German many' => ['de_CH', 2, '2 alte Aufträge gelöscht.'],
+    'French one' => ['fr', 1, '1 ancien lot supprimé.'],
+    'French many' => ['fr', 2, '2 anciens lots supprimés.'],
+])->coversNothing();
+
 it('chooses the plural forms of the undo summary in :dataset', function (string $locale, int $count, string $expected): void {
     app()->setLocale($locale);
 
@@ -114,6 +126,7 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Pending' => 'Ausstehend',
         'Undo pending' => 'Rückgängigmachen ausstehend',
         'Partly undone' => 'Teilweise rückgängig gemacht',
+        'Edit by hand' => 'Von Hand bearbeiten',
     ]],
     'Swiss German' => ['de_CH', [
         'Match case' => 'Gross-/Kleinschreibung beachten',
@@ -122,6 +135,7 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Pending' => 'Ausstehend',
         'Undo pending' => 'Rückgängigmachen ausstehend',
         'Partly undone' => 'Teilweise rückgängig gemacht',
+        'Edit by hand' => 'Von Hand bearbeiten',
     ]],
     'French' => ['fr', [
         'Match case' => 'Respecter la casse',
@@ -130,5 +144,6 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Pending' => 'En attente',
         'Undo pending' => 'Annulation en attente',
         'Partly undone' => 'Partiellement annulé',
+        'Edit by hand' => 'Modifier à la main',
     ]],
 ])->coversNothing();

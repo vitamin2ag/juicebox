@@ -18,11 +18,14 @@ use UnexpectedValueException;
 use Vitamin2\Juicebox\Features\SearchReplace\Data\Item;
 use Vitamin2\Juicebox\Features\SearchReplace\Data\Occurrence;
 use Vitamin2\Juicebox\Features\SearchReplace\Data\SearchResult;
+use Vitamin2\Juicebox\Features\SearchReplace\Data\SplitOccurrence;
 
 /**
  * Finds a term in the text fields of every entry, term and global set the user may edit, in every site. Each
  * localization is read from its own values, not from those it inherits from its origin, so a match is listed where it
- * is stored. The occurrences come in the same order for the same content, so a search run again finds the same ones.
+ * is stored. The adjacent text nodes of a Bard node are searched as one text: a match inside one of them is an
+ * occurrence of that node, and one across them is split, to be edited by hand. The matches come in the same order for
+ * the same content, so a search run again finds the same ones, and both kinds count toward the limit.
  */
 class Searcher
 {
@@ -37,14 +40,14 @@ class Searcher
         $pattern = '/'.preg_quote($term, '/').'/u'.($matchCase ? '' : 'i');
         $limit = 500;
 
-        $occurrences = $this->contents()
+        $matches = $this->contents()
             ->filter(fn (Entry|LocalizedTerm|Variables $content): bool => $user->can('edit', $content))
-            ->flatMap(fn (Entry|LocalizedTerm|Variables $content): Collection => $this->occurrencesIn($content, $pattern))
+            ->flatMap(fn (Entry|LocalizedTerm|Variables $content): Collection => $this->matchesIn($content, $pattern))
             ->remember();
 
         return new SearchResult(
-            $occurrences->take($limit)->collect(),
-            $occurrences->skip($limit)->isNotEmpty(),
+            $matches->take($limit)->collect(),
+            $matches->skip($limit)->isNotEmpty(),
         );
     }
 
@@ -62,23 +65,54 @@ class Searcher
     }
 
     /**
-     * @return Collection<int, Occurrence>
+     * @return Collection<int, Occurrence|SplitOccurrence>
      */
-    private function occurrencesIn(Entry|LocalizedTerm|Variables $content, string $pattern): Collection
+    private function matchesIn(Entry|LocalizedTerm|Variables $content, string $pattern): Collection
     {
         $item = $this->item($content);
         $blueprint = $content->blueprint();
-        $fields = $blueprint instanceof Blueprint ? $this->fields->of($blueprint, $content->data()) : new Collection;
+        $texts = $blueprint instanceof Blueprint ? $this->fields->of($blueprint, $content->data()) : new Collection;
 
-        return $fields->flatMap(fn (array $field): Collection => $this->matches($pattern, $field['value'])
-            ->map(fn (array $match): Occurrence => new Occurrence(
-                $item,
-                $field['path'],
-                $field['label'],
-                $field['value'],
-                $match[1],
-                strlen($match[0]),
-            )));
+        return $texts->flatMap(fn (array $text): Collection => $this->matchesInText($item, $text, $pattern));
+    }
+
+    /**
+     * Each match belongs to the part it starts in, and is split when it ends in a later one.
+     *
+     * @param  array{label: string, node: bool, parts: array<int, array{path: string, value: string}>}  $text
+     * @return Collection<int, Occurrence|SplitOccurrence>
+     */
+    private function matchesInText(Item $item, array $text, string $pattern): Collection
+    {
+        $joined = implode('', array_column($text['parts'], 'value'));
+        $parts = collect($text['parts'])
+            ->map(function (array $part, int $index) use ($text): array {
+                $start = strlen(implode('', array_column(array_slice($text['parts'], 0, $index), 'value')));
+
+                return [...$part, 'start' => $start, 'end' => $start + strlen($part['value'])];
+            });
+
+        return $this->matches($pattern, $joined)
+            ->map(function (array $match) use ($item, $text, $joined, $parts): Occurrence|SplitOccurrence {
+                [$matched, $offset] = $match;
+                $length = strlen($matched);
+                $part = $parts->firstOrFail(fn (array $part): bool => $offset < $part['end']);
+
+                if ($offset + $length > $part['end']) {
+                    return new SplitOccurrence($item, $text['label'], $joined, $offset, $length);
+                }
+
+                return new Occurrence(
+                    $item,
+                    $part['path'],
+                    $text['label'],
+                    $part['value'],
+                    $offset - $part['start'],
+                    $length,
+                    $joined,
+                    $part['start'],
+                );
+            });
     }
 
     private function item(Entry|LocalizedTerm|Variables $content): Item

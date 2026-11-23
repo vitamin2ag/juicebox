@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SearchReplace\Console\Commands;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -22,7 +23,7 @@ class ApplyReplacements extends Command
 
     /**
      * Each batch is saved as applied, or undone, right after it is, so a run that stops halfway does not do it again.
-     * The pending batches come first, so an undo sees what they changed.
+     * The pending batches come first, so an undo sees what they changed, and the old batches are pruned last.
      */
     public function handle(BatchRepository $batches, Replacer $replacer): int
     {
@@ -50,8 +51,26 @@ class ApplyReplacements extends Command
         $this->info(trans_choice('Undid :count batch|Undid :count batches', $undos->count()).', '
             .trans_choice('restored :count item|restored :count items', $undos->sum(fn (UndoResult $result): int => $result->restored)).', '
             .trans_choice('skipped :count item|skipped :count items', $undos->sum(fn (UndoResult $result): int => count($result->skipped))).'.');
+        $this->prune($batches);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Deletes the batches done more than keep_days days ago. A keep_days that is no whole number above 0, such as false,
+     * keeps every batch.
+     */
+    private function prune(BatchRepository $batches): void
+    {
+        $days = filter_var(config('juicebox.search_replace.keep_days'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+        if ($days === false) {
+            return;
+        }
+
+        $deleted = $batches->prune(CarbonImmutable::now()->subDays($days));
+
+        $this->info(trans_choice('Deleted :count old batch.|Deleted :count old batches.', $deleted));
     }
 
     /**

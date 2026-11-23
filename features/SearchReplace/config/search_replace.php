@@ -32,4 +32,19 @@ return [
 
     'schedule' => env('JUICEBOX_SEARCH_REPLACE_SCHEDULE', '* * * * *'),
 
+    /*
+    |----------------------------------------------------------------------
+    | Keep Days
+    |----------------------------------------------------------------------
+    |
+    | How many days the command keeps a batch after it applied or undid
+    | it. A batch can be undone only while it is kept; a pending batch or
+    | undo is never deleted.
+    |
+    | Accepted values: a number of days, or false to keep every batch
+    |
+    */
+
+    'keep_days' => env('JUICEBOX_SEARCH_REPLACE_KEEP_DAYS', 30),
+
 ];

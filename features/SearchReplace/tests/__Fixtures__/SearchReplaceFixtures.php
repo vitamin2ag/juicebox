@@ -13,6 +13,7 @@ use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry as Entries;
+use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalVariables;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term as Terms;
@@ -50,17 +51,18 @@ class SearchReplaceFixtures
     }
 
     /**
-     * Reads the blueprints of the pages collection, the tags taxonomy and the footer global set from
-     * __Fixtures__/blueprints.
+     * Reads the blueprints of the pages and articles collections, the tags taxonomy and the footer global set from
+     * __Fixtures__/blueprints, and the fieldsets they import from __Fixtures__/fieldsets.
      */
     public static function blueprints(): void
     {
         Blueprint::setDirectory(__DIR__.'/blueprints');
+        Fieldset::setDirectory(__DIR__.'/fieldsets');
     }
 
     /**
      * Saves an entry in both sites, as a localization of its origin when one is given. A collection other than pages
-     * has no blueprint in __Fixtures__/blueprints, so its entries get Statamic's default one.
+     * and articles has no blueprint in __Fixtures__/blueprints, so its entries get Statamic's default one.
      *
      * @param  array<mixed>  $data
      */

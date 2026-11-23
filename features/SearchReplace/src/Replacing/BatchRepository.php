@@ -12,7 +12,8 @@ use InvalidArgumentException;
 
 /**
  * Keeps every batch as a JSON file of its own on the local disk, outside the content and the cache, so the control
- * panel and the command never write the same file. A file that cannot be read or holds no batch counts as missing.
+ * panel and the command never write the same file, until it is pruned. A file that cannot be read or holds no batch
+ * counts as missing.
  */
 class BatchRepository
 {
@@ -62,6 +63,21 @@ class BatchRepository
             ->reverse()
             ->take($limit)
             ->values();
+    }
+
+    /**
+     * Deletes the batches the command was done with before the time, applied ones and undone ones, and returns how many.
+     * A pending batch, or one whose undo is pending, is kept, however old.
+     */
+    public function prune(CarbonImmutable $before): int
+    {
+        $done = $this->all()
+            ->filter(fn (Batch $batch): bool => $batch->doneAt()?->isBefore($before) ?? false);
+        $paths = $done->map(fn (Batch $batch): string => $this->path($batch->id))->all();
+
+        Storage::disk('local')->delete($paths);
+
+        return $done->count();
     }
 
     /**

@@ -1,0 +1,28 @@
+heading: 'Team oben'
+text: 'Text vom Team'
+hero_heading: 'Hero-Team'
+hero_text: 'Hero-Text vom Team'
+blocks:
+  -
+    id: b1a2b3c4
+    type: teaser
+    enabled: true
+    heading: 'Block-Team'
+    cta_text: 'Ruf das Team an'
+body:
+  -
+    type: set
+    attrs:
+      id: lb1c2d3e
+      values:
+        type: teaser
+        text: 'Box vom Team'
+        box_heading: 'Box-Team'
+rows:
+  -
+    id: r1a2b3c4
+    heading: 'Zeile Team'
+    side_text: 'Seite vom Team'
+meta:
+  text: 'Meta vom Team'
+  og_heading: 'OG-Team'

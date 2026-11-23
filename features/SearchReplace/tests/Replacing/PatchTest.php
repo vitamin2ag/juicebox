@@ -26,6 +26,8 @@ function patchOccurrences(string $value, string $text, string $path = 'title', s
         $value,
         $match[1],
         strlen($match[0]),
+        $value,
+        0,
     ));
 }
 

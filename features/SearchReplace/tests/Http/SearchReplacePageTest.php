@@ -190,6 +190,7 @@ it('lists the matches of the search by item, with the context of each one', func
                             ['id' => $ids[1], 'field' => 'Lead', 'before' => 'Das ', 'match' => 'Team', 'after' => ' im Team'],
                             ['id' => $ids[2], 'field' => 'Lead', 'before' => 'Das Team im ', 'match' => 'Team', 'after' => ''],
                         ],
+                        'split' => [],
                     ],
                     [
                         'type' => 'term',
@@ -199,6 +200,7 @@ it('lists the matches of the search by item, with the context of each one', func
                         'occurrences' => [
                             ['id' => $ids[3], 'field' => 'Beschreibung', 'before' => 'Neues vom ', 'match' => 'Team', 'after' => '.'],
                         ],
+                        'split' => [],
                     ],
                     [
                         'type' => 'global',
@@ -208,9 +210,54 @@ it('lists the matches of the search by item, with the context of each one', func
                         'occurrences' => [
                             ['id' => $ids[4], 'field' => 'Claim', 'before' => '', 'match' => 'Team', 'after' => ''],
                         ],
+                        'split' => [],
                     ],
                 ],
             ]));
+});
+
+it('lists the matches across Bard formatting with their item, apart from those to select, in the order of the items', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['content' => [['type' => 'paragraph', 'content' => [
+        ['type' => 'text', 'text' => 'Die '],
+        ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'Acme'],
+        ['type' => 'text', 'text' => ' Corp lädt ein.'],
+    ]]]]);
+    SearchReplaceFixtures::entry('kontakt', [
+        'title' => 'Acme Corp',
+        'content' => [['type' => 'paragraph', 'content' => [
+            ['type' => 'text', 'marks' => [['type' => 'italic']], 'text' => 'Acme'],
+            ['type' => 'text', 'text' => ' Corp'],
+        ]]],
+        'subtitle' => [['type' => 'text', 'text' => 'Acme Corp']],
+    ]);
+    $ids = searchReplacePageIds('acme corp');
+    $this->actingAs(SearchReplaceFixtures::superUser());
+
+    expect(data_get(searchReplacePageProps('search=acme%20corp'), 'results.items'))->toBe([
+        [
+            'type' => 'entry',
+            'title' => 'ueber-uns',
+            'editUrl' => SearchReplaceFixtures::cpUrl('collections.entries.edit', ['pages', 'ueber-uns']),
+            'site' => 'Deutsch',
+            'occurrences' => [],
+            'split' => [
+                ['field' => 'Inhalt', 'before' => 'Die ', 'match' => 'Acme Corp', 'after' => ' lädt ein.'],
+            ],
+        ],
+        [
+            'type' => 'entry',
+            'title' => 'Acme Corp',
+            'editUrl' => SearchReplaceFixtures::cpUrl('collections.entries.edit', ['pages', 'kontakt']),
+            'site' => 'Deutsch',
+            'occurrences' => [
+                ['id' => $ids[0], 'field' => 'Titel', 'before' => '', 'match' => 'Acme Corp', 'after' => ''],
+                ['id' => $ids[1], 'field' => 'Untertitel', 'before' => '', 'match' => 'Acme Corp', 'after' => ''],
+            ],
+            'split' => [
+                ['field' => 'Inhalt', 'before' => '', 'match' => 'Acme Corp', 'after' => ''],
+            ],
+        ],
+    ]);
 });
 
 it('keeps the items apart that share their type, id or site', function (): void {

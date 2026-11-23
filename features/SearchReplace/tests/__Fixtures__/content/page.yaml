@@ -72,13 +72,39 @@ sections:
     type: removed
     enabled: true
     text: 'Team alt'
+  -
+    id: m2b3c4d5
+    type: pricing
+    enabled: true
+    rows:
+      -
+        cells:
+          - Team
+          - 'CHF 90'
 facts:
   -
     id: f1a2b3c4
     label: Gründung
     value: '1999 mit Team'
+    sources:
+      - Team-Chronik
 seo:
   description: 'Team und Werte'
+  keywords:
+    - Team
+    - Werte
+highlights:
+  - Team-Event
+  - 2024
+prices:
+  -
+    cells:
+      - Leistung
+      - Preis
+  -
+    cells:
+      - Team-Coaching
+      - 'CHF 120'
 anchor: team-anker
 link: 'https://example.com/team'
 related:

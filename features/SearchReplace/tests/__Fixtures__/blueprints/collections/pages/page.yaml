@@ -81,6 +81,14 @@ tabs:
                             field:
                               type: text
                               display: Beschriftung
+                pricing:
+                  display: Preise
+                  fields:
+                    -
+                      handle: rows
+                      field:
+                        type: table
+                        display: Tabelle
           -
             handle: facts
             field:
@@ -97,6 +105,11 @@ tabs:
                   field:
                     type: text
                     display: Wert
+                -
+                  handle: sources
+                  field:
+                    type: list
+                    display: Quellen
           -
             handle: seo
             field:
@@ -108,6 +121,21 @@ tabs:
                   field:
                     type: textarea
                     display: Beschreibung
+                -
+                  handle: keywords
+                  field:
+                    type: list
+                    display: Stichwörter
+          -
+            handle: highlights
+            field:
+              type: list
+              display: Highlights
+          -
+            handle: prices
+            field:
+              type: table
+              display: Preise
           -
             handle: anchor
             field:

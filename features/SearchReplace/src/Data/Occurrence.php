@@ -6,7 +6,8 @@ namespace Vitamin2\Juicebox\Features\SearchReplace\Data;
 
 /**
  * One match of the search term in the value of a text field. The offset and length count bytes, so the match is
- * replaced with substr_replace(); the context counts characters.
+ * replaced with substr_replace(); the context counts characters, and comes from the text the value is part of, so a
+ * match in a bold word of a Bard paragraph shows the words around it.
  */
 readonly class Occurrence
 {
@@ -14,6 +15,8 @@ readonly class Occurrence
      * @param  string  $path  where the value is in the data of the item, in dot notation (`content.2.content.0.text`)
      * @param  string  $label  the displays of the field and of the fields around it
      * @param  string  $value  the whole value of the field
+     * @param  string  $joined  the value, or the joined text of the adjacent Bard text nodes the value is one of
+     * @param  int  $start  the byte offset of the value in the joined text
      */
     public function __construct(
         public Item $item,
@@ -22,6 +25,8 @@ readonly class Occurrence
         public string $value,
         public int $offset,
         public int $length,
+        public string $joined,
+        public int $start,
     ) {}
 
     /**
@@ -46,11 +51,11 @@ readonly class Occurrence
 
     public function contextBefore(): string
     {
-        return mb_substr(substr($this->value, 0, $this->offset), -40);
+        return mb_substr(substr($this->joined, 0, $this->start + $this->offset), -40);
     }
 
     public function contextAfter(): string
     {
-        return mb_substr(substr($this->value, $this->offset + $this->length), 0, 40);
+        return mb_substr(substr($this->joined, $this->start + $this->offset + $this->length), 0, 40);
     }
 }

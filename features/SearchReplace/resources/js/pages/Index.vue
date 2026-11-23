@@ -30,12 +30,20 @@ interface Occurrence {
     after: string;
 }
 
+interface SplitOccurrence {
+    field: string;
+    before: string;
+    match: string;
+    after: string;
+}
+
 interface Item {
     type: 'entry' | 'term' | 'global';
     title: string;
     editUrl: string | null;
     site: string | null;
     occurrences: Occurrence[];
+    split: SplitOccurrence[];
 }
 
 interface SkippedItem {
@@ -87,6 +95,7 @@ const confirming = ref(false);
 const replacing = ref(false);
 
 const occurrenceIds = computed(() => props.results?.items.flatMap((item) => item.occurrences.map((occurrence) => occurrence.id)) ?? []);
+const hasSplit = computed(() => props.results?.items.some((item) => item.split.length > 0) ?? false);
 // The ids belong to the search the results came from, so an edited search has to run before its matches are replaced.
 const searchChanged = computed(() => form.search !== props.search || form.matchCase !== props.matchCase);
 
@@ -193,6 +202,14 @@ watch(
                     variant="warning"
                     :text="__('The search found more than 500 matches and lists the first 500. Narrow the search to see the others.')"
                 />
+                <Description
+                    v-if="hasSplit"
+                    :text="
+                        __(
+                            'Matches across formatting, such as a bold word or a link, cannot be replaced here. They have no checkbox; edit them by hand.',
+                        )
+                    "
+                />
 
                 <div class="space-y-2">
                     <div class="flex flex-wrap items-center gap-2">
@@ -241,6 +258,15 @@ watch(
                             /></span>
                         </span>
                     </Checkbox>
+                    <div v-for="(split, splitIndex) in item.split" :key="splitIndex" class="flex flex-wrap items-start gap-2 ps-6 text-sm">
+                        <Badge size="sm" :text="split.field" />
+                        <span style="white-space: pre-wrap"
+                            ><span v-text="split.before" /><mark
+                                class="bg-amber-100 text-amber-800 dark:bg-amber-300/6 dark:text-amber-300"
+                                v-text="split.match" /><span v-text="split.after"
+                        /></span>
+                        <Badge size="sm" color="amber" :href="item.editUrl ?? undefined" :text="__('Edit by hand')" />
+                    </div>
                 </div>
             </div>
         </CardPanel>

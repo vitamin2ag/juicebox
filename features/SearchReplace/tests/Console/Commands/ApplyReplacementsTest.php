@@ -17,7 +17,9 @@ use Statamic\Taxonomies\LocalizedTerm;
 use Vitamin2\Juicebox\Features\SearchReplace\Console\Commands\ApplyReplacements;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
 covers(ApplyReplacements::class);
@@ -57,6 +59,33 @@ function searchReplaceAskForUndo(int $number): void
 }
 
 /**
+ * Saves a batch without patches, applied at the given time and, when given, undone or asked to be undone.
+ */
+function searchReplaceDoneBatch(int $number, ?string $appliedAt, ?string $requestedAt = null, ?string $undoneAt = null): void
+{
+    $batch = new Batch(searchReplaceBatchNumber($number), null, 'Team', 'Praxis', false, CarbonImmutable::parse('2026-01-01 10:00:00'), []);
+    $batch = $appliedAt === null ? $batch : $batch->applied(new Result(CarbonImmutable::parse($appliedAt), 0, 0, []));
+    $batch = $requestedAt === null ? $batch : $batch->withUndo(new Undo(null, CarbonImmutable::parse($requestedAt)));
+    $batch = $undoneAt === null ? $batch : $batch->undone(new UndoResult(CarbonImmutable::parse($undoneAt), 0, []));
+
+    resolve(BatchRepository::class)->save($batch);
+}
+
+/**
+ * The ids of the batches left on the disk, in order.
+ *
+ * @return array<int, string>
+ */
+function searchReplaceBatchesLeft(): array
+{
+    return collect(Storage::disk('local')->files('juicebox/search-replace'))
+        ->map(fn (string $path): string => basename($path, '.json'))
+        ->sort()
+        ->values()
+        ->all();
+}
+
+/**
  * The contents of the files of the entries, the term and the global set the command tests change.
  *
  * @return array<string, string>
@@ -83,7 +112,7 @@ it('applies a pending batch to the content and saves it as applied', function ()
     $status = Artisan::call('statamic:juicebox:search-replace:apply');
 
     expect($status)->toBe(0)
-        ->and(Artisan::output())->toBe("Applied 1 batch, replaced 3 matches, skipped 0 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+        ->and(Artisan::output())->toBe("Applied 1 batch, replaced 3 matches, skipped 0 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\nDeleted 0 old batches.\n")
         ->and(SearchReplaceFixtures::savedEntry('ueber-uns'))->toMatchArray(['title' => 'Unser Praxis', 'lead' => 'Das Praxis im Praxis'])
         ->and(searchReplaceBatchFile(1))->toMatchArray([
             'id' => searchReplaceBatchNumber(1),
@@ -117,7 +146,7 @@ it('applies the pending batches from the oldest to the newest and saves each one
 
     Artisan::call('statamic:juicebox:search-replace:apply');
 
-    expect(Artisan::output())->toBe("Applied 2 batches, replaced 2 matches, skipped 2 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+    expect(Artisan::output())->toBe("Applied 2 batches, replaced 2 matches, skipped 2 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\nDeleted 0 old batches.\n")
         ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Praxis'])
         ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toBe(['title' => 'Kontakt zum Praxis'])
         ->and(data_get(searchReplaceBatchFile(2), 'result.replaced'))->toBe(2)
@@ -141,7 +170,7 @@ it('goes on with the other items and the later batches of a run when a save thro
     $status = Artisan::call('statamic:juicebox:search-replace:apply');
 
     expect($status)->toBe(0)
-        ->and(Artisan::output())->toBe("Applied 2 batches, replaced 2 matches, skipped 2 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+        ->and(Artisan::output())->toBe("Applied 2 batches, replaced 2 matches, skipped 2 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\nDeleted 0 old batches.\n")
         ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Crew'])
         ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toBe(['title' => 'Kontakt zum Praxis'])
         ->and(data_get(searchReplaceBatchFile(1), 'result.skipped'))->toBe([['type' => 'entry', 'id' => 'ueber-uns', 'site' => 'de', 'reason' => 'failed']])
@@ -162,7 +191,7 @@ it('leaves the applied batches as they are', function (): void {
     $status = Artisan::call('statamic:juicebox:search-replace:apply');
 
     expect($status)->toBe(0)
-        ->and(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+        ->and(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\nDeleted 0 old batches.\n")
         ->and(searchReplaceBatchFile(1))->toBe($applied);
 });
 
@@ -195,7 +224,7 @@ it('undoes an applied batch at the next run, which gives the files their content
     $status = Artisan::call('statamic:juicebox:search-replace:apply');
 
     expect($status)->toBe(0)
-        ->and(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 1 batch, restored 6 items, skipped 0 items.\n")
+        ->and(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 1 batch, restored 6 items, skipped 0 items.\nDeleted 0 old batches.\n")
         ->and($applied)->not->toBe($files)
         ->and(searchReplaceContentFiles())->toBe($files)
         ->and(searchReplaceBatchFile(1))->toMatchArray([
@@ -222,7 +251,7 @@ it('partly undoes a batch whose items changed, were deleted or got a working cop
 
     Artisan::call('statamic:juicebox:search-replace:apply');
 
-    expect(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 1 batch, restored 1 item, skipped 3 items.\n")
+    expect(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 1 batch, restored 1 item, skipped 3 items.\nDeleted 0 old batches.\n")
         ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team'])
         ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toBe(['title' => 'Kontakt zur Praxis'])
         ->and(SearchReplaceFixtures::values('entry', 'news'))->toBe(['title' => 'Praxis News'])
@@ -248,7 +277,7 @@ it('applies the pending batches before the undos, which skip the items those bat
 
     Artisan::call('statamic:juicebox:search-replace:apply');
 
-    expect(Artisan::output())->toBe("Applied 1 batch, replaced 1 match, skipped 0 items.\nUndid 1 batch, restored 1 item, skipped 1 item.\n")
+    expect(Artisan::output())->toBe("Applied 1 batch, replaced 1 match, skipped 0 items.\nUndid 1 batch, restored 1 item, skipped 1 item.\nDeleted 0 old batches.\n")
         ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Ihr Praxis'])
         ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toBe(['title' => 'Kontakt zum Team'])
         ->and(data_get(searchReplaceBatchFile(1), 'undo.result.skipped'))->toBe([
@@ -256,3 +285,57 @@ it('applies the pending batches before the undos, which skip the items those bat
         ])
         ->and($batches->pendingUndos())->toBeEmpty();
 });
+
+it('deletes the batches it applied or undid more than keep_days days ago, and keeps pending ones and pending undos', function (int|string $days): void {
+    config(['juicebox.search_replace.keep_days' => $days]);
+    searchReplaceDoneBatch(1, null);
+    searchReplaceDoneBatch(2, '2026-10-20 10:00:59');
+    searchReplaceDoneBatch(3, '2026-10-20 10:01:00');
+    searchReplaceDoneBatch(4, '2026-01-02 10:00:00', '2026-01-03 10:00:00');
+    searchReplaceDoneBatch(5, '2026-01-02 10:00:00', '2026-01-03 10:00:00', '2026-10-20 10:00:59');
+    searchReplaceDoneBatch(6, '2026-01-02 10:00:00', '2026-01-03 10:00:00', '2026-10-20 10:01:00');
+
+    $status = Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect($status)->toBe(0)
+        ->and(Artisan::output())->toEndWith("restored 0 items, skipped 0 items.\nDeleted 2 old batches.\n")
+        ->and(searchReplaceBatchesLeft())->toBe([
+            searchReplaceBatchNumber(1),
+            searchReplaceBatchNumber(3),
+            searchReplaceBatchNumber(4),
+            searchReplaceBatchNumber(6),
+        ]);
+})->with([
+    'a number' => 30,
+    'a number from the env' => '30',
+]);
+
+it('deletes an applied batch once it is old enough and keeps the one it undid in the same run', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    searchReplaceDoneBatch(1, '2026-11-17 10:00:00');
+    resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(2)));
+    Artisan::call('statamic:juicebox:search-replace:apply');
+    searchReplaceAskForUndo(2);
+    config(['juicebox.search_replace.keep_days' => 1]);
+
+    Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 1 batch, restored 1 item, skipped 0 items.\nDeleted 1 old batch.\n")
+        ->and(searchReplaceBatchesLeft())->toBe([searchReplaceBatchNumber(2)]);
+});
+
+it('keeps every batch while keep_days is :dataset', function (mixed $days): void {
+    searchReplaceDoneBatch(1, '2026-01-02 10:00:00');
+    config(['juicebox.search_replace.keep_days' => $days]);
+
+    Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect(Artisan::output())->toBe("Applied 0 batches, replaced 0 matches, skipped 0 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+        ->and(searchReplaceBatchesLeft())->toBe([searchReplaceBatchNumber(1)]);
+})->with([
+    'false' => false,
+    'null' => null,
+    'zero' => 0,
+    'negative' => -1,
+    'not a number' => 'thirty',
+]);

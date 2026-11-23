@@ -337,3 +337,29 @@ it('lists the latest batches, the newest first', function (): void {
         appliedSearchReplaceBatch(1, '2026-11-19 10:05:00'),
     ])->and($batches->latest(10))->toHaveCount(3);
 });
+
+it('deletes the batches done before the time, and keeps the pending ones and those whose undo is pending', function (): void {
+    $batches = resolve(BatchRepository::class);
+    $batches->save(pendingSearchReplaceBatch(1, '2026-11-01 10:00:00'));
+    $batches->save(appliedSearchReplaceBatch(2));
+    $batches->save(undoingSearchReplaceBatch(3, '2026-11-01 10:00:00', '2026-11-19 11:00:00'));
+    $batches->save(undoingSearchReplaceBatch(4, '2026-11-01 10:00:00', '2026-11-19 11:00:00')
+        ->undone(new UndoResult(CarbonImmutable::parse('2026-11-19 11:01:00'), 1, [])));
+    $batches->save(undoingSearchReplaceBatch(5, '2026-11-01 10:00:00', '2026-11-19 11:00:00')
+        ->undone(new UndoResult(CarbonImmutable::parse('2026-11-19 11:02:00'), 1, [])));
+
+    expect($batches->prune(CarbonImmutable::parse('2026-11-19 11:02:00')))->toBe(2)
+        ->and(Storage::disk('local')->allFiles())->toEqualCanonicalizing([
+            'juicebox/search-replace/'.searchReplaceBatchId(1).'.json',
+            'juicebox/search-replace/'.searchReplaceBatchId(3).'.json',
+            'juicebox/search-replace/'.searchReplaceBatchId(5).'.json',
+        ]);
+});
+
+it('deletes nothing when no batch is old enough', function (): void {
+    $batches = resolve(BatchRepository::class);
+    $batches->save(appliedSearchReplaceBatch());
+
+    expect($batches->prune(CarbonImmutable::parse('2026-11-19 10:01:00')))->toBe(0)
+        ->and($batches->latest(10))->toHaveCount(1);
+});

@@ -140,3 +140,17 @@ it('keeps its undo once it is applied', function (): void {
 
     expect(teamBatch()->withUndo(searchReplaceTeamUndo())->applied($result)->undo)->toEqual(searchReplaceTeamUndo());
 });
+
+it('was done with when it was :dataset', function (Batch $batch, ?string $doneAt): void {
+    expect($batch->doneAt()?->toIso8601String())->toBe($doneAt);
+})->with([
+    'pending' => [teamBatch(), null],
+    'applied' => [writtenTeamBatch(), '2026-11-19T10:01:00+00:00'],
+    'asked to be undone' => [writtenTeamBatch()->withUndo(searchReplaceTeamUndo()), null],
+    'undone' => [
+        writtenTeamBatch()
+            ->withUndo(searchReplaceTeamUndo())
+            ->undone(new UndoResult(CarbonImmutable::parse('2026-11-19 11:01:00'), 1, [])),
+        '2026-11-19T11:01:00+00:00',
+    ],
+]);

@@ -105,6 +105,19 @@ readonly class Batch
         return $user->isSuper() || $this->user === $user->getAuthIdentifier();
     }
 
+    /**
+     * When the command was last done with the batch: when it undid it, or else when it applied it. Null while the batch
+     * or its undo is pending.
+     */
+    public function doneAt(): ?CarbonImmutable
+    {
+        if ($this->undo instanceof Undo) {
+            return $this->undo->result?->undoneAt;
+        }
+
+        return $this->result?->appliedAt;
+    }
+
     public function undoPending(): bool
     {
         return $this->undo instanceof Undo && $this->undo->pending();

@@ -19,6 +19,8 @@ function teamOccurrence(array $changes = []): Occurrence
         $changes['value'] ?? 'Team im Team',
         $changes['offset'] ?? 8,
         4,
+        $changes['value'] ?? 'Team im Team',
+        0,
     );
 }
 
@@ -28,7 +30,7 @@ it('holds the matched text as it is stored', function (): void {
 
 it('shows 40 characters before and after the match without cutting a character', function (): void {
     $value = 'Ä'.str_repeat('ä', 40).'Team'.str_repeat('ö', 40).'Ö';
-    $occurrence = new Occurrence(new Item('entry', 'ueber-uns', 'de', 'Über uns'), 'lead', 'Lead', $value, 82, 4);
+    $occurrence = new Occurrence(new Item('entry', 'ueber-uns', 'de', 'Über uns'), 'lead', 'Lead', $value, 82, 4, $value, 0);
 
     expect($occurrence->text())->toBe('Team')
         ->and($occurrence->contextBefore())->toBe(str_repeat('ä', 40))
@@ -38,6 +40,14 @@ it('shows 40 characters before and after the match without cutting a character',
 it('shows the text up to the start and the end of a short value', function (): void {
     expect(teamOccurrence()->contextBefore())->toBe('Team im ')
         ->and(teamOccurrence()->contextAfter())->toBeEmpty();
+});
+
+it('takes the context from the joined text of the Bard text nodes, around the node the match is in', function (): void {
+    $occurrence = new Occurrence(new Item('entry', 'ueber-uns', 'de', 'Über uns'), 'content.0.content.1.text', 'Inhalt', 'das Team', 4, 4, 'Ein starkes das Team für Sie', 12);
+
+    expect($occurrence->text())->toBe('Team')
+        ->and($occurrence->contextBefore())->toBe('Ein starkes das ')
+        ->and($occurrence->contextAfter())->toBe(' für Sie');
 });
 
 it('keeps its id for the same match in the same value', function (): void {

@@ -18,6 +18,7 @@ use Statamic\Globals\Variables;
 use Statamic\Taxonomies\LocalizedTerm;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Vitamin2\Juicebox\Features\SearchReplace\Data\Occurrence;
+use Vitamin2\Juicebox\Features\SearchReplace\Data\SplitOccurrence;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
@@ -26,10 +27,11 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 
 /**
- * The props of the Search & Replace utility: the matches of the search in the query, by item, and the latest batches
- * with what the command did with them and with their undo, and whether the user may undo them now. Every item is looked
- * up, so the page shows its edit link and site; a skipped item that no longer exists is titled as missing. The results
- * are a closure, so the page reloading only the batches while one is pending does not search again.
+ * The props of the Search & Replace utility: the matches of the search in the query, by item, those to select apart
+ * from those across Bard formatting, which are to be edited by hand, and the latest batches with what the command did
+ * with them and with their undo, and whether the user may undo them now. Every item is looked up, so the page shows its
+ * edit link and site; a skipped item that no longer exists is titled as missing. The results are a closure, so the page
+ * reloading only the batches while one is pending does not search again.
  */
 class SearchReplacePage
 {
@@ -40,7 +42,7 @@ class SearchReplacePage
     ) {}
 
     /**
-     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, undoUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}>}
+     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, undoUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>, split: array<int, array{field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}>}
      */
     public function toArray(Request $request): array
     {
@@ -73,7 +75,7 @@ class SearchReplacePage
     }
 
     /**
-     * @return array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}
+     * @return array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>, split: array<int, array{field: string, before: string, match: string, after: string}>}>}
      */
     private function results(string $search, bool $matchCase): array
     {
@@ -81,11 +83,11 @@ class SearchReplacePage
 
         return [
             'truncated' => $result->truncated,
-            'items' => $result->occurrences
-                ->groupBy(fn (Occurrence $occurrence): string => implode("\0", [
-                    $occurrence->item->type,
-                    $occurrence->item->id,
-                    $occurrence->item->site,
+            'items' => $result->matches
+                ->groupBy(fn (Occurrence|SplitOccurrence $match): string => implode("\0", [
+                    $match->item->type,
+                    $match->item->id,
+                    $match->item->site,
                 ]))
                 ->map($this->item(...))
                 ->values()
@@ -94,19 +96,20 @@ class SearchReplacePage
     }
 
     /**
-     * @param  Collection<int, Occurrence>  $occurrences  the occurrences in one item
-     * @return array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}
+     * @param  Collection<int, Occurrence|SplitOccurrence>  $matches  the matches in one item
+     * @return array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>, split: array<int, array{field: string, before: string, match: string, after: string}>}
      */
-    private function item(Collection $occurrences): array
+    private function item(Collection $matches): array
     {
-        $item = $occurrences->firstOrFail()->item;
+        $item = $matches->firstOrFail()->item;
 
         return [
             'type' => $item->type,
             'title' => $item->title,
             'editUrl' => $this->lookUp($item->type, $item->id, $item->site)['editUrl'] ?? null,
             'site' => $this->site($item->site),
-            'occurrences' => $occurrences
+            'occurrences' => $matches
+                ->whereInstanceOf(Occurrence::class)
                 ->map(fn (Occurrence $occurrence): array => [
                     'id' => $occurrence->id(),
                     'field' => $occurrence->label,
@@ -114,6 +117,17 @@ class SearchReplacePage
                     'match' => $occurrence->text(),
                     'after' => $occurrence->contextAfter(),
                 ])
+                ->values()
+                ->all(),
+            'split' => $matches
+                ->whereInstanceOf(SplitOccurrence::class)
+                ->map(fn (SplitOccurrence $match): array => [
+                    'field' => $match->label,
+                    'before' => $match->contextBefore(),
+                    'match' => $match->text(),
+                    'after' => $match->contextAfter(),
+                ])
+                ->values()
                 ->all(),
         ];
     }

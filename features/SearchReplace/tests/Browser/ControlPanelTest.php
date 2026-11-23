@@ -64,6 +64,29 @@ it('saves the selected matches as a batch and lists it as pending', function ():
     ]);
 });
 
+it('lists a match across Bard formatting without a checkbox, to be edited by hand, and shows the text around a bold match', function (): void {
+    SearchReplaceFixtures::entry('kontakt', ['title' => 'Kontakt', 'content' => [['type' => 'paragraph', 'content' => [
+        ['type' => 'text', 'text' => 'Ein starkes '],
+        ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'Team'],
+        ['type' => 'text', 'text' => ' für Sie'],
+    ]]]]);
+
+    visit(SearchReplaceFixtures::cpUrl('utilities.search-replace', ['search' => 'starkes Team']))
+        ->assertSee('Matches across formatting, such as a bold word or a link, cannot be replaced here.')
+        ->assertSee('Ein starkes Team für Sie')
+        ->assertCount('mark:has-text("starkes Team")', 1)
+        ->assertCount('[role="checkbox"]', 1)
+        ->assertPresent('a[href$="/cp/collections/pages/entries/kontakt"]:has-text("Edit by hand")')
+        ->assertNoJavaScriptErrors();
+
+    visit(SearchReplaceFixtures::cpUrl('utilities.search-replace', ['search' => 'Team']))
+        ->fill('replacement', 'Praxis')
+        ->assertSee('Ein starkes TeamPraxis für Sie')
+        ->assertCount('[role="checkbox"]', 4)
+        ->assertDontSee('Edit by hand')
+        ->assertNoJavaScriptErrors();
+});
+
 it('says that no text field contains the search term', function (): void {
     visit(SearchReplaceFixtures::cpUrl('utilities.search-replace', ['search' => 'Praxis']))
         ->assertSee('No text field contains the search term.')

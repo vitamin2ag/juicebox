@@ -9,11 +9,28 @@ use Illuminate\Support\Collection;
 readonly class SearchResult
 {
     /**
-     * @param  Collection<int, Occurrence>  $occurrences
-     * @param  bool  $truncated  whether the search found more occurrences than it returns
+     * The matches that can be replaced.
+     *
+     * @var Collection<int, Occurrence>
+     */
+    public Collection $occurrences;
+
+    /**
+     * The matches across Bard formatting, to be edited by hand.
+     *
+     * @var Collection<int, SplitOccurrence>
+     */
+    public Collection $split;
+
+    /**
+     * @param  Collection<int, Occurrence|SplitOccurrence>  $matches  in the order the search found them
+     * @param  bool  $truncated  whether the search found more matches than it returns
      */
     public function __construct(
-        public Collection $occurrences,
+        public Collection $matches,
         public bool $truncated,
-    ) {}
+    ) {
+        $this->occurrences = $matches->whereInstanceOf(Occurrence::class)->values();
+        $this->split = $matches->whereInstanceOf(SplitOccurrence::class)->values();
+    }
 }

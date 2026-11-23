@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Mockery\MockInterface;
@@ -13,10 +14,14 @@ use Statamic\Events\EntrySaved;
 use Statamic\Events\EntrySaving;
 use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\LocalizedTermSaved;
+use Statamic\Events\RevisionSaving;
+use Statamic\Facades\Collection as Collections;
+use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Git;
 use Statamic\Facades\Stache;
 use Statamic\Git\Subscriber;
 use Statamic\Globals\GlobalSet;
+use Statamic\Revisions\Revision;
 use Statamic\Taxonomies\Term;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Patch;
@@ -90,6 +95,38 @@ function searchReplaceEntryEditor(): string
 }
 
 /**
+ * Switches revisions on for the pages collection, as a Pro site with revisions enabled has them.
+ */
+function searchReplaceRevisions(): void
+{
+    config(['statamic.editions.pro' => true, 'statamic.revisions.enabled' => true]);
+    $pages = Collections::findByHandle('pages');
+    $pages?->revisionsEnabled(true);
+    $pages?->save();
+}
+
+/**
+ * The revisions of the entry, the oldest first, as their files hold them.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function searchReplaceRevisionsOf(string $id): array
+{
+    $revisions = Entries::find($id)?->revisions();
+
+    return collect($revisions instanceof Collection ? $revisions : [])
+        ->whereInstanceOf(Revision::class)
+        ->map(fn (Revision $revision): array => [
+            'action' => data_get($revision->fileData(), 'action'),
+            'user' => data_get($revision->fileData(), 'user'),
+            'message' => data_get($revision->fileData(), 'message'),
+            'title' => data_get($revision->fileData(), 'attributes.data.title'),
+        ])
+        ->values()
+        ->all();
+}
+
+/**
  * Switches Statamic's automatic Git commits on, as a Pro site with Git enabled has them, and spies on Git, whose
  * as() returns the spy.
  */
@@ -120,12 +157,41 @@ it('replaces the matches in every text field of an entry, in Bard text and in se
     Arr::set($expected, 'subtitle.0.text', 'Praxis-Untertitel');
     Arr::set($expected, 'sections.0.text', 'Das Praxis');
     Arr::set($expected, 'sections.1.cards.0.label', 'Praxis A');
+    Arr::set($expected, 'sections.3.rows.0.cells.0', 'Praxis');
     Arr::set($expected, 'facts.0.value', '1999 mit Praxis');
+    Arr::set($expected, 'facts.0.sources.0', 'Praxis-Chronik');
     Arr::set($expected, 'seo.description', 'Praxis und Werte');
+    Arr::set($expected, 'seo.keywords.0', 'Praxis');
+    Arr::set($expected, 'highlights.0', 'Praxis-Event');
+    Arr::set($expected, 'prices.1.cells.0', 'Praxis-Coaching');
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe($expected)
         ->and(Arr::except(SearchReplaceFixtures::savedEntry('ueber-uns'), ['id', 'blueprint']))->toEqual($expected)
-        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 11, 1, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 16, 1, []));
+});
+
+it('replaces the matches in the fields imported from a fieldset, with and without a prefix', function (): void {
+    $article = SearchReplaceFixtures::data('article');
+    SearchReplaceFixtures::entry('artikel', $article, collection: 'articles');
+
+    $result = applySearchReplace(SearchReplaceFixtures::batch(replacement: 'Crew'));
+
+    $expected = $article;
+    Arr::set($expected, 'heading', 'Crew oben');
+    Arr::set($expected, 'text', 'Text vom Crew');
+    Arr::set($expected, 'hero_heading', 'Hero-Crew');
+    Arr::set($expected, 'hero_text', 'Hero-Text vom Crew');
+    Arr::set($expected, 'blocks.0.heading', 'Block-Crew');
+    Arr::set($expected, 'blocks.0.cta_text', 'Ruf das Crew an');
+    Arr::set($expected, 'body.0.attrs.values.text', 'Box vom Crew');
+    Arr::set($expected, 'body.0.attrs.values.box_heading', 'Box-Crew');
+    Arr::set($expected, 'rows.0.heading', 'Zeile Crew');
+    Arr::set($expected, 'rows.0.side_text', 'Seite vom Crew');
+    Arr::set($expected, 'meta.text', 'Meta vom Crew');
+    Arr::set($expected, 'meta.og_heading', 'OG-Crew');
+
+    expect(SearchReplaceFixtures::values('entry', 'artikel'))->toBe($expected)
+        ->and($result->replaced)->toBe(12);
 });
 
 it('removes the Bard text nodes a replacement empties and keeps other emptied text', function (): void {
@@ -677,3 +743,49 @@ it('leaves the commits to Statamic while :dataset', function (string $switch): v
     'Git is disabled' => 'statamic.git.enabled',
     'Git does not commit automatically' => 'statamic.git.automatic',
 ]);
+
+it('makes a revision of each entry it writes in a collection with revisions, with the user of the batch and its message', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('news-1', ['title' => 'Team News'], collection: 'news');
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    searchReplaceRevisions();
+
+    expect(applySearchReplace(SearchReplaceFixtures::batch(user: SearchReplaceFixtures::editor()))->items)->toBe(3)
+        ->and(searchReplaceRevisionsOf('ueber-uns'))->toBe([
+            ['action' => 'revision', 'user' => 'editor-1', 'message' => 'Search & Replace: replaced "Team" with "Praxis"', 'title' => 'Unser Praxis'],
+        ])
+        ->and(searchReplaceRevisionsOf('news-1'))->toBeEmpty();
+});
+
+it('makes a revision of each entry it restores, with the user who asked for the undo and its message', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    searchReplaceRevisions();
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(), SearchReplaceFixtures::editor());
+    $this->travelTo(CarbonImmutable::parse('2026-11-19 11:01:00'));
+
+    expect(undoSearchReplace($batch)->restored)->toBe(1)
+        ->and(searchReplaceRevisionsOf('ueber-uns'))->toBe([
+            ['action' => 'revision', 'user' => null, 'message' => 'Search & Replace: replaced "Team" with "Praxis"', 'title' => 'Unser Praxis'],
+            ['action' => 'revision', 'user' => 'editor-1', 'message' => 'Search & Replace: undid replacing "Team" with "Praxis"', 'title' => 'Unser Team'],
+        ]);
+});
+
+it('skips an entry whose revision cannot be saved, reports the error and writes the others', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    searchReplaceRevisions();
+    $batch = SearchReplaceFixtures::batch();
+    Exceptions::fake();
+    Event::listen(RevisionSaving::class, function (): void {
+        throw new RuntimeException('The revisions folder is read-only.');
+    });
+
+    $result = applySearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Praxis'])
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Failed),
+        ]));
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The revisions folder is read-only.');
+});

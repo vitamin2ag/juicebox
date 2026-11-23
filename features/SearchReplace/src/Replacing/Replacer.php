@@ -32,7 +32,8 @@ use Vitamin2\Juicebox\Features\SearchReplace\Searching\TextFields;
  * the replacement. An item whose save throws is skipped too, so it holds up neither the other items nor later batches.
  * The result records the values every written item had before and after, and an undo restores an item only while all
  * of them still hold what the batch wrote. Each item is saved once, so events, the search index and the static cache
- * see one change, and Git commits a whole batch, or undo, at once.
+ * see one change, an entry of a collection with revisions gets a revision, and Git commits a whole batch, or undo, at
+ * once.
  */
 class Replacer
 {
@@ -41,12 +42,13 @@ class Replacer
     public function apply(Batch $batch): Result
     {
         $user = Users::find($batch->user);
+        $message = $this->message('Search & Replace: replaced ":search" with ":replacement"', $batch);
         $items = collect($batch->patches)
             ->groupBy(fn (Patch $patch): string => implode("\0", [$patch->type, $patch->id, $patch->site]));
         $outcomes = $this->inOneCommit(
-            fn (): Collection => $items->map(fn (Collection $patches): SkippedItem|WrittenItem => $this->applyTo($patches, $user)),
+            fn (): Collection => $items->map(fn (Collection $patches): SkippedItem|WrittenItem => $this->applyTo($patches, $user, $message)),
             $user,
-            $this->commitMessage('Search & Replace: replaced ":search" with ":replacement"', $batch),
+            $message,
         );
         $skipped = $outcomes->whereInstanceOf(SkippedItem::class);
         $written = $items->diffKeys($skipped);
@@ -69,11 +71,12 @@ class Replacer
     public function undo(Batch $batch): UndoResult
     {
         $user = Users::find($batch->undo->user ?? null);
+        $message = $this->message('Search & Replace: undid replacing ":search" with ":replacement"', $batch);
         $written = collect($batch->result->written ?? []);
         $outcomes = $this->inOneCommit(
-            fn (): Collection => $written->map(fn (WrittenItem $item): ?SkippedItem => $this->restore($item, $user)),
+            fn (): Collection => $written->map(fn (WrittenItem $item): ?SkippedItem => $this->restore($item, $user, $message)),
             $user,
-            $this->commitMessage('Search & Replace: undid replacing ":search" with ":replacement"', $batch),
+            $message,
         );
         $skipped = $outcomes->whereInstanceOf(SkippedItem::class);
 
@@ -83,7 +86,7 @@ class Replacer
     /**
      * @param  Collection<int, Patch>  $patches  the patches of one item
      */
-    private function applyTo(Collection $patches, ?User $user): SkippedItem|WrittenItem
+    private function applyTo(Collection $patches, ?User $user, string $message): SkippedItem|WrittenItem
     {
         $patch = $patches->firstOrFail();
         $content = $this->find($patch->type, $patch->id, $patch->site);
@@ -104,10 +107,10 @@ class Replacer
             return $this->skip($patch, SkipReason::Changed);
         }
 
-        return $this->write($content, $patches, $user);
+        return $this->write($content, $patches, $user, $message);
     }
 
-    private function restore(WrittenItem $item, ?User $user): ?SkippedItem
+    private function restore(WrittenItem $item, ?User $user, string $message): ?SkippedItem
     {
         $content = $this->find($item->type, $item->id, $item->site);
 
@@ -131,7 +134,7 @@ class Replacer
             ->mapWithKeys(fn (array $field): array => [$field['handle'] => $field['before']])
             ->all();
 
-        if (! $this->save($content, $values, $user)) {
+        if (! $this->save($content, $values, $user, $message)) {
             return new SkippedItem($item->type, $item->id, $item->site, SkipReason::Failed);
         }
 
@@ -188,7 +191,7 @@ class Replacer
      *
      * @param  Collection<int, Patch>  $patches
      */
-    private function write(Entry|LocalizedTerm|Variables $content, Collection $patches, ?User $user): SkippedItem|WrittenItem
+    private function write(Entry|LocalizedTerm|Variables $content, Collection $patches, ?User $user, string $message): SkippedItem|WrittenItem
     {
         $emptiedNodes = $this->emptiedTextNodes($content, $patches);
         $before = $patches
@@ -211,7 +214,7 @@ class Replacer
 
         $patch = $patches->firstOrFail();
 
-        if (! $this->save($content, $values, $user)) {
+        if (! $this->save($content, $values, $user, $message)) {
             return $this->skip($patch, SkipReason::Failed);
         }
 
@@ -228,12 +231,13 @@ class Replacer
 
     /**
      * Sets the values and saves the item once. Entries and terms record the user as their last editor, while the user
-     * exists. When the save throws, the error is reported and the item gets its values back from a clone, as a later
-     * batch of the run may be given the same object again.
+     * exists, and an entry of a collection with revisions gets a revision with the user and the message, as a save in
+     * the control panel would. When the save or the revision throws, the error is reported and the item gets its values
+     * back from a clone, as a later batch of the run may be given the same object again.
      *
      * @param  array<array-key, mixed>  $values  the whole value of each top-level field, by handle
      */
-    private function save(Entry|LocalizedTerm|Variables $content, array $values, ?User $user): bool
+    private function save(Entry|LocalizedTerm|Variables $content, array $values, ?User $user, string $message): bool
     {
         $original = clone $content;
 
@@ -247,6 +251,10 @@ class Replacer
 
         try {
             $content->save();
+
+            if ($content instanceof Entry && $content->revisionsEnabled()) {
+                $content->createRevision(['user' => $user, 'message' => $message]);
+            }
         } catch (Throwable $exception) {
             report($exception);
             $content->data($original->data());
@@ -289,9 +297,10 @@ class Replacer
     }
 
     /**
-     * The message names the search and the replacement, in the locale Statamic writes its commit messages in.
+     * The message of the commit and of the revisions names the search and the replacement, in the locale Statamic writes
+     * its commit messages in.
      */
-    private function commitMessage(string $message, Batch $batch): string
+    private function message(string $message, Batch $batch): string
     {
         $locale = config('statamic.git.locale');
 
@@ -316,7 +325,7 @@ class Replacer
         $nodes = $this->fields
             ->of($blueprint, $content->data())
             ->where('node', true)
-            ->pluck('path');
+            ->flatMap(fn (array $text): array => array_column($text['parts'], 'path'));
 
         return $patches
             ->filter(fn (Patch $patch): bool => $patch->after === '' && $nodes->contains($patch->path))
