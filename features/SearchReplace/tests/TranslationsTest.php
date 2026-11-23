@@ -100,17 +100,23 @@ it('translates the strings of the control panel page into :dataset', function (s
         'No text field contains the search term.' => 'Kein Textfeld enthält den Suchbegriff.',
         'Replace selected' => 'Auswahl ersetzen',
         'Pending' => 'Ausstehend',
+        'Undo pending' => 'Rückgängigmachen ausstehend',
+        'Partly undone' => 'Teilweise rückgängig gemacht',
     ]],
     'Swiss German' => ['de_CH', [
         'Match case' => 'Gross-/Kleinschreibung beachten',
         'No text field contains the search term.' => 'Kein Textfeld enthält den Suchbegriff.',
         'Replace selected' => 'Auswahl ersetzen',
         'Pending' => 'Ausstehend',
+        'Undo pending' => 'Rückgängigmachen ausstehend',
+        'Partly undone' => 'Teilweise rückgängig gemacht',
     ]],
     'French' => ['fr', [
         'Match case' => 'Respecter la casse',
         'No text field contains the search term.' => 'Aucun champ texte ne contient le terme recherché.',
         'Replace selected' => 'Remplacer la sélection',
         'Pending' => 'En attente',
+        'Undo pending' => 'Annulation en attente',
+        'Partly undone' => 'Partiellement annulé',
     ]],
 ])->coversNothing();

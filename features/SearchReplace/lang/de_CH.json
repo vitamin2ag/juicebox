@@ -32,5 +32,11 @@
     "Pending": "Ausstehend",
     "Applied": "Angewendet",
     "Replaced": "Ersetzt",
-    "Skipped": "Übersprungen"
+    "Skipped": "Übersprungen",
+    "Undo": "Rückgängig machen",
+    "Undo pending": "Rückgängigmachen ausstehend",
+    "Undone": "Rückgängig gemacht",
+    "Partly undone": "Teilweise rückgängig gemacht",
+    "Not undone": "Nicht rückgängig gemacht",
+    "At the next scheduled run, the items get back their values from before the replacement. Items changed since the replacement are skipped.": "Beim nächsten geplanten Lauf erhalten die Elemente ihre Werte von vor der Ersetzung zurück. Elemente, die seit der Ersetzung geändert wurden, werden übersprungen."
 }

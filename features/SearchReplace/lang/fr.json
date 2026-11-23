@@ -32,5 +32,11 @@
     "Pending": "En attente",
     "Applied": "Appliqué",
     "Replaced": "Remplacées",
-    "Skipped": "Ignorés"
+    "Skipped": "Ignorés",
+    "Undo": "Annuler",
+    "Undo pending": "Annulation en attente",
+    "Undone": "Annulé",
+    "Partly undone": "Partiellement annulé",
+    "Not undone": "Non annulés",
+    "At the next scheduled run, the items get back their values from before the replacement. Items changed since the replacement are skipped.": "Lors de la prochaine exécution planifiée, les éléments retrouvent leurs valeurs d'avant le remplacement. Les éléments modifiés depuis le remplacement sont ignorés."
 }

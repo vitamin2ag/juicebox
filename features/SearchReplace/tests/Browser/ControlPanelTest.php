@@ -93,3 +93,42 @@ it('lists an applied batch with the items the command skipped', function (): voi
         ->assertPresent('a[href$="/cp/collections/pages/entries/ueber-uns"]')
         ->assertNoJavaScriptErrors();
 });
+
+it('undoes an applied batch at the next run and lists the item changed since', function (): void {
+    $kontakt = SearchReplaceFixtures::entry('kontakt', ['title' => 'Kontakt', 'lead' => 'Schreib dem Team.']);
+    resolve(BatchRepository::class)->save(new Batch(
+        '9d3c1f2a-0b4e-4c6d-8e7f-000000000002',
+        null,
+        'Team',
+        'Praxis',
+        false,
+        CarbonImmutable::now(),
+        [
+            new Patch('entry', 'ueber-uns', 'de', 'lead', 'Das Team stellt sich vor.', 'Das Praxis stellt sich vor.', 1),
+            new Patch('entry', 'kontakt', 'de', 'lead', 'Schreib dem Team.', 'Schreib dem Praxis.', 1),
+        ],
+    ));
+    Artisan::call('statamic:juicebox:search-replace:apply');
+    $kontakt->set('lead', 'Schreib uns.');
+    $kontakt->save();
+
+    $page = visit(SearchReplaceFixtures::cpUrl('utilities.search-replace'))
+        ->assertSee('Applied')
+        ->click('td button:has-text("Undo")')
+        ->click('[role="dialog"] button:has-text("Undo")')
+        ->assertSee('The batch will be undone at the next scheduled run.')
+        ->assertSee('Undo pending');
+
+    Artisan::call('statamic:juicebox:search-replace:apply');
+
+    $page->wait(3)
+        ->assertSee('Partly undone')
+        ->assertSee('Not undone')
+        ->assertSee('Changed since the replacement')
+        ->assertPresent('a[href$="/cp/collections/pages/entries/kontakt"]')
+        ->assertNotPresent('td button:has-text("Undo")')
+        ->assertNoJavaScriptErrors();
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toMatchArray(['lead' => 'Das Team stellt sich vor.'])
+        ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toMatchArray(['lead' => 'Schreib uns.']);
+});
