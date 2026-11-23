@@ -20,7 +20,7 @@ Use this skill when a project that uses `vitamin2/juicebox` needs to switch on, 
 - Laravel's scheduler runs that command, without a queue, every minute by default, and skips a run while the previous one is still going. The server needs the scheduler's cron entry, which Statamic already needs for scheduled entries: `* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1`.
 - Where the scheduler cannot run, put `* * * * * cd /path/to/project && php please juicebox:search-replace:apply >> /dev/null 2>&1` in the hosting's cron and set `JUICEBOX_SEARCH_REPLACE_SCHEDULE=false`.
 - Each item is read again before it is written and skipped as a whole when it was deleted (`missing`), is an entry with a working copy (`working_copy`), or a field of it was edited after the search (`changed`). The batch lists the skipped items with the reason.
-- Every other item is saved once, like a save in the control panel: events, search index, static cache, and Git automation, which commits it like a manual change. Entries and terms record the user who asked for the batch as their last editor.
+- Every other item is saved once, like a save in the control panel: events, search index, static cache, and Git automation, which commits it like a manual change. Entries and terms record the user who asked for the batch as their last editor. A Bard text node left empty is removed. Items are saved without the control panel's validation, and in a collection with revisions the replacement is published at once.
 
 ## Configure
 

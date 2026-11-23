@@ -18,7 +18,9 @@ use Statamic\Fieldtypes\Replicator;
 class TextFields
 {
     /**
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * `node` marks the text of a Bard text node, which Bard does not allow to be empty.
+     *
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     public function of(Blueprint $blueprint, mixed $data): Collection
     {
@@ -28,7 +30,7 @@ class TextFields
     /**
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     private function inFields(Fields $fields, mixed $data, array $path, array $labels): Collection
     {
@@ -45,12 +47,12 @@ class TextFields
     /**
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     private function inField(Field $field, mixed $value, array $path, array $labels): Collection
     {
         return match ($field->type()) {
-            'text', 'textarea', 'markdown' => $this->text($value, $path, $labels),
+            'text', 'textarea', 'markdown' => $this->text($value, $path, $labels, false),
             'bard' => $this->inNodes($field, $value, $path, $labels),
             'replicator' => $this->rows($value)
                 ->flatMap(fn (mixed $row, int|string $index): Collection => $this->inSet($field, $row, [...$path, $index], $labels)),
@@ -65,13 +67,13 @@ class TextFields
      *
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     private function inNodes(Field $field, mixed $nodes, array $path, array $labels): Collection
     {
         return $this->rows($nodes)
             ->flatMap(fn (mixed $node, int|string $index): Collection => match (data_get($node, 'type')) {
-                'text' => $this->text(data_get($node, 'text'), [...$path, $index, 'text'], $labels),
+                'text' => $this->text(data_get($node, 'text'), [...$path, $index, 'text'], $labels, true),
                 'set' => $this->inSet($field, data_get($node, 'attrs.values'), [...$path, $index, 'attrs', 'values'], $labels),
                 default => $this->inNodes($field, data_get($node, 'content'), [...$path, $index, 'content'], $labels),
             });
@@ -80,7 +82,7 @@ class TextFields
     /**
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     private function inSet(Field $field, mixed $values, array $path, array $labels): Collection
     {
@@ -95,7 +97,7 @@ class TextFields
     /**
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
     private function inGrid(Field $field, mixed $rows, array $path, array $labels): Collection
     {
@@ -108,9 +110,9 @@ class TextFields
     /**
      * @param  array<int, int|string>  $path
      * @param  array<int, string>  $labels
-     * @return Collection<int, array{path: string, label: string, value: string}>
+     * @return Collection<int, array{path: string, label: string, value: string, node: bool}>
      */
-    private function text(mixed $value, array $path, array $labels): Collection
+    private function text(mixed $value, array $path, array $labels, bool $node): Collection
     {
         if (! is_string($value)) {
             return new Collection;
@@ -120,6 +122,7 @@ class TextFields
             'path' => implode('.', $path),
             'label' => implode(' › ', $labels),
             'value' => $value,
+            'node' => $node,
         ]]);
     }
 

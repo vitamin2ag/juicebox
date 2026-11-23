@@ -14,8 +14,10 @@ use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\GlobalVariables;
 use Statamic\Facades\Term;
 use Statamic\Facades\User as Users;
+use Statamic\Fields\Blueprint;
 use Statamic\Globals\Variables;
 use Statamic\Taxonomies\LocalizedTerm;
+use Vitamin2\Juicebox\Features\SearchReplace\Searching\TextFields;
 
 /**
  * Applies the patches of a batch item by item. An item is written only while every patched field still holds the
@@ -25,6 +27,8 @@ use Statamic\Taxonomies\LocalizedTerm;
  */
 class Replacer
 {
+    public function __construct(private readonly TextFields $fields) {}
+
     public function apply(Batch $batch): Result
     {
         $user = Users::find($batch->user);
@@ -91,6 +95,7 @@ class Replacer
      */
     private function write(Entry|LocalizedTerm|Variables $content, Collection $patches, ?User $user): void
     {
+        $emptiedNodes = $this->emptiedTextNodes($content, $patches);
         $values = $patches
             ->map(fn (Patch $patch): string => Str::before($patch->path, '.'))
             ->unique()
@@ -99,6 +104,13 @@ class Replacer
 
         foreach ($patches as $patch) {
             Arr::set($values, $patch->path, $patch->after);
+        }
+
+        Arr::forget($values, $emptiedNodes->all());
+
+        foreach ($emptiedNodes as $node) {
+            $list = Str::beforeLast($node, '.');
+            Arr::set($values, $list, array_values(Arr::array($values, $list)));
         }
 
         foreach ($values as $handle => $value) {
@@ -110,6 +122,31 @@ class Replacer
         }
 
         $content->save();
+    }
+
+    /**
+     * The paths of the Bard text nodes the patches empty. Bard refuses to open a field with an empty text node, so such
+     * a node is removed instead of being left blank.
+     *
+     * @param  Collection<int, Patch>  $patches
+     * @return Collection<int, string>
+     */
+    private function emptiedTextNodes(Entry|LocalizedTerm|Variables $content, Collection $patches): Collection
+    {
+        $blueprint = $content->blueprint();
+
+        if (! $blueprint instanceof Blueprint) {
+            return new Collection;
+        }
+
+        $nodes = $this->fields
+            ->of($blueprint, $content->data())
+            ->where('node', true)
+            ->pluck('path');
+
+        return $patches
+            ->filter(fn (Patch $patch): bool => $patch->after === '' && $nodes->contains($patch->path))
+            ->map(fn (Patch $patch): string => Str::beforeLast($patch->path, '.'));
     }
 
     private function skip(Patch $patch, SkipReason $reason): SkippedItem

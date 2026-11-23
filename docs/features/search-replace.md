@@ -52,6 +52,8 @@ Before an item is written, it is read again. It is left as it is, and listed in 
 
 Every other item gets all its replacements and is saved once, as a save in the control panel is: events, the search index and the static cache see it, and with Git automation it is committed like any manual change. Entries and terms record the user who asked for the batch as their last editor, while that user still exists.
 
+A Bard text node that a replacement leaves empty, such as a bold word replaced with nothing, is removed, as Bard does not open a field with an empty text node; its paragraph stays. The item is saved without the validation of the control panel, so a required field can end up empty and a character limit is not checked. In a collection with revisions, the replacement is published at once, without a new revision.
+
 ## Configuration
 
 Publish the config file:

@@ -13,14 +13,15 @@ beforeEach(function (): void {
 });
 
 /**
- * Every text field of the page blueprint in the given values, as "path | label | value".
+ * Every text field of the page blueprint in the given values, as "path | label | value", followed by "| node" for the
+ * text of a Bard text node.
  *
  * @return array<int, string>
  */
 function pageTextFields(mixed $data): array
 {
     return new TextFields()->of(Blueprint::findOrFail('collections.pages.page'), $data)
-        ->map(fn (array $field): string => "{$field['path']} | {$field['label']} | {$field['value']}")
+        ->map(fn (array $field): string => "{$field['path']} | {$field['label']} | {$field['value']}".($field['node'] ? ' | node' : ''))
         ->all();
 }
 
@@ -29,13 +30,13 @@ it('takes text, textarea, markdown and the text of bard, at every depth of bard,
         'title | Titel | Unser Team',
         'lead | Lead | Das Team stellt sich vor.',
         'body | Text | Mehr über das **Team**.',
-        'content.0.content.0.text | Inhalt | Ein starkes ',
-        'content.0.content.1.text | Inhalt | Team',
-        'content.0.content.2.text | Inhalt |  für ',
-        'content.0.content.3.text | Inhalt | Sie',
+        'content.0.content.0.text | Inhalt | Ein starkes  | node',
+        'content.0.content.1.text | Inhalt | Team | node',
+        'content.0.content.2.text | Inhalt |  für  | node',
+        'content.0.content.3.text | Inhalt | Sie | node',
         'content.1.attrs.values.text | Inhalt › Zitat | Team first',
-        'content.2.content.0.content.0.content.0.text | Inhalt | Team Bern',
-        'subtitle.0.text | Untertitel | Team-Untertitel',
+        'content.2.content.0.content.0.content.0.text | Inhalt | Team Bern | node',
+        'subtitle.0.text | Untertitel | Team-Untertitel | node',
         'sections.0.text | Abschnitte › Teaser-Text | Das Team',
         'sections.1.cards.0.label | Abschnitte › Karten › Beschriftung | Team A',
         'facts.0.label | Fakten › Bezeichnung | Gründung',
@@ -68,6 +69,6 @@ it('names a field without a display by its handle', function (): void {
     $blueprint->setContents(['fields' => [['handle' => 'meta_title', 'field' => ['type' => 'text']]]]);
 
     expect(new TextFields()->of($blueprint, ['meta_title' => 'Team'])->all())->toBe([
-        ['path' => 'meta_title', 'label' => 'Meta Title', 'value' => 'Team'],
+        ['path' => 'meta_title', 'label' => 'Meta Title', 'value' => 'Team', 'node' => false],
     ]);
 });

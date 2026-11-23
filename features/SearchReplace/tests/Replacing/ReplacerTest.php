@@ -57,6 +57,49 @@ it('replaces the matches in every text field of an entry, in Bard text and in se
         ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 11, 1, []));
 });
 
+it('removes the Bard text nodes a replacement empties and keeps other emptied text', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', [
+        'title' => 'Team',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'Team'],
+                ['type' => 'text', 'text' => ' und '],
+                ['type' => 'text', 'marks' => [['type' => 'italic']], 'text' => 'Team'],
+                ['type' => 'text', 'text' => 'Teams'],
+            ]],
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Team']]],
+        ],
+        'subtitle' => [['type' => 'text', 'text' => 'Team']],
+        'sections' => [['id' => 'm1a2b3c4', 'type' => 'teaser', 'enabled' => true, 'text' => 'Team']],
+    ]);
+
+    $result = applySearchReplace(SearchReplaceFixtures::batch(replacement: ''));
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe([
+        'title' => '',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'text' => ' und '],
+                ['type' => 'text', 'text' => 's'],
+            ]],
+            ['type' => 'paragraph', 'content' => []],
+        ],
+        'subtitle' => [],
+        'sections' => [['id' => 'm1a2b3c4', 'type' => 'teaser', 'enabled' => true, 'text' => '']],
+    ])->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 7, 1, []));
+});
+
+it('writes an emptied value of an item whose blueprint is gone as it is', function (): void {
+    SearchReplaceFixtures::term('news', ['de' => ['blueprint' => 'gone', 'title' => 'Team']]);
+    $batch = new Batch('9d3c1f2a-0b4e-4c6d-8e7f-000000000001', null, 'Team', '', false, CarbonImmutable::now(), [
+        new Patch('term', 'tags::news', 'de', 'title', 'Team', '', 1),
+    ]);
+
+    applySearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['blueprint' => 'gone', 'title' => '']);
+});
+
 it('replaces the matches of a localization in its own values only', function (): void {
     SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team', 'lead' => 'Das Team']);
     SearchReplaceFixtures::entry('about', ['title' => 'Our team'], 'en', 'ueber-uns');
