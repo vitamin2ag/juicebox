@@ -115,6 +115,7 @@ it('saves the selected matches as a pending batch and goes back to the utility',
                 ['type' => 'entry', 'id' => 'ueber-uns', 'site' => 'de', 'path' => 'lead', 'before' => 'Das Team im Team', 'after' => 'Das Team im Praxis', 'occurrences' => 1],
             ],
             'result' => null,
+            'undo' => null,
         ]);
 });
 

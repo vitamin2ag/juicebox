@@ -17,12 +17,14 @@ readonly class Result
      * @param  int  $replaced  the matches replaced in the items written
      * @param  int  $items  the entries, terms and global sets written
      * @param  array<int, SkippedItem>  $skipped
+     * @param  array<int, WrittenItem>  $written  the items written, with the values an undo restores
      */
     public function __construct(
         public CarbonImmutable $appliedAt,
         public int $replaced,
         public int $items,
         public array $skipped,
+        public array $written = [],
     ) {}
 
     /**
@@ -40,11 +42,15 @@ readonly class Result
                 ->map(SkippedItem::fromArray(...))
                 ->values()
                 ->all(),
+            collect(Arr::array($data, 'written'))
+                ->map(WrittenItem::fromArray(...))
+                ->values()
+                ->all(),
         );
     }
 
     /**
-     * @return array{applied_at: string, replaced: int, items: int, skipped: array<int, array{type: string, id: string, site: string, reason: string}>}
+     * @return array{applied_at: string, replaced: int, items: int, skipped: array<int, array{type: string, id: string, site: string, reason: string}>, written: array<int, array{type: string, id: string, site: string, fields: array<int, array{handle: string, before: mixed, after: mixed}>}>}
      */
     public function toArray(): array
     {
@@ -53,6 +59,7 @@ readonly class Result
             'replaced' => $this->replaced,
             'items' => $this->items,
             'skipped' => array_map(fn (SkippedItem $item): array => $item->toArray(), $this->skipped),
+            'written' => array_map(fn (WrittenItem $item): array => $item->toArray(), $this->written),
         ];
     }
 }

@@ -28,6 +28,20 @@ it('chooses the plural forms of the summary in :dataset', function (string $loca
     'French many' => ['fr', 2, '2 lots appliqués, 2 occurrences remplacées, 2 éléments ignorés'],
 ])->coversNothing();
 
+it('chooses the plural forms of the undo summary in :dataset', function (string $locale, int $count, string $expected): void {
+    app()->setLocale($locale);
+
+    expect(trans_choice('Undid :count batch|Undid :count batches', $count).', '
+        .trans_choice('restored :count item|restored :count items', $count))
+        ->toBe($expected);
+})->with([
+    'German one' => ['de', 1, '1 Auftrag rückgängig gemacht, 1 Element wiederhergestellt'],
+    'German many' => ['de', 2, '2 Aufträge rückgängig gemacht, 2 Elemente wiederhergestellt'],
+    'Swiss German many' => ['de_CH', 2, '2 Aufträge rückgängig gemacht, 2 Elemente wiederhergestellt'],
+    'French none' => ['fr', 0, '0 lot annulé, 0 élément restauré'],
+    'French many' => ['fr', 2, '2 lots annulés, 2 éléments restaurés'],
+])->coversNothing();
+
 it('translates the utility and its messages into :dataset', function (string $locale, array $expected): void {
     app()->setLocale($locale);
 
@@ -38,18 +52,27 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'The search term is not valid UTF-8.' => 'Der Suchbegriff ist kein gültiges UTF-8.',
         'Has unpublished changes' => 'Hat unveröffentlichte Änderungen',
         'Missing global set' => 'Fehlendes globales Set',
+        'The batch will be undone at the next scheduled run.' => 'Der Auftrag wird beim nächsten geplanten Lauf rückgängig gemacht.',
+        'This batch cannot be undone.' => 'Dieser Auftrag kann nicht rückgängig gemacht werden.',
+        'Changed since the replacement' => 'Seit der Ersetzung geändert',
     ]],
     'Swiss German' => ['de_CH', [
         'Search & Replace' => 'Suchen & Ersetzen',
         'The search term is not valid UTF-8.' => 'Der Suchbegriff ist kein gültiges UTF-8.',
         'Has unpublished changes' => 'Hat unveröffentlichte Änderungen',
         'Missing global set' => 'Fehlendes globales Set',
+        'The batch will be undone at the next scheduled run.' => 'Der Auftrag wird beim nächsten geplanten Lauf rückgängig gemacht.',
+        'This batch cannot be undone.' => 'Dieser Auftrag kann nicht rückgängig gemacht werden.',
+        'Changed since the replacement' => 'Seit der Ersetzung geändert',
     ]],
     'French' => ['fr', [
         'Search & Replace' => 'Rechercher & remplacer',
         'The search term is not valid UTF-8.' => "Le terme recherché n'est pas de l'UTF-8 valide.",
         'Has unpublished changes' => 'A des modifications non publiées',
         'Missing global set' => 'Jeu de globales manquant',
+        'The batch will be undone at the next scheduled run.' => 'Le lot sera annulé lors de la prochaine exécution planifiée.',
+        'This batch cannot be undone.' => 'Ce lot ne peut pas être annulé.',
+        'Changed since the replacement' => 'Modifié depuis le remplacement',
     ]],
 ])->coversNothing();
 

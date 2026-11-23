@@ -15,6 +15,9 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\TextFields;
 use Vitamin2\Juicebox\Features\SearchReplace\ServiceProvider;
@@ -94,6 +97,43 @@ function searchReplacePageSkipped(SkippedItem ...$skipped): mixed
 }
 
 /**
+ * A batch of the user marko that the command applied and that wrote an entry, with this undo.
+ */
+function searchReplaceWrittenBatch(?Undo $undo = null): Batch
+{
+    return new Batch(
+        '9d3c1f2a-0b4e-4c6d-8e7f-000000000001',
+        'marko',
+        'Team',
+        'Praxis',
+        false,
+        CarbonImmutable::parse('2026-11-19 10:00:00'),
+        [],
+        new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [], [
+            new WrittenItem('entry', 'ueber-uns', 'de', [['handle' => 'title', 'before' => 'Unser Team', 'after' => 'Unser Praxis']]),
+        ]),
+        $undo,
+    );
+}
+
+/**
+ * Saves a user with this id who may use the utility, or a super user.
+ */
+function searchReplacePageUser(string $id, bool $super = false): User
+{
+    $user = SearchReplaceFixtures::userWith('access search_replace utility');
+    $user->id($id);
+
+    if ($super) {
+        $user->makeSuper();
+    }
+
+    $user->save();
+
+    return $user;
+}
+
+/**
  * Saves a user with this name, which a batch names by its id.
  */
 function searchReplaceUser(?string $name): void
@@ -119,6 +159,7 @@ it('opens the utility without a search', function (): void {
             ->where('matchCase', false)
             ->where('searchUrl', SearchReplaceFixtures::cpUrl('utilities.search-replace'))
             ->where('replaceUrl', SearchReplaceFixtures::cpUrl('utilities.search-replace.replace'))
+            ->where('undoUrl', SearchReplaceFixtures::cpUrl('utilities.search-replace.undo'))
             ->where('results', null)
             ->where('batches', []));
 });
@@ -327,6 +368,8 @@ it('lists a pending batch and an applied one with the items the command skipped'
             'replaced' => null,
             'items' => null,
             'skipped' => [],
+            'undoable' => false,
+            'undo' => null,
         ],
         [
             'id' => '9d3c1f2a-0b4e-4c6d-8e7f-000000000001',
@@ -368,6 +411,8 @@ it('lists a pending batch and an applied one with the items the command skipped'
                     'reason' => 'Deleted',
                 ],
             ],
+            'undoable' => false,
+            'undo' => null,
         ],
     ]);
 });
@@ -424,4 +469,80 @@ it('leaves the site out while the project has one site', function (): void {
 
     expect(searchReplacePageProps('search=team')['results'])->toHaveKey('items.0.site', null)
         ->and(searchReplacePageSkipped(new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed)))->toHaveKey('0.site', null);
+});
+
+it('tells whether the user may undo a batch :dataset', function (Batch $batch, User $user, bool $undoable): void {
+    resolve(BatchRepository::class)->save($batch);
+    $this->actingAs($user);
+
+    expect(searchReplacePageProps()['batches'])->toHaveKey('0.undoable', $undoable);
+})->with([
+    'that the user made' => [fn (): Batch => searchReplaceWrittenBatch(), fn (): User => searchReplacePageUser('marko'), true],
+    'that another user made, as a super user' => [fn (): Batch => searchReplaceWrittenBatch(), fn (): User => searchReplacePageUser('admin-1', super: true), true],
+    'not that another user made' => [fn (): Batch => searchReplaceWrittenBatch(), fn (): User => searchReplacePageUser('editor-2'), false],
+    'not while it is pending' => [
+        fn (): Batch => new Batch('9d3c1f2a-0b4e-4c6d-8e7f-000000000001', 'marko', 'Team', 'Praxis', false, CarbonImmutable::now(), []),
+        fn (): User => searchReplacePageUser('marko'),
+        false,
+    ],
+    'not once its undo is asked for' => [
+        fn (): Batch => searchReplaceWrittenBatch(new Undo('marko', CarbonImmutable::parse('2026-11-19 11:00:00'))),
+        fn (): User => searchReplacePageUser('marko'),
+        false,
+    ],
+]);
+
+it('lists the undo of a batch while it is pending', function (): void {
+    searchReplaceUser('Marko Muster');
+    resolve(BatchRepository::class)->save(searchReplaceWrittenBatch(new Undo('marko', CarbonImmutable::parse('2026-11-19 11:00:00'))));
+    $this->actingAs(SearchReplaceFixtures::superUser());
+
+    expect(searchReplacePageProps()['batches'])->toHaveKey('0.undo', [
+        'requestedAt' => '2026-11-19T11:00:00+00:00',
+        'user' => 'Marko Muster',
+        'pending' => true,
+        'undoneAt' => null,
+        'restored' => null,
+        'skipped' => [],
+    ]);
+});
+
+it('lists the undo of a batch once it is done, with the items it skipped', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::globalSet('footer', ['en' => ['claim' => 'Team']]);
+    resolve(BatchRepository::class)->save(searchReplaceWrittenBatch(new Undo(null, CarbonImmutable::parse('2026-11-19 11:00:00'), new UndoResult(
+        CarbonImmutable::parse('2026-11-19 11:01:00'),
+        2,
+        [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed),
+            new SkippedItem('global', 'footer', 'en', SkipReason::WorkingCopy),
+            new SkippedItem('term', 'tags::alt', 'de', SkipReason::Missing),
+        ],
+    ))));
+    $this->actingAs(SearchReplaceFixtures::superUser());
+
+    expect(searchReplacePageProps()['batches'])->toHaveKey('0.undo', [
+        'requestedAt' => '2026-11-19T11:00:00+00:00',
+        'user' => null,
+        'pending' => false,
+        'undoneAt' => '2026-11-19T11:01:00+00:00',
+        'restored' => 2,
+        'skipped' => [
+            [
+                'type' => 'entry',
+                'title' => 'Unser Team',
+                'editUrl' => SearchReplaceFixtures::cpUrl('collections.entries.edit', ['pages', 'ueber-uns']),
+                'site' => 'Deutsch',
+                'reason' => 'Changed since the replacement',
+            ],
+            [
+                'type' => 'global',
+                'title' => 'Footer',
+                'editUrl' => SearchReplaceFixtures::cpUrl('globals.variables.edit', ['footer', 'site' => 'en']),
+                'site' => 'English',
+                'reason' => 'Has unpublished changes',
+            ],
+            ['type' => 'term', 'title' => 'Missing term', 'editUrl' => null, 'site' => 'Deutsch', 'reason' => 'Deleted'],
+        ],
+    ]);
 });

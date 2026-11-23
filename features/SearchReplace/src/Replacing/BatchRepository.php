@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vitamin2\Juicebox\Features\SearchReplace\Replacing;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,6 +39,17 @@ class BatchRepository
     {
         return $this->all()
             ->filter(fn (Batch $batch): bool => $batch->pending())
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Batch> the oldest request first
+     */
+    public function pendingUndos(): Collection
+    {
+        return $this->all()
+            ->filter(fn (Batch $batch): bool => $batch->undoPending())
+            ->sortBy(fn (Batch $batch): ?CarbonImmutable => $batch->undo->requestedAt ?? null)
             ->values();
     }
 

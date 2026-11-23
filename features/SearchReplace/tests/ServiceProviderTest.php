@@ -55,6 +55,7 @@ it('leaves the Search & Replace utility and its route out of the control panel w
 })->with([
     'page' => 'statamic.cp.utilities.search-replace',
     'replacement' => 'statamic.cp.utilities.search-replace.replace',
+    'undo' => 'statamic.cp.utilities.search-replace.undo',
 ]);
 
 /*

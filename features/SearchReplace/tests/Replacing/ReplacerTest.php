@@ -9,6 +9,7 @@ use Statamic\Entries\Entry;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\LocalizedTermSaved;
+use Statamic\Facades\Stache;
 use Statamic\Globals\GlobalSet;
 use Statamic\Taxonomies\Term;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
@@ -17,9 +18,12 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Replacer;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
-covers(Replacer::class, Result::class, SkippedItem::class, SkipReason::class);
+covers(Replacer::class, Result::class, SkippedItem::class, SkipReason::class, WrittenItem::class, UndoResult::class);
 
 beforeEach(function (): void {
     SearchReplaceFixtures::sites();
@@ -30,6 +34,27 @@ beforeEach(function (): void {
 function applySearchReplace(Batch $batch): Result
 {
     return resolve(Replacer::class)->apply($batch);
+}
+
+/**
+ * The result without the values it records for an undo.
+ */
+function searchReplaceReport(Result $result): Result
+{
+    return new Result($result->appliedAt, $result->replaced, $result->items, $result->skipped);
+}
+
+/**
+ * Applies the batch and asks for its undo as the user.
+ */
+function searchReplaceUndoing(Batch $batch, ?string $user = null): Batch
+{
+    return $batch->applied(applySearchReplace($batch))->withUndo(new Undo($user, CarbonImmutable::now()));
+}
+
+function undoSearchReplace(Batch $batch): UndoResult
+{
+    return resolve(Replacer::class)->undo($batch);
 }
 
 it('replaces the matches in every text field of an entry, in Bard text and in sets too', function (): void {
@@ -54,7 +79,7 @@ it('replaces the matches in every text field of an entry, in Bard text and in se
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe($expected)
         ->and(Arr::except(SearchReplaceFixtures::savedEntry('ueber-uns'), ['id', 'blueprint']))->toEqual($expected)
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 11, 1, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 11, 1, []));
 });
 
 it('removes the Bard text nodes a replacement empties and keeps other emptied text', function (): void {
@@ -86,7 +111,51 @@ it('removes the Bard text nodes a replacement empties and keeps other emptied te
         ],
         'subtitle' => [],
         'sections' => [['id' => 'm1a2b3c4', 'type' => 'teaser', 'enabled' => true, 'text' => '']],
-    ])->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 7, 1, []));
+    ])->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 7, 1, []));
+});
+
+it('records the values of the fields it wrote as it set them, without the Bard text nodes it removed', function (): void {
+    $data = [
+        'title' => 'Team',
+        'content' => [['type' => 'paragraph', 'content' => [
+            ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'Team'],
+            ['type' => 'text', 'text' => ' und Teams'],
+        ]]],
+        'sections' => [['id' => 'm1a2b3c4', 'type' => 'teaser', 'enabled' => true, 'text' => 'Das Team']],
+        'notes' => 'Team intern',
+    ];
+    SearchReplaceFixtures::entry('ueber-uns', $data);
+
+    $written = applySearchReplace(SearchReplaceFixtures::batch(replacement: ''))->written;
+
+    expect($written)->toEqual([new WrittenItem('entry', 'ueber-uns', 'de', [
+        ['handle' => 'title', 'before' => 'Team', 'after' => ''],
+        ['handle' => 'content', 'before' => $data['content'], 'after' => [['type' => 'paragraph', 'content' => [
+            ['type' => 'text', 'text' => ' und s'],
+        ]]]],
+        ['handle' => 'sections', 'before' => $data['sections'], 'after' => [
+            ['id' => 'm1a2b3c4', 'type' => 'teaser', 'enabled' => true, 'text' => 'Das '],
+        ]],
+    ])]);
+});
+
+it('records every item it wrote, in the order of the batch, and none it skipped', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team', 'lead' => 'Das Team im Team']);
+    SearchReplaceFixtures::globalSet('footer', ['en' => ['claim' => 'Your team']]);
+    $batch = new Batch('9d3c1f2a-0b4e-4c6d-8e7f-000000000001', null, 'Team', 'Praxis', false, CarbonImmutable::now(), [
+        new Patch('global', 'footer', 'en', 'claim', 'Your team', 'Your Praxis', 1),
+        new Patch('entry', 'gone', 'de', 'title', 'Team', 'Praxis', 1),
+        new Patch('entry', 'ueber-uns', 'de', 'lead', 'Das Team im Team', 'Das Praxis im Praxis', 2),
+        new Patch('entry', 'ueber-uns', 'de', 'title', 'Unser Team', 'Unser Praxis', 1),
+    ]);
+
+    expect(applySearchReplace($batch)->written)->toEqual([
+        new WrittenItem('global', 'footer', 'en', [['handle' => 'claim', 'before' => 'Your team', 'after' => 'Your Praxis']]),
+        new WrittenItem('entry', 'ueber-uns', 'de', [
+            ['handle' => 'lead', 'before' => 'Das Team im Team', 'after' => 'Das Praxis im Praxis'],
+            ['handle' => 'title', 'before' => 'Unser Team', 'after' => 'Unser Praxis'],
+        ]),
+    ]);
 });
 
 it('writes an emptied value of an item whose blueprint is gone as it is', function (): void {
@@ -108,7 +177,7 @@ it('replaces the matches of a localization in its own values only', function ():
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Praxis', 'lead' => 'Das Praxis'])
         ->and(SearchReplaceFixtures::values('entry', 'about', 'en'))->toBe(['title' => 'Our Praxis'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 3, 2, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 3, 2, []));
 });
 
 it('replaces the matches of a term in each site', function (): void {
@@ -121,7 +190,7 @@ it('replaces the matches of a term in each site', function (): void {
 
     expect(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['title' => 'News', 'description' => 'Neues vom Praxis.'])
         ->and(SearchReplaceFixtures::values('term', 'tags::news', 'en'))->toBe(['description' => 'Praxis news, Praxis views'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 3, 2, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 3, 2, []));
 });
 
 it('replaces the matches of a global set in each site', function (): void {
@@ -134,7 +203,7 @@ it('replaces the matches of a global set in each site', function (): void {
 
     expect(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Ihr Praxis in Bern', 'social' => 'https://example.com/team'])
         ->and(SearchReplaceFixtures::values('global', 'footer', 'en'))->toBe(['claim' => 'Your Praxis'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 2, 2, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 2, 2, []));
 });
 
 it('keeps an entry and a global set apart that share their id', function (): void {
@@ -145,7 +214,7 @@ it('keeps an entry and a global set apart that share their id', function (): voi
 
     expect(SearchReplaceFixtures::values('entry', 'footer'))->toBe(['title' => 'Praxis'])
         ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Ihr Praxis'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 2, 2, []));
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 2, 2, []));
 });
 
 it('saves each item once, with every replacement in it', function (): void {
@@ -228,7 +297,7 @@ it('skips an entry with a working copy', function (): void {
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team'])
         ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['description' => 'Praxis'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
             new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::WorkingCopy),
         ]));
 });
@@ -245,7 +314,7 @@ it('skips an item as a whole when one of its fields :dataset', function (mixed $
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team', 'lead' => $lead, 'notes' => 'Team intern'])
         ->and(SearchReplaceFixtures::values('entry', 'team'))->toBe(['title' => 'Praxis'])
-        ->and($result)->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
             new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed),
         ]));
 
@@ -269,3 +338,143 @@ it('reports the skipped items in the order of the batch', function (): void {
         new SkippedItem('global', 'footer', 'de', SkipReason::Missing),
     ])->and($entry->get('title'))->toBe('Unser neues Team');
 });
+
+it('gives every item it wrote its values from before the replacement back, in every site', function (): void {
+    $page = SearchReplaceFixtures::data('page');
+    SearchReplaceFixtures::entry('ueber-uns', $page);
+    SearchReplaceFixtures::entry('about', ['title' => 'Our team', 'lead' => 'A team of five.'], 'en', 'ueber-uns');
+    SearchReplaceFixtures::term('news', ['de' => ['title' => 'News', 'description' => 'Neues vom Team.'], 'en' => ['description' => 'Team news']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Ihr Team'], 'en' => ['claim' => 'Your team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(replacement: ''));
+    $this->travelTo(CarbonImmutable::parse('2026-11-19 11:01:00'));
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe($page)
+        ->and(SearchReplaceFixtures::values('entry', 'about', 'en'))->toBe(['title' => 'Our team', 'lead' => 'A team of five.'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['title' => 'News', 'description' => 'Neues vom Team.'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news', 'en'))->toBe(['description' => 'Team news'])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Ihr Team'])
+        ->and(SearchReplaceFixtures::values('global', 'footer', 'en'))->toBe(['claim' => 'Your team'])
+        ->and($result)->toEqual(new UndoResult(CarbonImmutable::parse('2026-11-19 11:01:00'), 6, []));
+});
+
+it('restores an item read again from its file, with the fields the batch emptied, which the file leaves out', function (): void {
+    SearchReplaceFixtures::entry('team', [
+        'title' => 'Team',
+        'lead' => "Das Team\n  in Bern:\n\n",
+        'subtitle' => [['type' => 'text', 'text' => 'Team']],
+        'notes' => 'intern',
+    ]);
+    SearchReplaceFixtures::term('news', ['de' => ['title' => 'Team', 'description' => 'Ein Team'], 'en' => ['description' => 'Team']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team'], 'en' => ['claim' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(replacement: ''));
+    Stache::clear();
+
+    $result = undoSearchReplace($batch);
+
+    expect(Arr::except(SearchReplaceFixtures::values('entry', 'team'), 'blueprint'))
+        ->toEqual(['title' => 'Team', 'lead' => "Das Team\n  in Bern:\n\n", 'subtitle' => [['type' => 'text', 'text' => 'Team']], 'notes' => 'intern'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toEqual(['title' => 'Team', 'description' => 'Ein Team'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news', 'en'))->toBe(['description' => 'Team'])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Team'])
+        ->and(SearchReplaceFixtures::values('global', 'footer', 'en'))->toBe(['claim' => 'Team'])
+        ->and($result->restored)->toBe(5)
+        ->and($result->skipped)->toBeEmpty();
+});
+
+it('records the user who asked for the undo as the last one to change an entry or term', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team', 'updated_by' => 'someone', 'updated_at' => 1700000000]);
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(), SearchReplaceFixtures::editor());
+    $this->travelTo(CarbonImmutable::parse('2026-11-19 11:01:00'));
+
+    undoSearchReplace($batch);
+
+    $now = CarbonImmutable::parse('2026-11-19 11:01:00')->getTimestamp();
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team', 'updated_by' => 'editor-1', 'updated_at' => $now])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['description' => 'Team', 'updated_by' => 'editor-1', 'updated_at' => $now])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Team']);
+});
+
+it('leaves the last change of an entry as it is when the undo :dataset', function (?string $user): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team', 'updated_by' => 'someone', 'updated_at' => 1700000000]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(), $user);
+
+    undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team', 'updated_by' => 'someone', 'updated_at' => 1700000000]);
+})->with([
+    'was asked for by a user who is gone' => 'editor-gone',
+    'names no user' => null,
+]);
+
+it('skips a missing :dataset and restores the other items', function (SkippedItem $skipped, Closure $delete): void {
+    SearchReplaceFixtures::entry('team', ['title' => 'Team']);
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    $term = SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    $set = SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch());
+    $delete($entry, $term, $set);
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'team'))->toBe(['title' => 'Team'])
+        ->and($result->restored)->toBe(3)
+        ->and($result->skipped)->toEqual([$skipped]);
+})->with([
+    'entry' => [
+        fn (): SkippedItem => new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Missing),
+        fn (Entry $entry): mixed => $entry->delete(),
+    ],
+    'term' => [
+        fn (): SkippedItem => new SkippedItem('term', 'tags::news', 'de', SkipReason::Missing),
+        fn (Entry $entry, Term $term): mixed => $term->delete(),
+    ],
+    'global set' => [
+        fn (): SkippedItem => new SkippedItem('global', 'footer', 'de', SkipReason::Missing),
+        fn (Entry $entry, Term $term, GlobalSet $set): mixed => $set->delete(),
+    ],
+]);
+
+it('skips an entry that got a working copy since the replacement', function (): void {
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch());
+    SearchReplaceFixtures::workingCopy($entry);
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Praxis'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['description' => 'Team'])
+        ->and($result)->toEqual(new UndoResult(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::WorkingCopy),
+        ]));
+});
+
+it('restores no field of an item when one of its fields :dataset', function (string $handle, mixed $value): void {
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Team', 'lead' => 'Das Team', 'notes' => 'Team intern']);
+    SearchReplaceFixtures::entry('team', ['title' => 'Team']);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(replacement: ''));
+    $entry->set($handle, $value);
+    $entry->save();
+    $expected = ['title' => '', 'lead' => 'Das ', 'notes' => 'Team intern'];
+    $expected[$handle] = $value;
+    Event::fake([EntrySaved::class]);
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe($expected)
+        ->and(SearchReplaceFixtures::values('entry', 'team'))->toBe(['title' => 'Team'])
+        ->and($result)->toEqual(new UndoResult(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed),
+        ]));
+
+    Event::assertDispatchedTimes(EntrySaved::class, 1);
+})->with([
+    'changed since the replacement' => ['lead', 'Das neue '],
+    'lost its text' => ['lead', null],
+    'got text after the replacement emptied it' => ['title', 'Neu'],
+]);

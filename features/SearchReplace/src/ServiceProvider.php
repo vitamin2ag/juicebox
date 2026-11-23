@@ -12,6 +12,7 @@ use Statamic\Facades\Utility;
 use Statamic\Http\Middleware\CP\TrimStrings;
 use Vitamin2\Juicebox\Features\SearchReplace\Console\Commands\ApplyReplacements;
 use Vitamin2\Juicebox\Features\SearchReplace\Http\Controllers\ReplaceController;
+use Vitamin2\Juicebox\Features\SearchReplace\Http\Controllers\UndoController;
 use Vitamin2\Juicebox\Features\SearchReplace\Http\SearchReplacePage;
 use Vitamin2\Juicebox\FeatureServiceProvider;
 
@@ -72,6 +73,7 @@ class ServiceProvider extends FeatureServiceProvider
                 $router->post('replace', ReplaceController::class)
                     ->name('replace')
                     ->withoutMiddleware(TrimStrings::class);
+                $router->post('undo', UndoController::class)->name('undo');
             });
         });
     }

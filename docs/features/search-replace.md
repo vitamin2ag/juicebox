@@ -14,6 +14,8 @@ Select the matches, or all of them with `Select All`, and confirm `Replace selec
 
 Below the search, the page lists the latest 10 batches: when and by whom, the search and the replacement, whether the batch is pending or applied, how many matches it replaced, and the items it skipped with the reason (`Deleted`, `Has unpublished changes`, `Changed since the search`), linked to their edit page. An item deleted since is shown as missing, such as `Missing entry`. While a batch is pending, the page reloads the list every 5 seconds, so it shows the result once the command has applied the batch.
 
+An applied batch that wrote at least one item can be undone, once, by the user who made it or by a super user; other users cannot undo it. The undo is not done in the request either: the page says that the batch will be undone at the next scheduled run, and the list shows the undo as pending until the command has done it, then when it was done, how many items it restored and the items it skipped with the reason (`Deleted`, `Has unpublished changes`, `Changed since the replacement`). A batch whose undo skipped items is only partly undone.
+
 Users need the permission `access search_replace utility`, which Statamic lists with the other utilities in the role editor; super users have it. The search lists, and a batch holds, only the entries, terms and global sets the user may edit.
 
 ## Command
@@ -24,7 +26,14 @@ Apply the pending batches by hand:
 php please juicebox:search-replace:apply
 ```
 
-It applies every pending batch, the oldest first, saves each one as applied right after it, and prints a summary such as `Applied 1 batch, replaced 12 matches, skipped 1 item.` Without a pending batch it changes nothing. While the feature is off it prints an error and exits with `1`. The same command runs as `php artisan statamic:juicebox:search-replace:apply`.
+It applies every pending batch, the oldest first, and saves each one as applied right after it. Then it undoes every batch whose undo was asked for, the oldest request first, and saves each one as undone right after it, so an undo sees what the batches of the same run changed. It prints a summary such as:
+
+``` text
+Applied 1 batch, replaced 12 matches, skipped 1 item.
+Undid 1 batch, restored 3 items, skipped 0 items.
+```
+
+Without a pending batch or undo it changes nothing. While the feature is off it prints an error and exits with `1`. The same command runs as `php artisan statamic:juicebox:search-replace:apply`.
 
 ## Scheduler
 
@@ -42,7 +51,37 @@ Where the scheduler cannot run, call the command from the hosting's cron instead
 
 ## Batches
 
-Each batch is one JSON file, `juicebox/search-replace/<uuid>.json` on the `local` disk, which is `storage/app/private/juicebox/search-replace/` in a default Laravel app. It holds the search, the replacement, who asked for it and when, and the whole value of every field it changes, before and after the replacement. Once applied, it also holds when, how many matches and items it replaced and the items it skipped. The files stay out of `content/`, so they make no git commits, and out of the cache, which a deploy clears; they are kept after they are applied.
+Each batch is one JSON file, `juicebox/search-replace/<uuid>.json` on the `local` disk, which is `storage/app/private/juicebox/search-replace/` in a default Laravel app. It holds the search, the replacement, who asked for it and when, and the whole value of every field it changes, before and after the replacement. Once applied, it also holds when, how many matches and items it replaced, the items it skipped, and for every item it wrote the whole value of each top-level field it set, before and after the write. Once its undo is asked for, it holds who asked and when, and once undone, when, how many items were restored and the items skipped. The files stay out of `content/`, so they make no git commits, and out of the cache, which a deploy clears; they are kept after they are applied or undone.
+
+``` json
+{
+    "id": "<uuid>",
+    "user": "<user id>",
+    "search": "Team",
+    "replacement": "Praxis",
+    "match_case": false,
+    "created_at": "2026-11-19T10:00:00+00:00",
+    "patches": [
+        {"type": "entry", "id": "<entry id>", "site": "default", "path": "title", "before": "Our Team", "after": "Our Praxis", "occurrences": 1}
+    ],
+    "result": {
+        "applied_at": "2026-11-19T10:01:00+00:00",
+        "replaced": 1,
+        "items": 1,
+        "skipped": [],
+        "written": [
+            {"type": "entry", "id": "<entry id>", "site": "default", "fields": [{"handle": "title", "before": "Our Team", "after": "Our Praxis"}]}
+        ]
+    },
+    "undo": {
+        "user": "<user id>",
+        "requested_at": "2026-11-19T11:00:00+00:00",
+        "result": {"undone_at": "2026-11-19T11:01:00+00:00", "restored": 1, "skipped": []}
+    }
+}
+```
+
+`result` is `null` while the batch is pending, `undo` is `null` until its undo is asked for, and the `result` of the undo is `null` while the undo is pending. A skipped item is `{"type", "id", "site", "reason"}`, with the reason `missing`, `working_copy` or `changed`. The `id` of a term is `<taxonomy>::<slug>`, and that of a global set its handle.
 
 Before an item is written, it is read again. It is left as it is, and listed in the batch with the reason, when:
 
@@ -53,6 +92,16 @@ Before an item is written, it is read again. It is left as it is, and listed in 
 Every other item gets all its replacements and is saved once, as a save in the control panel is: events, the search index and the static cache see it, and with Git automation it is committed like any manual change. Entries and terms record the user who asked for the batch as their last editor, while that user still exists.
 
 A Bard text node that a replacement leaves empty, such as a bold word replaced with nothing, is removed, as Bard does not open a field with an empty text node; its paragraph stays. The item is saved without the validation of the control panel, so a required field can end up empty and a character limit is not checked. In a collection with revisions, the replacement is published at once, without a new revision.
+
+## Undo
+
+An undo uses only what the batch recorded when it wrote each item: the whole value of every top-level field it set, before and after. So it also brings back a Bard text node the replacement removed. Each item is read again and left as it is, and listed with the reason, when:
+
+- it was deleted, or its site removed (`missing`);
+- it is an entry with a working copy (`working_copy`);
+- one of the fields the batch wrote no longer holds what the batch wrote, because it was edited, or changed by a later batch (`changed`). Then none of its fields is restored. A field the batch emptied counts as unchanged while it is still empty, as Statamic leaves empty fields out of the file.
+
+Every other item gets the values of those fields from before the replacement back and is saved once, like a save in the control panel. Entries and terms record the user who asked for the undo as their last editor, while that user still exists. Other fields, and changes made to other items since, stay as they are.
 
 ## Configuration
 

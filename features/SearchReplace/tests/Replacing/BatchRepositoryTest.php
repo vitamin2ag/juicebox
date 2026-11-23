@@ -11,8 +11,11 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Patch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
 
-covers(BatchRepository::class, Batch::class, Patch::class, Result::class, SkippedItem::class);
+covers(BatchRepository::class, Batch::class, Patch::class, Result::class, SkippedItem::class, WrittenItem::class, Undo::class, UndoResult::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -32,15 +35,24 @@ function pendingSearchReplaceBatch(int $number = 1, string $createdAt = '2026-11
 
 function appliedSearchReplaceBatch(int $number = 1, string $createdAt = '2026-11-19 10:00:00'): Batch
 {
-    return pendingSearchReplaceBatch($number, $createdAt)->applied(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, []));
+    return pendingSearchReplaceBatch($number, $createdAt)->applied(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [], [
+        new WrittenItem('entry', 'ueber-uns', 'de', [['handle' => 'title', 'before' => 'Unser Team', 'after' => 'Unser Praxis']]),
+    ]));
+}
+
+function undoingSearchReplaceBatch(int $number, string $createdAt, string $requestedAt): Batch
+{
+    return appliedSearchReplaceBatch($number, $createdAt)->withUndo(new Undo('editor-1', CarbonImmutable::parse($requestedAt)));
 }
 
 /**
- * The JSON of an applied batch with one patch and one skipped item, with the value at the given path replaced.
+ * An applied and undone batch with one patch, one skipped item, one written item and one item the undo skipped.
+ *
+ * @return array<string, mixed>
  */
-function searchReplaceBatchJson(?string $path = null, mixed $value = null): string
+function searchReplaceBatchData(): array
 {
-    $batch = [
+    return [
         'id' => searchReplaceBatchId(),
         'user' => 'editor-1',
         'search' => 'Team',
@@ -61,14 +73,76 @@ function searchReplaceBatchJson(?string $path = null, mixed $value = null): stri
             'replaced' => 0,
             'items' => 0,
             'skipped' => [['type' => 'entry', 'id' => 'ueber-uns', 'site' => 'de', 'reason' => 'changed']],
+            'written' => [[
+                'type' => 'term',
+                'id' => 'tags::news',
+                'site' => 'en',
+                'fields' => [
+                    ['handle' => 'description', 'before' => 'Team news', 'after' => 'Praxis news'],
+                    ['handle' => 'content', 'before' => [['type' => 'text', 'text' => 'Team']], 'after' => []],
+                ],
+            ]],
+        ],
+        'undo' => [
+            'user' => 'admin-1',
+            'requested_at' => '2026-11-19T11:00:00+00:00',
+            'result' => [
+                'undone_at' => '2026-11-19T11:01:00+00:00',
+                'restored' => 0,
+                'skipped' => [['type' => 'term', 'id' => 'tags::news', 'site' => 'en', 'reason' => 'working_copy']],
+            ],
         ],
     ];
+}
+
+/**
+ * The JSON of searchReplaceBatchData(), with the value at the given path replaced.
+ */
+function searchReplaceBatchJson(?string $path = null, mixed $value = null): string
+{
+    $batch = searchReplaceBatchData();
 
     if ($path !== null) {
         Arr::set($batch, $path, $value);
     }
 
     return json_encode($batch, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * The JSON of searchReplaceBatchData(), without the value at the given path.
+ */
+function searchReplaceBatchJsonWithout(string $path): string
+{
+    $batch = searchReplaceBatchData();
+    Arr::forget($batch, $path);
+
+    return json_encode($batch, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * The batch searchReplaceBatchData() holds.
+ */
+function searchReplaceBatchOfData(): Batch
+{
+    return new Batch(
+        searchReplaceBatchId(),
+        'editor-1',
+        'Team',
+        'Praxis',
+        true,
+        CarbonImmutable::parse('2026-11-19 10:00:00'),
+        [new Patch('entry', 'ueber-uns', 'de', 'content.1.attrs.values.text', 'Team first', 'Praxis first', 1)],
+        new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 0, 0, [new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed)], [
+            new WrittenItem('term', 'tags::news', 'en', [
+                ['handle' => 'description', 'before' => 'Team news', 'after' => 'Praxis news'],
+                ['handle' => 'content', 'before' => [['type' => 'text', 'text' => 'Team']], 'after' => []],
+            ]),
+        ]),
+        new Undo('admin-1', CarbonImmutable::parse('2026-11-19 11:00:00'), new UndoResult(CarbonImmutable::parse('2026-11-19 11:01:00'), 0, [
+            new SkippedItem('term', 'tags::news', 'en', SkipReason::WorkingCopy),
+        ])),
+    );
 }
 
 it('saves a batch as JSON in juicebox/search-replace/<id>.json on the local disk', function (): void {
@@ -95,19 +169,14 @@ it('saves a batch as JSON in juicebox/search-replace/<id>.json on the local disk
                     "occurrences": 1
                 }
             ],
-            "result": null
+            "result": null,
+            "undo": null
         }
         JSON);
 });
 
-it('converts an applied batch to the values of its JSON', function (): void {
-    $batch = new Batch(searchReplaceBatchId(), 'editor-1', 'Team', 'Praxis', true, CarbonImmutable::parse('2026-11-19 10:00:00'), [
-        new Patch('entry', 'ueber-uns', 'de', 'content.1.attrs.values.text', 'Team first', 'Praxis first', 1),
-    ], new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 0, 0, [
-        new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed),
-    ]));
-
-    expect($batch->toArray())->toBe(json_decode(searchReplaceBatchJson(), true));
+it('converts an applied and undone batch to the values of its JSON', function (): void {
+    expect(searchReplaceBatchOfData()->toArray())->toBe(searchReplaceBatchData());
 });
 
 it('finds a saved batch by its id', function (Batch $batch): void {
@@ -126,21 +195,22 @@ it('finds a saved batch by its id', function (Batch $batch): void {
         new SkippedItem('term', 'tags::news', 'en', SkipReason::Missing),
         new SkippedItem('global', 'footer', 'de', SkipReason::WorkingCopy),
     ])),
+    'with a pending undo asked for by a user without an id' => fn (): Batch => appliedSearchReplaceBatch()
+        ->withUndo(new Undo(null, CarbonImmutable::parse('2026-11-19 11:00:00'))),
+    'undone' => searchReplaceBatchOfData(),
 ]);
 
 it('reads the batch a file holds', function (): void {
     Storage::disk('local')->put('juicebox/search-replace/'.searchReplaceBatchId().'.json', searchReplaceBatchJson());
 
-    expect(resolve(BatchRepository::class)->find(searchReplaceBatchId()))->toEqual(new Batch(
-        searchReplaceBatchId(),
-        'editor-1',
-        'Team',
-        'Praxis',
-        true,
-        CarbonImmutable::parse('2026-11-19 10:00:00'),
-        [new Patch('entry', 'ueber-uns', 'de', 'content.1.attrs.values.text', 'Team first', 'Praxis first', 1)],
-        new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 0, 0, [new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Changed)]),
-    ));
+    expect(resolve(BatchRepository::class)->find(searchReplaceBatchId()))->toEqual(searchReplaceBatchOfData());
+});
+
+it('reads a written field that held nothing', function (): void {
+    Storage::disk('local')->put('juicebox/search-replace/'.searchReplaceBatchId().'.json', searchReplaceBatchJson('result.written.0.fields.0.before'));
+
+    expect(resolve(BatchRepository::class)->find(searchReplaceBatchId())?->result?->written[0]->fields[0])
+        ->toBe(['handle' => 'description', 'before' => null, 'after' => 'Praxis news']);
 });
 
 it('overwrites a batch saved again, such as once it is applied', function (): void {
@@ -197,6 +267,27 @@ it('treats a file :dataset as missing', function (string $contents): void {
     'with a skipped item without id' => searchReplaceBatchJson('result.skipped.0.id'),
     'with a skipped item without site' => searchReplaceBatchJson('result.skipped.0.site'),
     'with a skipped item of an unknown reason' => searchReplaceBatchJson('result.skipped.0.reason', 'gone'),
+    'without written items' => searchReplaceBatchJsonWithout('result.written'),
+    'with written items that are no list' => searchReplaceBatchJson('result.written', 'tags::news'),
+    'with a written item that is no object' => searchReplaceBatchJson('result.written.0', 'tags::news'),
+    'with a written item of an unknown type' => searchReplaceBatchJson('result.written.0.type', 'user'),
+    'with a written item without id' => searchReplaceBatchJson('result.written.0.id'),
+    'with a written item without site' => searchReplaceBatchJson('result.written.0.site'),
+    'with written fields that are no list' => searchReplaceBatchJson('result.written.0.fields', 'description'),
+    'with a written field that is no object' => searchReplaceBatchJson('result.written.0.fields.0', 'description'),
+    'with a written field without handle' => searchReplaceBatchJson('result.written.0.fields.0.handle'),
+    'with a written field without before' => searchReplaceBatchJsonWithout('result.written.0.fields.0.before'),
+    'with a written field without after' => searchReplaceBatchJsonWithout('result.written.0.fields.0.after'),
+    'with a written field whose before is no text' => searchReplaceBatchJson('result.written.0.fields.0.before', 7),
+    'with a written field whose after is no text' => searchReplaceBatchJson('result.written.0.fields.1.after', true),
+    'with an undo that is no object' => searchReplaceBatchJson('undo', 'pending'),
+    'with an undo whose user is no id' => searchReplaceBatchJson('undo.user', 7),
+    'with an undo whose requested_at is no date' => searchReplaceBatchJson('undo.requested_at', 'gestern'),
+    'with an undo result that is no object' => searchReplaceBatchJson('undo.result', 'undone'),
+    'with an undo result whose undone_at is no date' => searchReplaceBatchJson('undo.result.undone_at', 'gestern'),
+    'with an undo result whose restored is no number' => searchReplaceBatchJson('undo.result.restored', '0'),
+    'with undo skipped items that are no list' => searchReplaceBatchJson('undo.result.skipped', 'tags::news'),
+    'with an undo skipped item of an unknown reason' => searchReplaceBatchJson('undo.result.skipped.0.reason', 'gone'),
 ]);
 
 it('lists the pending batches, the oldest first', function (): void {
@@ -216,6 +307,23 @@ it('lists the pending batches, the oldest first', function (): void {
 
 it('lists no pending batch before the first one', function (): void {
     expect(resolve(BatchRepository::class)->pending())->toBeEmpty();
+});
+
+it('lists the batches whose undo is pending, the oldest request first', function (): void {
+    $batches = resolve(BatchRepository::class);
+    $batches->save(undoingSearchReplaceBatch(1, '2026-11-19 10:00:00', '2026-11-19 11:05:00'));
+    $batches->save(appliedSearchReplaceBatch(2, '2026-11-19 10:01:00'));
+    $batches->save(undoingSearchReplaceBatch(3, '2026-11-19 10:02:00', '2026-11-19 11:00:00'));
+    $batches->save(pendingSearchReplaceBatch(4, '2026-11-19 10:03:00'));
+    $batches->save(undoingSearchReplaceBatch(5, '2026-11-19 10:04:00', '2026-11-19 11:01:00')
+        ->undone(new UndoResult(CarbonImmutable::parse('2026-11-19 11:02:00'), 1, [])));
+    $batches->save(undoingSearchReplaceBatch(6, '2026-11-19 10:05:00', '2026-11-19 11:03:00'));
+
+    expect($batches->pendingUndos()->all())->toEqual([
+        undoingSearchReplaceBatch(3, '2026-11-19 10:02:00', '2026-11-19 11:00:00'),
+        undoingSearchReplaceBatch(6, '2026-11-19 10:05:00', '2026-11-19 11:03:00'),
+        undoingSearchReplaceBatch(1, '2026-11-19 10:00:00', '2026-11-19 11:05:00'),
+    ]);
 });
 
 it('lists the latest batches, the newest first', function (): void {

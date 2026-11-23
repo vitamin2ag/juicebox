@@ -22,13 +22,14 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 
 /**
  * The props of the Search & Replace utility: the matches of the search in the query, by item, and the latest batches
- * with what the command did with them. Every item is looked up, so the page shows its edit link and site; a skipped
- * item that no longer exists is titled as missing. The results are a closure, so the page reloading only the batches
- * while one is pending does not search again.
+ * with what the command did with them and with their undo, and whether the user may undo them now. Every item is looked
+ * up, so the page shows its edit link and site; a skipped item that no longer exists is titled as missing. The results
+ * are a closure, so the page reloading only the batches while one is pending does not search again.
  */
 class SearchReplacePage
 {
@@ -39,7 +40,7 @@ class SearchReplacePage
     ) {}
 
     /**
-     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}>}
+     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, undoUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}>}
      */
     public function toArray(Request $request): array
     {
@@ -51,6 +52,7 @@ class SearchReplacePage
             'matchCase' => $matchCase,
             'searchUrl' => route('statamic.cp.utilities.search-replace'),
             'replaceUrl' => route('statamic.cp.utilities.search-replace.replace'),
+            'undoUrl' => route('statamic.cp.utilities.search-replace.undo'),
             'results' => fn (): ?array => $search === '' ? null : $this->results($search, $matchCase),
             'batches' => $this->batches
                 ->latest(10)
@@ -117,7 +119,7 @@ class SearchReplacePage
     }
 
     /**
-     * @return array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}
+     * @return array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}
      */
     private function batch(Batch $batch): array
     {
@@ -131,14 +133,36 @@ class SearchReplacePage
             'appliedAt' => $batch->result?->appliedAt->toIso8601String(),
             'replaced' => $batch->result?->replaced,
             'items' => $batch->result?->items,
-            'skipped' => array_map($this->skipped(...), $batch->result->skipped ?? []),
+            'skipped' => array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the search')), $batch->result->skipped ?? []),
+            'undoable' => $batch->undoable() && $batch->mayBeUndoneBy($this->user),
+            'undo' => $this->undo($batch->undo),
         ];
     }
 
     /**
+     * @return array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null
+     */
+    private function undo(?Undo $undo): ?array
+    {
+        if (! $undo instanceof Undo) {
+            return null;
+        }
+
+        return [
+            'requestedAt' => $undo->requestedAt->toIso8601String(),
+            'user' => $this->userName($undo->user),
+            'pending' => $undo->pending(),
+            'undoneAt' => $undo->result?->undoneAt->toIso8601String(),
+            'restored' => $undo->result?->restored,
+            'skipped' => array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the replacement')), $undo->result->skipped ?? []),
+        ];
+    }
+
+    /**
+     * @param  string  $changed  why an item that changed was skipped, since the search or since the replacement
      * @return array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}
      */
-    private function skipped(SkippedItem $item): array
+    private function skipped(SkippedItem $item, string $changed): array
     {
         $found = $this->lookUp($item->type, $item->id, $item->site);
 
@@ -150,7 +174,7 @@ class SearchReplacePage
             'reason' => match ($item->reason) {
                 SkipReason::Missing => __('Deleted'),
                 SkipReason::WorkingCopy => __('Has unpublished changes'),
-                SkipReason::Changed => __('Changed since the search'),
+                SkipReason::Changed => $changed,
             },
         ];
     }
