@@ -55,6 +55,10 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'The batch will be undone at the next scheduled run.' => 'Der Auftrag wird beim nächsten geplanten Lauf rückgängig gemacht.',
         'This batch cannot be undone.' => 'Dieser Auftrag kann nicht rückgängig gemacht werden.',
         'Changed since the replacement' => 'Seit der Ersetzung geändert',
+        'Not allowed to edit' => 'Keine Berechtigung zum Bearbeiten',
+        'Could not be saved' => 'Konnte nicht gespeichert werden',
+        'Search & Replace: replaced ":search" with ":replacement"' => 'Suchen & Ersetzen: „:search“ durch „:replacement“ ersetzt',
+        'Search & Replace: undid replacing ":search" with ":replacement"' => 'Suchen & Ersetzen: Ersetzen von „:search“ durch „:replacement“ rückgängig gemacht',
     ]],
     'Swiss German' => ['de_CH', [
         'Search & Replace' => 'Suchen & Ersetzen',
@@ -64,6 +68,10 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'The batch will be undone at the next scheduled run.' => 'Der Auftrag wird beim nächsten geplanten Lauf rückgängig gemacht.',
         'This batch cannot be undone.' => 'Dieser Auftrag kann nicht rückgängig gemacht werden.',
         'Changed since the replacement' => 'Seit der Ersetzung geändert',
+        'Not allowed to edit' => 'Keine Berechtigung zum Bearbeiten',
+        'Could not be saved' => 'Konnte nicht gespeichert werden',
+        'Search & Replace: replaced ":search" with ":replacement"' => 'Suchen & Ersetzen: «:search» durch «:replacement» ersetzt',
+        'Search & Replace: undid replacing ":search" with ":replacement"' => 'Suchen & Ersetzen: Ersetzen von «:search» durch «:replacement» rückgängig gemacht',
     ]],
     'French' => ['fr', [
         'Search & Replace' => 'Rechercher & remplacer',
@@ -73,6 +81,10 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'The batch will be undone at the next scheduled run.' => 'Le lot sera annulé lors de la prochaine exécution planifiée.',
         'This batch cannot be undone.' => 'Ce lot ne peut pas être annulé.',
         'Changed since the replacement' => 'Modifié depuis le remplacement',
+        'Not allowed to edit' => 'Modification non autorisée',
+        'Could not be saved' => "N'a pas pu être enregistré",
+        'Search & Replace: replaced ":search" with ":replacement"' => 'Rechercher & remplacer : « :search » remplacé par « :replacement »',
+        'Search & Replace: undid replacing ":search" with ":replacement"' => 'Rechercher & remplacer : remplacement de « :search » par « :replacement » annulé',
     ]],
 ])->coversNothing();
 

@@ -455,6 +455,15 @@ it('marks the skipped items that no longer exist as missing', function (): void 
     ]);
 });
 
+it('tells which skipped items could not be saved and which the user may not edit', function (): void {
+    $this->actingAs(SearchReplaceFixtures::superUser());
+
+    expect(data_get(searchReplacePageSkipped(
+        new SkippedItem('entry', 'geloescht', 'de', SkipReason::Failed),
+        new SkippedItem('entry', 'geloescht', 'de', SkipReason::NotPermitted),
+    ), '*.reason'))->toBe(['Could not be saved', 'Not allowed to edit']);
+});
+
 it('shows the handle of a site that no longer exists', function (): void {
     $this->actingAs(SearchReplaceFixtures::superUser());
 

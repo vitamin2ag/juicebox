@@ -12,9 +12,9 @@ The feature is off by default; switch it on with `JUICEBOX_SEARCH_REPLACE_ENABLE
 
 Select the matches, or all of them with `Select All`, and confirm `Replace selected`. The selected matches and the replacement, which may be empty to delete them, are saved as a batch, and the page says that they will be replaced at the next scheduled run. The batch is made from the term the listed matches were found with, so after changing the term or `Match case`, search again before replacing. Before it saves the batch, the search runs again: a selected match that is gone, or whose field changed since the search, is left out, and when none is left, no batch is saved and the page asks to search again.
 
-Below the search, the page lists the latest 10 batches: when and by whom, the search and the replacement, whether the batch is pending or applied, how many matches it replaced, and the items it skipped with the reason (`Deleted`, `Has unpublished changes`, `Changed since the search`), linked to their edit page. An item deleted since is shown as missing, such as `Missing entry`. While a batch or its undo is pending, the page reloads the list every 5 seconds, so it shows the result once the command has run.
+Below the search, the page lists the latest 10 batches: when and by whom, the search and the replacement, whether the batch is pending or applied, how many matches it replaced, and the items it skipped with the reason (`Deleted`, `Not allowed to edit`, `Has unpublished changes`, `Changed since the search`, `Could not be saved`), linked to their edit page. An item deleted since is shown as missing, such as `Missing entry`. While a batch or its undo is pending, the page reloads the list every 5 seconds, so it shows the result once the command has run.
 
-An applied batch that wrote at least one item can be undone, once, by the user who made it or by a super user; other users do not see its `Undo` button. After confirming `Undo`, the page says that the batch will be undone at the next scheduled run; the undo is not done in the request either. The list then shows the batch as `Undo pending` until the command has done it, then as `Undone`, or `Partly undone` when it skipped items, with the time. The items the undo skipped are listed under `Not undone` with the reason (`Deleted`, `Has unpublished changes`, `Changed since the replacement`), apart from those the replacement skipped.
+An applied batch that wrote at least one item can be undone, once, by the user who made it or by a super user; other users do not see its `Undo` button. After confirming `Undo`, the page says that the batch will be undone at the next scheduled run; the undo is not done in the request either. The list then shows the batch as `Undo pending` until the command has done it, then as `Undone`, or `Partly undone` when it skipped items, with the time. The items the undo skipped are listed under `Not undone` with the reason (`Deleted`, `Not allowed to edit`, `Has unpublished changes`, `Changed since the replacement`, `Could not be saved`), apart from those the replacement skipped.
 
 Users need the permission `access search_replace utility`, which Statamic lists with the other utilities in the role editor; super users have it. The search lists, and a batch holds, only the entries, terms and global sets the user may edit.
 
@@ -81,15 +81,18 @@ Each batch is one JSON file, `juicebox/search-replace/<uuid>.json` on the `local
 }
 ```
 
-`result` is `null` while the batch is pending, `undo` is `null` until its undo is asked for, and the `result` of the undo is `null` while the undo is pending. A skipped item is `{"type", "id", "site", "reason"}`, with the reason `missing`, `working_copy` or `changed`. The `id` of a term is `<taxonomy>::<slug>`, and that of a global set its handle.
+`result` is `null` while the batch is pending, `undo` is `null` until its undo is asked for, and the `result` of the undo is `null` while the undo is pending. A skipped item is `{"type", "id", "site", "reason"}`, with the reason `missing`, `not_permitted`, `working_copy`, `changed` or `failed`. The `id` of a term is `<taxonomy>::<slug>`, and that of a global set its handle.
 
 Before an item is written, it is read again. It is left as it is, and listed in the batch with the reason, when:
 
 - it was deleted, or its site removed (`missing`);
+- the user who asked for the batch may no longer edit it (`not_permitted`); a batch without a user, or whose user was deleted, is not checked again;
 - it is an entry with a working copy, whose unpublished changes would hide the replacement until they are published (`working_copy`);
 - one of its fields no longer holds the value the batch was made from, because it was edited after the search (`changed`). Then none of its fields is written.
 
-Every other item gets all its replacements and is saved once, as a save in the control panel is: events, the search index and the static cache see it, and with Git automation it is committed like any manual change. Entries and terms record the user who asked for the batch as their last editor, while that user still exists.
+Every other item gets all its replacements and is saved once, as a save in the control panel is: events, the search index and the static cache see it. Entries and terms record the user who asked for the batch as their last editor, while that user still exists. When the save of an item throws an error, such as a file that cannot be written or a failing listener, the error goes to the log and the item is listed as `failed`; it keeps its values from before, and the other items and the later batches go on, so the batch is still saved as applied. An error that a listener of the saved event throws comes after the file was written, so such a `failed` item can hold the replacement, and the undo does not restore it.
+
+With Statamic's automatic Git commits (Statamic Pro with `STATAMIC_GIT_ENABLED` and `STATAMIC_GIT_AUTOMATIC`), the items of a batch are not committed one by one: once the batch is applied, one commit holds every item it wrote, as the user who asked for the batch, with a message such as `Search & Replace: replaced "Team" with "Praxis"`, in the locale of Statamic's own commit messages (`STATAMIC_GIT_LOCALE`). A batch that wrote no item makes no commit.
 
 A Bard text node that a replacement leaves empty, such as a bold word replaced with nothing, is removed, as Bard does not open a field with an empty text node; its paragraph stays. The item is saved without the validation of the control panel, so a required field can end up empty and a character limit is not checked. In a collection with revisions, the replacement is published at once, without a new revision.
 
@@ -98,10 +101,11 @@ A Bard text node that a replacement leaves empty, such as a bold word replaced w
 An undo uses only what the batch recorded when it wrote each item: the whole value of every top-level field it set, before and after. So it also brings back a Bard text node the replacement removed. Each item is read again and left as it is, and listed with the reason, when:
 
 - it was deleted, or its site removed (`missing`);
+- the user who asked for the undo may not edit it (`not_permitted`); an undo without a user is not checked;
 - it is an entry with a working copy (`working_copy`);
 - one of the fields the batch wrote no longer holds what the batch wrote, because it was edited, or changed by a later batch (`changed`). Then none of its fields is restored. A field the batch emptied counts as unchanged while it is still empty, as Statamic leaves empty fields out of the file.
 
-Every other item gets the values of those fields from before the replacement back and is saved once, like a save in the control panel. Entries and terms record the user who asked for the undo as their last editor, while that user still exists. Other fields, and changes made to other items since, stay as they are.
+Every other item gets the values of those fields from before the replacement back and is saved once, like a save in the control panel. Entries and terms record the user who asked for the undo as their last editor, while that user still exists. Other fields, and changes made to other items since, stay as they are. An item whose save throws is listed as `failed`, as when a batch is applied. With automatic Git commits, the undo makes one commit as well, as the user who asked for it, with a message such as `Search & Replace: undid replacing "Team" with "Praxis"`.
 
 ## Configuration
 

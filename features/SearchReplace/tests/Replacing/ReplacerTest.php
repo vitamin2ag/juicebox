@@ -5,11 +5,17 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
+use Mockery\MockInterface;
+use Statamic\Contracts\Auth\User;
 use Statamic\Entries\Entry;
 use Statamic\Events\EntrySaved;
+use Statamic\Events\EntrySaving;
 use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\LocalizedTermSaved;
+use Statamic\Facades\Git;
 use Statamic\Facades\Stache;
+use Statamic\Git\Subscriber;
 use Statamic\Globals\GlobalSet;
 use Statamic\Taxonomies\Term;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
@@ -21,6 +27,7 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
+use Vitamin2\Juicebox\Features\SearchReplace\Searching\TextFields;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
 covers(Replacer::class, Result::class, SkippedItem::class, SkipReason::class, WrittenItem::class, UndoResult::class);
@@ -55,6 +62,45 @@ function searchReplaceUndoing(Batch $batch, ?string $user = null): Batch
 function undoSearchReplace(Batch $batch): UndoResult
 {
     return resolve(Replacer::class)->undo($batch);
+}
+
+/**
+ * Makes the save of the entry with this id throw, and fakes the reporting of the error.
+ */
+function searchReplaceSaveThrows(string $id): void
+{
+    Exceptions::fake();
+    Event::listen(EntrySaving::class, function (EntrySaving $event) use ($id): void {
+        if ($event->entry->id() === $id) {
+            throw new RuntimeException("Could not write {$id}.");
+        }
+    });
+}
+
+/**
+ * Saves a user who may edit the entries of the pages collection in the German site only, with a fixed id.
+ */
+function searchReplaceEntryEditor(): string
+{
+    $user = SearchReplaceFixtures::userWith('access de site', 'edit pages entries');
+    $user->id('editor-2');
+    $user->save();
+
+    return 'editor-2';
+}
+
+/**
+ * Switches Statamic's automatic Git commits on, as a Pro site with Git enabled has them, and spies on Git, whose
+ * as() returns the spy.
+ */
+function searchReplaceGit(): MockInterface
+{
+    config(['statamic.editions.pro' => true, 'statamic.git.enabled' => true, 'statamic.git.automatic' => true]);
+    Event::subscribe(Subscriber::class);
+    $git = Git::spy();
+    $git->shouldReceive('as')->andReturnSelf();
+
+    return $git;
 }
 
 it('replaces the matches in every text field of an entry, in Bard text and in sets too', function (): void {
@@ -477,4 +523,157 @@ it('restores no field of an item when one of its fields :dataset', function (str
     'changed since the replacement' => ['lead', 'Das neue '],
     'lost its text' => ['lead', null],
     'got text after the replacement emptied it' => ['title', 'Neu'],
+]);
+
+it('skips an item whose save throws, reports the error, gives the item its values back and writes the others', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team', 'updated_by' => 'someone', 'updated_at' => 1700000000]);
+    SearchReplaceFixtures::entry('team', ['title' => 'Team']);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = SearchReplaceFixtures::batch(user: SearchReplaceFixtures::editor());
+    searchReplaceSaveThrows('ueber-uns');
+
+    $result = applySearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team', 'updated_by' => 'someone', 'updated_at' => 1700000000])
+        ->and(SearchReplaceFixtures::values('entry', 'team'))->toMatchArray(['title' => 'Praxis'])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Praxis'])
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 2, 2, [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Failed),
+        ]))
+        ->and($result->written)->toHaveCount(2);
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'Could not write ueber-uns.');
+});
+
+it('skips the items the user of the batch may not edit', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('about', ['title' => 'Our team'], 'en', 'ueber-uns');
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = SearchReplaceFixtures::batch(user: searchReplaceEntryEditor());
+
+    $result = applySearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toMatchArray(['title' => 'Unser Praxis'])
+        ->and(SearchReplaceFixtures::values('entry', 'about', 'en'))->toBe(['title' => 'Our team'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['description' => 'Team'])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Team'])
+        ->and(searchReplaceReport($result))->toEqual(new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, 1, [
+            new SkippedItem('entry', 'about', 'en', SkipReason::NotPermitted),
+            new SkippedItem('term', 'tags::news', 'de', SkipReason::NotPermitted),
+            new SkippedItem('global', 'footer', 'de', SkipReason::NotPermitted),
+        ]));
+});
+
+it('skips an item whose save throws during the undo, reports the error, leaves the item as it was and restores the others', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('team', ['title' => 'Team']);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(), SearchReplaceFixtures::editor());
+    searchReplaceSaveThrows('ueber-uns');
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Praxis'])
+        ->and(SearchReplaceFixtures::values('entry', 'team'))->toMatchArray(['title' => 'Team'])
+        ->and($result)->toEqual(new UndoResult(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, [
+            new SkippedItem('entry', 'ueber-uns', 'de', SkipReason::Failed),
+        ]));
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'Could not write ueber-uns.');
+});
+
+it('skips the items the user who asked for the undo may not edit', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('about', ['title' => 'Our team'], 'en', 'ueber-uns');
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(), searchReplaceEntryEditor());
+
+    $result = undoSearchReplace($batch);
+
+    expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toMatchArray(['title' => 'Unser Team'])
+        ->and(SearchReplaceFixtures::values('entry', 'about', 'en'))->toBe(['title' => 'Our Praxis'])
+        ->and(SearchReplaceFixtures::values('term', 'tags::news'))->toBe(['description' => 'Praxis'])
+        ->and(SearchReplaceFixtures::values('global', 'footer'))->toBe(['claim' => 'Praxis'])
+        ->and($result)->toEqual(new UndoResult(CarbonImmutable::parse('2026-11-19 10:01:00'), 1, [
+            new SkippedItem('entry', 'about', 'en', SkipReason::NotPermitted),
+            new SkippedItem('term', 'tags::news', 'de', SkipReason::NotPermitted),
+            new SkippedItem('global', 'footer', 'de', SkipReason::NotPermitted),
+        ]));
+});
+
+it('commits the items of a batch once, as its user, and lets every save commit on its own again', function (): void {
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::term('news', ['de' => ['description' => 'Team']]);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = SearchReplaceFixtures::batch(user: SearchReplaceFixtures::editor());
+    $git = searchReplaceGit();
+
+    expect(applySearchReplace($batch)->items)->toBe(3);
+
+    $git->shouldHaveReceived('dispatchCommit')->once();
+    $git->shouldHaveReceived('dispatchCommit', ['Search & Replace: replaced "Team" with "Praxis"']);
+    $git->shouldHaveReceived('as')->once()->with(Mockery::on(fn (mixed $user): bool => $user instanceof User && $user->getAuthIdentifier() === 'editor-1'));
+
+    $entry->save();
+
+    $git->shouldHaveReceived('dispatchCommit')->twice();
+    $git->shouldHaveReceived('dispatchCommit', ['Entry saved']);
+});
+
+it('commits the items of an undo once, as the user who asked for it, in the locale Git commits in', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Team']]);
+    $batch = searchReplaceUndoing(SearchReplaceFixtures::batch(user: SearchReplaceFixtures::editor()));
+    $git = searchReplaceGit();
+    config(['statamic.git.locale' => 'fr']);
+
+    expect(undoSearchReplace($batch)->restored)->toBe(2);
+
+    $git->shouldHaveReceived('dispatchCommit')->once();
+    $git->shouldHaveReceived('dispatchCommit', ['Rechercher & remplacer : remplacement de « Team » par « Praxis » annulé']);
+    $git->shouldHaveReceived('as')->once()->with(null);
+});
+
+it('commits nothing for a batch or an undo that wrote no item', function (): void {
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    $batch = SearchReplaceFixtures::batch();
+    $undo = searchReplaceUndoing($batch);
+    $entry->set('title', 'Unser neues Team');
+    $entry->save();
+    $git = searchReplaceGit();
+
+    expect(applySearchReplace($batch)->items)->toBe(0)
+        ->and(undoSearchReplace($undo)->restored)->toBe(0);
+
+    $git->shouldNotHaveReceived('dispatchCommit');
+});
+
+it('lets every save commit on its own again when a batch stops with an error', function (): void {
+    $entry = SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    $batch = SearchReplaceFixtures::batch();
+    $git = searchReplaceGit();
+    $this->mock(TextFields::class)->shouldReceive('of')->andThrow(new RuntimeException('The blueprint is broken.'));
+
+    expect(fn (): Result => applySearchReplace($batch))->toThrow(RuntimeException::class, 'The blueprint is broken.');
+
+    $entry->save();
+
+    $git->shouldHaveReceived('dispatchCommit')->once();
+    $git->shouldHaveReceived('dispatchCommit', ['Entry saved']);
+});
+
+it('leaves the commits to Statamic while :dataset', function (string $switch): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    $batch = SearchReplaceFixtures::batch();
+    $git = searchReplaceGit();
+    config([$switch => false]);
+
+    expect(applySearchReplace($batch)->items)->toBe(1);
+
+    $git->shouldNotHaveReceived('dispatchCommit', ['Search & Replace: replaced "Team" with "Praxis"']);
+})->with([
+    'Statamic is not Pro' => 'statamic.editions.pro',
+    'Git is disabled' => 'statamic.git.enabled',
+    'Git does not commit automatically' => 'statamic.git.automatic',
 ]);

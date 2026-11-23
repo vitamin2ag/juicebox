@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Statamic\Events\EntrySaving;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalVariables;
 use Statamic\Facades\Stache;
@@ -120,6 +123,32 @@ it('applies the pending batches from the oldest to the newest and saves each one
         ->and(data_get(searchReplaceBatchFile(2), 'result.replaced'))->toBe(2)
         ->and(data_get(searchReplaceBatchFile(1), 'result.skipped.*.reason'))->toBe(['changed', 'changed'])
         ->and($batches->pending())->toBeEmpty();
+});
+
+it('goes on with the other items and the later batches of a run when a save throws', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('kontakt', ['title' => 'Kontakt zum Team']);
+    $batches = resolve(BatchRepository::class);
+    $batches->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(1), createdAt: '2026-11-19 10:00:00'));
+    $batches->save(SearchReplaceFixtures::batch(replacement: 'Crew', id: searchReplaceBatchNumber(2), createdAt: '2026-11-19 10:00:30'));
+    Exceptions::fake();
+    Event::listen(EntrySaving::class, function (EntrySaving $event): void {
+        if ($event->entry->get('title') === 'Unser Praxis') {
+            throw new RuntimeException('The disk is full.');
+        }
+    });
+
+    $status = Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect($status)->toBe(0)
+        ->and(Artisan::output())->toBe("Applied 2 batches, replaced 2 matches, skipped 2 items.\nUndid 0 batches, restored 0 items, skipped 0 items.\n")
+        ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Crew'])
+        ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toBe(['title' => 'Kontakt zum Praxis'])
+        ->and(data_get(searchReplaceBatchFile(1), 'result.skipped'))->toBe([['type' => 'entry', 'id' => 'ueber-uns', 'site' => 'de', 'reason' => 'failed']])
+        ->and(data_get(searchReplaceBatchFile(2), 'result.skipped'))->toBe([['type' => 'entry', 'id' => 'kontakt', 'site' => 'de', 'reason' => 'changed']])
+        ->and($batches->pending())->toBeEmpty();
+
+    Exceptions::assertReported(RuntimeException::class);
 });
 
 it('leaves the applied batches as they are', function (): void {

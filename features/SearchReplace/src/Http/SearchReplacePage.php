@@ -173,8 +173,10 @@ class SearchReplacePage
             'site' => $this->site($item->site),
             'reason' => match ($item->reason) {
                 SkipReason::Missing => __('Deleted'),
+                SkipReason::NotPermitted => __('Not allowed to edit'),
                 SkipReason::WorkingCopy => __('Has unpublished changes'),
                 SkipReason::Changed => $changed,
+                SkipReason::Failed => __('Could not be saved'),
             },
         ];
     }
