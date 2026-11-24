@@ -23,15 +23,15 @@ afterAll(function (): void {
     putenv('JUICEBOX_SEARCH_REPLACE_ENABLED');
 });
 
-it('applies the pending batches every minute without overlapping', function (): void {
-    expect(SearchReplaceFixtures::scheduledApplies())->toBe([['* * * * *', true]]);
+it('applies the pending batches every minute, without the overlap lock of the scheduler, which a dead run would hold for a day', function (): void {
+    expect(SearchReplaceFixtures::scheduledApplies())->toBe([['* * * * *', false]]);
 });
 
 it('applies the pending batches at the time schedule sets', function (): void {
     config(['juicebox.search_replace.schedule' => '*/5 * * * *']);
     app()->forgetInstance(Schedule::class);
 
-    expect(SearchReplaceFixtures::scheduledApplies())->toBe([['*/5 * * * *', true]]);
+    expect(SearchReplaceFixtures::scheduledApplies())->toBe([['*/5 * * * *', false]]);
 });
 
 it('lists the Search & Replace utility in the control panel', function (): void {

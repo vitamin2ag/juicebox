@@ -69,6 +69,7 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'Changed since the replacement' => 'Seit der Ersetzung geändert',
         'Not allowed to edit' => 'Keine Berechtigung zum Bearbeiten',
         'Could not be saved' => 'Konnte nicht gespeichert werden',
+        'Another run is still applying the batches.' => 'Ein anderer Lauf wendet die Aufträge noch an.',
         'Search & Replace: replaced ":search" with ":replacement"' => 'Suchen & Ersetzen: „:search“ durch „:replacement“ ersetzt',
         'Search & Replace: undid replacing ":search" with ":replacement"' => 'Suchen & Ersetzen: Ersetzen von „:search“ durch „:replacement“ rückgängig gemacht',
     ]],
@@ -82,6 +83,7 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'Changed since the replacement' => 'Seit der Ersetzung geändert',
         'Not allowed to edit' => 'Keine Berechtigung zum Bearbeiten',
         'Could not be saved' => 'Konnte nicht gespeichert werden',
+        'Another run is still applying the batches.' => 'Ein anderer Lauf wendet die Aufträge noch an.',
         'Search & Replace: replaced ":search" with ":replacement"' => 'Suchen & Ersetzen: «:search» durch «:replacement» ersetzt',
         'Search & Replace: undid replacing ":search" with ":replacement"' => 'Suchen & Ersetzen: Ersetzen von «:search» durch «:replacement» rückgängig gemacht',
     ]],
@@ -95,6 +97,7 @@ it('translates the utility and its messages into :dataset', function (string $lo
         'Changed since the replacement' => 'Modifié depuis le remplacement',
         'Not allowed to edit' => 'Modification non autorisée',
         'Could not be saved' => "N'a pas pu être enregistré",
+        'Another run is still applying the batches.' => 'Une autre exécution applique encore les lots.',
         'Search & Replace: replaced ":search" with ":replacement"' => 'Rechercher & remplacer : « :search » remplacé par « :replacement »',
         'Search & Replace: undid replacing ":search" with ":replacement"' => 'Rechercher & remplacer : remplacement de « :search » par « :replacement » annulé',
     ]],
@@ -127,6 +130,7 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Undo pending' => 'Rückgängigmachen ausstehend',
         'Partly undone' => 'Teilweise rückgängig gemacht',
         'Edit by hand' => 'Von Hand bearbeiten',
+        'Result' => 'Ergebnis',
     ]],
     'Swiss German' => ['de_CH', [
         'Match case' => 'Gross-/Kleinschreibung beachten',
@@ -136,6 +140,7 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Undo pending' => 'Rückgängigmachen ausstehend',
         'Partly undone' => 'Teilweise rückgängig gemacht',
         'Edit by hand' => 'Von Hand bearbeiten',
+        'Result' => 'Ergebnis',
     ]],
     'French' => ['fr', [
         'Match case' => 'Respecter la casse',
@@ -145,5 +150,6 @@ it('translates the strings of the control panel page into :dataset', function (s
         'Undo pending' => 'Annulation en attente',
         'Partly undone' => 'Partiellement annulé',
         'Edit by hand' => 'Modifier à la main',
+        'Result' => 'Résultat',
     ]],
 ])->coversNothing();

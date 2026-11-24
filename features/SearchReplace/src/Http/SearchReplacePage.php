@@ -21,16 +21,21 @@ use Vitamin2\Juicebox\Features\SearchReplace\Data\Occurrence;
 use Vitamin2\Juicebox\Features\SearchReplace\Data\SplitOccurrence;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Patch;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Searching\Searcher;
 
 /**
  * The props of the Search & Replace utility: the matches of the search in the query, by item, those to select apart
  * from those across Bard formatting, which are to be edited by hand, and the latest batches with what the command did
- * with them and with their undo, and whether the user may undo them now. Every item is looked up, so the page shows its
- * edit link and site; a skipped item that no longer exists is titled as missing. The results are a closure, so the page
+ * with them and with their undo, and whether the user may undo them now. Only the user who made a batch, and super
+ * users, get the items it wrote and skipped; everyone else gets the counts. Every item is looked up, so the page shows
+ * its edit link and site; an item that no longer exists is titled as missing. The results are a closure, so the page
  * reloading only the batches while one is pending does not search again.
  */
 class SearchReplacePage
@@ -42,7 +47,7 @@ class SearchReplacePage
     ) {}
 
     /**
-     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, undoUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>, split: array<int, array{field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}>}
+     * @return array{search: string, matchCase: bool, searchUrl: string, replaceUrl: string, undoUrl: string, results: Closure(): (array{truncated: bool, items: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, occurrences: array<int, array{id: string, field: string, before: string, match: string, after: string}>, split: array<int, array{field: string, before: string, match: string, after: string}>}>}|null), batches: array<int, array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skippedCount: int|null, written: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, replaced: int}>, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skippedCount: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}>}
      */
     public function toArray(Request $request): array
     {
@@ -133,10 +138,13 @@ class SearchReplacePage
     }
 
     /**
-     * @return array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}
+     * @return array{id: string, createdAt: string, user: string|null, search: string, replacement: string, pending: bool, appliedAt: string|null, replaced: int|null, items: int|null, skippedCount: int|null, written: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, replaced: int}>, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>, undoable: bool, undo: array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skippedCount: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null}
      */
     private function batch(Batch $batch): array
     {
+        $details = $batch->belongsTo($this->user);
+        $skipped = $batch->result->skipped ?? [];
+
         return [
             'id' => $batch->id,
             'createdAt' => $batch->createdAt->toIso8601String(),
@@ -147,20 +155,24 @@ class SearchReplacePage
             'appliedAt' => $batch->result?->appliedAt->toIso8601String(),
             'replaced' => $batch->result?->replaced,
             'items' => $batch->result?->items,
-            'skipped' => array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the search')), $batch->result->skipped ?? []),
-            'undoable' => $batch->undoable() && $batch->mayBeUndoneBy($this->user),
-            'undo' => $this->undo($batch->undo),
+            'skippedCount' => $batch->result instanceof Result ? count($skipped) : null,
+            'written' => $details ? array_map(fn (WrittenItem $item): array => $this->written($item, $batch), $batch->result->written ?? []) : [],
+            'skipped' => $details ? array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the search')), $skipped) : [],
+            'undoable' => $batch->undoable() && $details,
+            'undo' => $this->undo($batch->undo, $details),
         ];
     }
 
     /**
-     * @return array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null
+     * @return array{requestedAt: string, user: string|null, pending: bool, undoneAt: string|null, restored: int|null, skippedCount: int|null, skipped: array<int, array{type: string, title: string, editUrl: string|null, site: string|null, reason: string}>}|null
      */
-    private function undo(?Undo $undo): ?array
+    private function undo(?Undo $undo, bool $details): ?array
     {
         if (! $undo instanceof Undo) {
             return null;
         }
+
+        $skipped = $undo->result->skipped ?? [];
 
         return [
             'requestedAt' => $undo->requestedAt->toIso8601String(),
@@ -168,7 +180,23 @@ class SearchReplacePage
             'pending' => $undo->pending(),
             'undoneAt' => $undo->result?->undoneAt->toIso8601String(),
             'restored' => $undo->result?->restored,
-            'skipped' => array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the replacement')), $undo->result->skipped ?? []),
+            'skippedCount' => $undo->result instanceof UndoResult ? count($skipped) : null,
+            'skipped' => $details ? array_map(fn (SkippedItem $item): array => $this->skipped($item, __('Changed since the replacement')), $skipped) : [],
+        ];
+    }
+
+    /**
+     * An item the batch wrote, with how many matches its patches replaced in it.
+     *
+     * @return array{type: string, title: string, editUrl: string|null, site: string|null, replaced: int}
+     */
+    private function written(WrittenItem $item, Batch $batch): array
+    {
+        return [
+            ...$this->listed($item->type, $item->id, $item->site),
+            'replaced' => collect($batch->patches)
+                ->filter(fn (Patch $patch): bool => [$patch->type, $patch->id, $patch->site] === [$item->type, $item->id, $item->site])
+                ->sum(fn (Patch $patch): int => $patch->occurrences),
         ];
     }
 
@@ -178,13 +206,8 @@ class SearchReplacePage
      */
     private function skipped(SkippedItem $item, string $changed): array
     {
-        $found = $this->lookUp($item->type, $item->id, $item->site);
-
         return [
-            'type' => $item->type,
-            'title' => $found['title'] ?? $this->missingTitle($item->type),
-            'editUrl' => $found['editUrl'] ?? null,
-            'site' => $this->site($item->site),
+            ...$this->listed($item->type, $item->id, $item->site),
             'reason' => match ($item->reason) {
                 SkipReason::Missing => __('Deleted'),
                 SkipReason::NotPermitted => __('Not allowed to edit'),
@@ -192,6 +215,24 @@ class SearchReplacePage
                 SkipReason::Changed => $changed,
                 SkipReason::Failed => __('Could not be saved'),
             },
+        ];
+    }
+
+    /**
+     * An entry, term or global set of a batch, as the page lists it.
+     *
+     * @param  'entry'|'term'|'global'  $type
+     * @return array{type: string, title: string, editUrl: string|null, site: string|null}
+     */
+    private function listed(string $type, string $id, string $site): array
+    {
+        $found = $this->lookUp($type, $id, $site);
+
+        return [
+            'type' => $type,
+            'title' => $found['title'] ?? $this->missingTitle($type),
+            'editUrl' => $found['editUrl'] ?? null,
+            'site' => $this->site($site),
         ];
     }
 

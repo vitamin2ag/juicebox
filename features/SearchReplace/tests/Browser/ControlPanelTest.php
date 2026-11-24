@@ -11,6 +11,7 @@ use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Patch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkippedItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\SkipReason;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\WrittenItem;
 use Vitamin2\Juicebox\Features\SearchReplace\Tests\__Fixtures__\SearchReplaceFixtures;
 
 beforeAll(function (): void {
@@ -110,6 +111,7 @@ it('lists an applied batch with the items the command skipped', function (): voi
 
     visit(SearchReplaceFixtures::cpUrl('utilities.search-replace'))
         ->assertSee('Applied')
+        ->click('td button:has-text("Details")')
         ->assertSee('Changed since the search')
         ->assertSee('Missing entry')
         ->assertSee('English')
@@ -146,6 +148,7 @@ it('undoes an applied batch at the next run and lists the item changed since', f
 
     $page->wait(3)
         ->assertSee('Partly undone')
+        ->click('td button:has-text("Details")')
         ->assertSee('Not undone')
         ->assertSee('Changed since the replacement')
         ->assertPresent('a[href$="/cp/collections/pages/entries/kontakt"]')
@@ -154,4 +157,62 @@ it('undoes an applied batch at the next run and lists the item changed since', f
 
     expect(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toMatchArray(['lead' => 'Das Team stellt sich vor.'])
         ->and(SearchReplaceFixtures::values('entry', 'kontakt'))->toMatchArray(['lead' => 'Schreib uns.']);
+});
+
+it('shows the items an applied batch changed to the user who made it, and only its counts to another user', function (): void {
+    SearchReplaceFixtures::entry('kontakt', ['title' => 'Kontakt', 'lead' => 'Schreib uns.']);
+    SearchReplaceFixtures::entry('impressum', ['title' => 'Impressum Praxis']);
+    $author = SearchReplaceFixtures::userWith('access search_replace utility');
+    $author->id('marko');
+    $author->save();
+    resolve(BatchRepository::class)->save(new Batch(
+        '9d3c1f2a-0b4e-4c6d-8e7f-000000000003',
+        'marko',
+        'Team',
+        'Praxis',
+        false,
+        CarbonImmutable::parse('2026-11-19 10:00:00'),
+        [
+            new Patch('entry', 'ueber-uns', 'de', 'title', 'Unser Team', 'Unser Praxis', 1),
+            new Patch('entry', 'ueber-uns', 'de', 'lead', 'Das Team stellt sich vor.', 'Das Praxis stellt sich vor.', 1),
+            new Patch('entry', 'impressum', 'de', 'title', 'Impressum Team', 'Impressum Praxis', 1),
+            new Patch('entry', 'kontakt', 'de', 'lead', 'Schreib dem Team.', 'Schreib dem Praxis.', 1),
+        ],
+        new Result(CarbonImmutable::parse('2026-11-19 10:01:00'), 3, 2, [
+            new SkippedItem('entry', 'kontakt', 'de', SkipReason::Changed),
+        ], [
+            new WrittenItem('entry', 'ueber-uns', 'de', [['handle' => 'title', 'before' => 'Unser Team', 'after' => 'Unser Praxis']]),
+            new WrittenItem('entry', 'impressum', 'de', [['handle' => 'title', 'before' => 'Impressum Team', 'after' => 'Impressum Praxis']]),
+        ]),
+    ));
+    $this->actingAs($author);
+
+    visit(SearchReplaceFixtures::cpUrl('utilities.search-replace'))
+        ->assertSee('Replaced3')
+        ->assertSee('Skipped1')
+        ->assertDontSee('Unser Team')
+        ->click('td button:has-text("Details")')
+        ->assertSee('Modified')
+        ->assertPresent('a[href$="/cp/collections/pages/entries/ueber-uns"]:has-text("Unser Team")')
+        ->assertSee('Replaced2')
+        ->assertPresent('a[href$="/cp/collections/pages/entries/impressum"]:has-text("Impressum Praxis")')
+        ->assertPresent('a[href$="/cp/collections/pages/entries/kontakt"]:has-text("Kontakt")')
+        ->assertSee('Changed since the search')
+        ->assertNoJavaScriptErrors();
+
+    $other = SearchReplaceFixtures::userWith('access search_replace utility');
+    $other->id('editor-2');
+    $other->email('editor-2@example.com');
+    $other->save();
+    $this->actingAs($other);
+
+    visit(SearchReplaceFixtures::cpUrl('utilities.search-replace'))
+        ->assertSee('Replaced3')
+        ->assertSee('Skipped1')
+        ->assertNotPresent('td button:has-text("Details")')
+        ->assertDontSee('Unser Team')
+        ->assertDontSee('Impressum')
+        ->assertDontSee('Kontakt')
+        ->assertDontSee('Changed since the search')
+        ->assertNoJavaScriptErrors();
 });

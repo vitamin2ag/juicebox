@@ -42,7 +42,8 @@ class ServiceProvider extends FeatureServiceProvider
     }
 
     /**
-     * Any schedule that is not a cron expression, such as false from the env, schedules nothing.
+     * Any schedule that is not a cron expression, such as false from the env, schedules nothing. The command keeps its
+     * runs apart itself; the overlap lock of the scheduler would hold for a day after a run that dies.
      */
     private function bootSchedule(): void
     {
@@ -53,7 +54,7 @@ class ServiceProvider extends FeatureServiceProvider
                 return;
             }
 
-            $schedule->command(ApplyReplacements::class)->cron($expression)->withoutOverlapping();
+            $schedule->command(ApplyReplacements::class)->cron($expression);
         });
     }
 

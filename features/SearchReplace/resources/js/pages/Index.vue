@@ -46,11 +46,18 @@ interface Item {
     split: SplitOccurrence[];
 }
 
-interface SkippedItem {
+interface ListedItem {
     type: 'entry' | 'term' | 'global';
     title: string;
     editUrl: string | null;
     site: string | null;
+}
+
+interface WrittenItem extends ListedItem {
+    replaced: number;
+}
+
+interface SkippedItem extends ListedItem {
     reason: string;
 }
 
@@ -60,6 +67,7 @@ interface Undo {
     pending: boolean;
     undoneAt: string | null;
     restored: number | null;
+    skippedCount: number | null;
     skipped: SkippedItem[];
 }
 
@@ -73,6 +81,8 @@ interface Batch {
     appliedAt: string | null;
     replaced: number | null;
     items: number | null;
+    skippedCount: number | null;
+    written: WrittenItem[];
     skipped: SkippedItem[];
     undoable: boolean;
     undo: Undo | null;
@@ -159,6 +169,17 @@ function skippedLists(batch: Batch): { undo: boolean; items: SkippedItem[] }[] {
         { undo: false, items: batch.skipped },
         { undo: true, items: batch.undo?.skipped ?? [] },
     ].filter((list) => list.items.length > 0);
+}
+
+// The items of a batch come only for the user who made it and for super users; everyone else gets the counts.
+function hasDetails(batch: Batch): boolean {
+    return batch.written.length > 0 || skippedLists(batch).length > 0;
+}
+
+const openBatches = ref<string[]>([]);
+
+function toggleDetails(id: string): void {
+    openBatches.value = openBatches.value.includes(id) ? openBatches.value.filter((openId) => openId !== id) : [...openBatches.value, id];
 }
 
 const poll = usePoll(5000, { only: ['batches'] }, { autoStart: false });
@@ -276,71 +297,115 @@ watch(
             <Table>
                 <TableColumns>
                     <TableColumn v-text="__('Date')" />
-                    <TableColumn v-text="__('User')" />
                     <TableColumn v-text="__('Replacement')" />
                     <TableColumn v-text="__('Status')" />
-                    <TableColumn v-text="__('Replaced')" />
-                    <TableColumn v-text="__('Skipped')" />
+                    <TableColumn v-text="__('Result')" />
                 </TableColumns>
                 <TableRows>
-                    <TableRow v-for="batch in batches" :key="batch.id">
-                        <TableCell class="whitespace-nowrap" v-text="dateFormatter.format(batch.createdAt, 'datetime')" />
-                        <TableCell v-text="batch.user ?? '—'" />
-                        <TableCell>
-                            <span style="white-space: pre-wrap"
-                                ><del class="bg-red-100 text-red-800 dark:bg-red-300/6 dark:text-red-300" v-text="batch.search" /> →
-                                <ins
-                                    class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                                    v-text="batch.replacement"
-                            /></span>
-                        </TableCell>
-                        <TableCell>
-                            <Badge v-if="batch.pending" color="amber" :text="__('Pending')" />
-                            <div v-else class="space-y-1">
-                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <Badge color="green" :text="__('Applied')" />
-                                    <span
-                                        v-if="batch.appliedAt"
-                                        class="text-sm text-gray-600 dark:text-gray-400"
-                                        v-text="dateFormatter.format(batch.appliedAt, 'datetime')"
-                                    />
-                                    <Button v-if="batch.undoable" size="sm" :text="__('Undo')" @click="confirmUndo(batch.id)" />
-                                </div>
-                                <div v-if="batch.undo" class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <Badge v-if="batch.undo.pending" color="amber" :text="__('Undo pending')" />
-                                    <Badge v-else-if="batch.undo.skipped.length > 0" color="orange" :text="__('Partly undone')" />
-                                    <Badge v-else color="blue" :text="__('Undone')" />
-                                    <span
-                                        class="text-sm text-gray-600 dark:text-gray-400"
-                                        v-text="dateFormatter.format(batch.undo.undoneAt ?? batch.undo.requestedAt, 'datetime')"
-                                    />
-                                </div>
-                            </div>
-                        </TableCell>
-                        <TableCell v-text="batch.replaced ?? '—'" />
-                        <TableCell>
-                            <div class="space-y-2">
-                                <div v-for="(list, listIndex) in skippedLists(batch)" :key="listIndex" class="space-y-1">
-                                    <div v-if="list.undo" class="text-sm font-medium" v-text="__('Not undone')" />
-                                    <div
-                                        v-for="(skipped, index) in list.items"
-                                        :key="index"
-                                        class="flex flex-wrap items-center gap-x-2 gap-y-1"
-                                    >
-                                        <Link
-                                            v-if="skipped.editUrl"
-                                            :href="skipped.editUrl"
-                                            class="text-blue-600 hover:underline dark:text-blue-400"
-                                            v-text="skipped.title"
+                    <template v-for="batch in batches" :key="batch.id">
+                        <TableRow>
+                            <TableCell>
+                                <div class="whitespace-nowrap" v-text="dateFormatter.format(batch.createdAt, 'datetime')" />
+                                <!-- Long words and e-mail addresses may break anywhere, so the table fits beside the sidebar. -->
+                                <div
+                                    v-if="batch.user"
+                                    class="text-sm text-gray-600 dark:text-gray-400"
+                                    style="overflow-wrap: anywhere"
+                                    v-text="batch.user"
+                                />
+                            </TableCell>
+                            <TableCell>
+                                <span style="white-space: pre-wrap; overflow-wrap: anywhere"
+                                    ><del class="bg-red-100 text-red-800 dark:bg-red-300/6 dark:text-red-300" v-text="batch.search" /> →
+                                    <ins
+                                        class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                                        v-text="batch.replacement"
+                                /></span>
+                            </TableCell>
+                            <TableCell>
+                                <Badge v-if="batch.pending" color="amber" :text="__('Pending')" />
+                                <div v-else class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <Badge color="green" :text="__('Applied')" />
+                                        <span
+                                            v-if="batch.appliedAt"
+                                            class="text-sm text-gray-600 dark:text-gray-400"
+                                            v-text="dateFormatter.format(batch.appliedAt, 'datetime')"
                                         />
-                                        <span v-else v-text="skipped.title" />
-                                        <Badge v-if="skipped.site" size="sm" :prepend="__('Site')" :text="skipped.site" />
-                                        <span class="text-sm text-gray-600 dark:text-gray-400" v-text="skipped.reason" />
+                                        <Button v-if="batch.undoable" size="sm" :text="__('Undo')" @click="confirmUndo(batch.id)" />
+                                    </div>
+                                    <div v-if="batch.undo" class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <Badge v-if="batch.undo.pending" color="amber" :text="__('Undo pending')" />
+                                        <Badge v-else-if="(batch.undo.skippedCount ?? 0) > 0" color="orange" :text="__('Partly undone')" />
+                                        <Badge v-else color="blue" :text="__('Undone')" />
+                                        <span
+                                            class="text-sm text-gray-600 dark:text-gray-400"
+                                            v-text="dateFormatter.format(batch.undo.undoneAt ?? batch.undo.requestedAt, 'datetime')"
+                                        />
                                     </div>
                                 </div>
-                            </div>
-                        </TableCell>
-                    </TableRow>
+                            </TableCell>
+                            <TableCell>
+                                <span v-if="batch.pending" v-text="'—'" />
+                                <div v-else class="flex flex-col items-start gap-1">
+                                    <Badge size="sm" :prepend="__('Replaced')" :text="batch.replaced ?? 0" />
+                                    <Badge size="sm" :prepend="__('Skipped')" :text="batch.skippedCount ?? 0" />
+                                    <Button
+                                        v-if="hasDetails(batch)"
+                                        size="sm"
+                                        variant="ghost"
+                                        inset
+                                        :icon-append="openBatches.includes(batch.id) ? 'chevron-up' : 'chevron-down'"
+                                        :text="__('Details')"
+                                        :aria-expanded="openBatches.includes(batch.id)"
+                                        @click="toggleDetails(batch.id)"
+                                    />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow v-if="hasDetails(batch) && openBatches.includes(batch.id)">
+                            <TableCell colspan="4">
+                                <div class="space-y-4">
+                                    <div v-if="batch.written.length > 0" class="space-y-1">
+                                        <div class="text-sm font-medium" v-text="__('Modified')" />
+                                        <div
+                                            v-for="(written, index) in batch.written"
+                                            :key="index"
+                                            class="flex flex-wrap items-center gap-x-2 gap-y-1"
+                                        >
+                                            <Link
+                                                v-if="written.editUrl"
+                                                :href="written.editUrl"
+                                                class="text-blue-600 hover:underline dark:text-blue-400"
+                                                v-text="written.title"
+                                            />
+                                            <span v-else v-text="written.title" />
+                                            <Badge v-if="written.site" size="sm" :prepend="__('Site')" :text="written.site" />
+                                            <Badge size="sm" :prepend="__('Replaced')" :text="written.replaced" />
+                                        </div>
+                                    </div>
+                                    <div v-for="(list, listIndex) in skippedLists(batch)" :key="listIndex" class="space-y-1">
+                                        <div class="text-sm font-medium" v-text="list.undo ? __('Not undone') : __('Skipped')" />
+                                        <div
+                                            v-for="(skipped, index) in list.items"
+                                            :key="index"
+                                            class="flex flex-wrap items-center gap-x-2 gap-y-1"
+                                        >
+                                            <Link
+                                                v-if="skipped.editUrl"
+                                                :href="skipped.editUrl"
+                                                class="text-blue-600 hover:underline dark:text-blue-400"
+                                                v-text="skipped.title"
+                                            />
+                                            <span v-else v-text="skipped.title" />
+                                            <Badge v-if="skipped.site" size="sm" :prepend="__('Site')" :text="skipped.site" />
+                                            <span class="text-sm text-gray-600 dark:text-gray-400" v-text="skipped.reason" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </template>
                 </TableRows>
             </Table>
         </CardPanel>

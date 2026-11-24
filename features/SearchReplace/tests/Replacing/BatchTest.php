@@ -85,18 +85,18 @@ it('may be undone once it is applied and wrote items, until an undo is asked for
     'undone' => [fn (): Batch => writtenTeamBatch()->withUndo(searchReplaceTeamUndo())->undone(new UndoResult(CarbonImmutable::parse('2026-11-19 11:01:00'), 1, [])), false],
 ]);
 
-it('may be undone by :dataset', function (User $user, bool $allowed): void {
-    expect(writtenTeamBatch()->mayBeUndoneBy($user))->toBe($allowed);
+it('belongs to :dataset', function (User $user, bool $allowed): void {
+    expect(writtenTeamBatch()->belongsTo($user))->toBe($allowed);
 })->with([
     'the user who made it' => [fn (): User => searchReplaceBatchUser('editor-1'), true],
     'a super user' => [fn (): User => searchReplaceBatchUser('admin-1', super: true), true],
     'no other user' => [fn (): User => searchReplaceBatchUser('editor-2'), false],
 ]);
 
-it('may be undone by no user but super users when it names no user', function (): void {
+it('belongs to no user but super users when it names no user', function (): void {
     $batch = new Batch('9d3c1f2a-0b4e-4c6d-8e7f-000000000001', null, 'Team', 'Praxis', false, CarbonImmutable::parse('2026-11-19 10:00:00'), []);
 
-    expect($batch->mayBeUndoneBy(searchReplaceBatchUser('editor-1')))->toBeFalse();
+    expect($batch->belongsTo(searchReplaceBatchUser('editor-1')))->toBeFalse();
 });
 
 it('keeps everything but the undo once an undo is asked for', function (): void {

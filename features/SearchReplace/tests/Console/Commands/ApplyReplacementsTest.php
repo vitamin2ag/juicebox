@@ -3,20 +3,26 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Statamic\Entries\Collection;
 use Statamic\Events\EntrySaving;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalVariables;
 use Statamic\Facades\Stache;
 use Statamic\Facades\Term;
+use Statamic\StaticCaching\Cacher;
+use Statamic\StaticCaching\Invalidate;
 use Statamic\Taxonomies\LocalizedTerm;
 use Vitamin2\Juicebox\Features\SearchReplace\Console\Commands\ApplyReplacements;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
+use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Replacer;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Result;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Undo;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\UndoResult;
@@ -206,6 +212,73 @@ it('applies nothing while the feature is disabled', function (): void {
         ->and(Artisan::output())->toBe("Search & Replace is disabled: juicebox.search_replace.enabled is false.\n")
         ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team'])
         ->and(resolve(BatchRepository::class)->pending())->toHaveCount(1);
+});
+
+it('applies nothing and says so while another run holds the lock', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(1)));
+    Cache::lock('juicebox:search-replace:apply', 600)->get();
+
+    $status = Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect($status)->toBe(0)
+        ->and(Artisan::output())->toBe("Another run is still applying the batches.\n")
+        ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team'])
+        ->and(resolve(BatchRepository::class)->pending())->toHaveCount(1);
+});
+
+it('holds the lock for ten minutes, so a run that dies holds up the next ones for ten minutes at most', function (): void {
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(1)));
+    $free = [];
+    Event::listen(EntrySaving::class, function () use (&$free): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-19 10:10:59'));
+        $free[] = Cache::lock('juicebox:search-replace:apply')->get();
+        $this->travelTo(CarbonImmutable::parse('2026-11-19 10:11:00'));
+        $free[] = Cache::lock('juicebox:search-replace:apply')->get();
+    });
+
+    Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect($free)->toBe([false, true]);
+});
+
+it('releases the lock when a run throws', function (): void {
+    resolve(BatchRepository::class)->save(new Batch(searchReplaceBatchNumber(1), null, 'Team', 'Praxis', false, CarbonImmutable::now(), []));
+    $this->mock(Replacer::class)->shouldReceive('apply')->andThrow(new RuntimeException('The disk is full.'));
+
+    expect(fn (): int => Artisan::call('statamic:juicebox:search-replace:apply'))->toThrow(RuntimeException::class, 'The disk is full.')
+        ->and(Cache::lock('juicebox:search-replace:apply')->get())->toBeTrue();
+});
+
+it('invalidates the static cache of the items it writes, when it applies a batch and when it undoes it', function (): void {
+    config([
+        'statamic.static_caching.strategy' => 'half',
+        'statamic.static_caching.invalidation.rules' => ['globals' => ['footer' => ['urls' => ['/kontakt']]]],
+    ]);
+    Event::subscribe(Invalidate::class);
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('impressum', ['title' => 'Impressum']);
+    $pages = new Collection;
+    $pages->handle('pages');
+    $pages->sites(['de', 'en']);
+    $pages->routes('{slug}');
+    $pages->save();
+    SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Ihr Team']]);
+    $cacher = resolve(Cacher::class);
+    $cache = fn () => collect(['/ueber-uns', '/kontakt', '/impressum'])->each(fn (string $url) => $cacher->cachePage(Request::create($url), $url));
+    $cache();
+    resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(1)));
+
+    Artisan::call('statamic:juicebox:search-replace:apply');
+    $afterApply = $cacher->getUrls()->values()->all();
+    $cache();
+    searchReplaceAskForUndo(1);
+    Artisan::call('statamic:juicebox:search-replace:apply');
+
+    expect($afterApply)->toBe(['/impressum'])
+        ->and($cacher->getUrls()->values()->all())->toBe(['/impressum'])
+        ->and(SearchReplaceFixtures::values('entry', 'ueber-uns'))->toBe(['title' => 'Unser Team']);
 });
 
 it('undoes an applied batch at the next run, which gives the files their contents from before the batch back', function (): void {

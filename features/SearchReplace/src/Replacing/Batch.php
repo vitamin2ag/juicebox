@@ -98,9 +98,9 @@ readonly class Batch
     }
 
     /**
-     * Only the user who made the batch, and super users, may undo it.
+     * The batch belongs to the user who made it and to super users: only they see its items and may undo it.
      */
-    public function mayBeUndoneBy(User $user): bool
+    public function belongsTo(User $user): bool
     {
         return $user->isSuper() || $this->user === $user->getAuthIdentifier();
     }

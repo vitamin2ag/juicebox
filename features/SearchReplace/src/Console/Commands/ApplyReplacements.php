@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Statamic\Console\RunsInPlease;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\Batch;
 use Vitamin2\Juicebox\Features\SearchReplace\Replacing\BatchRepository;
@@ -22,8 +23,8 @@ class ApplyReplacements extends Command
     use RunsInPlease;
 
     /**
-     * Each batch is saved as applied, or undone, right after it is, so a run that stops halfway does not do it again.
-     * The pending batches come first, so an undo sees what they changed, and the old batches are pruned last.
+     * Runs only while no other run, scheduled or by hand, holds the lock, which would apply the same batches again. A
+     * run that dies keeps the lock, so it expires after ten minutes, far longer than a run takes.
      */
     public function handle(BatchRepository $batches, Replacer $replacer): int
     {
@@ -31,6 +32,29 @@ class ApplyReplacements extends Command
             return self::FAILURE;
         }
 
+        $lock = Cache::lock('juicebox:search-replace:apply', 600);
+
+        if (! $lock->get()) {
+            $this->info(__('Another run is still applying the batches.'));
+
+            return self::SUCCESS;
+        }
+
+        try {
+            $this->apply($batches, $replacer);
+        } finally {
+            $lock->release();
+        }
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Each batch is saved as applied, or undone, right after it is, so a run that stops halfway does not do it again.
+     * The pending batches come first, so an undo sees what they changed, and the old batches are pruned last.
+     */
+    private function apply(BatchRepository $batches, Replacer $replacer): void
+    {
         $results = $batches->pending()->map(function (Batch $batch) use ($batches, $replacer): Result {
             $result = $replacer->apply($batch);
             $batches->save($batch->applied($result));
@@ -52,8 +76,6 @@ class ApplyReplacements extends Command
             .trans_choice('restored :count item|restored :count items', $undos->sum(fn (UndoResult $result): int => $result->restored)).', '
             .trans_choice('skipped :count item|skipped :count items', $undos->sum(fn (UndoResult $result): int => count($result->skipped))).'.');
         $this->prune($batches);
-
-        return self::SUCCESS;
     }
 
     /**

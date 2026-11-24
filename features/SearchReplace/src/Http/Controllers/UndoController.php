@@ -30,7 +30,7 @@ class UndoController extends CpController
 
         $batch = $batches->find($request->string('batch')->value());
 
-        abort_if($batch instanceof Batch && ! $batch->mayBeUndoneBy($user), 403);
+        abort_if($batch instanceof Batch && ! $batch->belongsTo($user), 403);
 
         if (! $batch instanceof Batch || ! $batch->undoable()) {
             throw ValidationException::withMessages([
