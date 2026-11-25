@@ -12,6 +12,7 @@ use Statamic\Auth\File\User;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Collection as Collections;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalVariables;
@@ -68,7 +69,7 @@ class SearchReplaceFixtures
      */
     public static function entry(string $id, array $data, string $site = 'de', ?string $origin = null, string $collection = 'pages'): Entry
     {
-        $pages = new Collection;
+        $pages = Collections::findByHandle($collection) ?? new Collection;
         $pages->handle($collection);
         $pages->sites(['de', 'en']);
         $pages->save();

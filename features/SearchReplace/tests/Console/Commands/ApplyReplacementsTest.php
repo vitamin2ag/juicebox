@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -257,16 +259,20 @@ it('invalidates the static cache of the items it writes, when it applies a batch
         'statamic.static_caching.invalidation.rules' => ['globals' => ['footer' => ['urls' => ['/kontakt']]]],
     ]);
     Event::subscribe(Invalidate::class);
-    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
-    SearchReplaceFixtures::entry('impressum', ['title' => 'Impressum']);
     $pages = new Collection;
     $pages->handle('pages');
     $pages->sites(['de', 'en']);
     $pages->routes('{slug}');
     $pages->save();
+    SearchReplaceFixtures::entry('ueber-uns', ['title' => 'Unser Team']);
+    SearchReplaceFixtures::entry('impressum', ['title' => 'Impressum']);
     SearchReplaceFixtures::globalSet('footer', ['de' => ['claim' => 'Ihr Team']]);
     $cacher = resolve(Cacher::class);
-    $cache = fn () => collect(['/ueber-uns', '/kontakt', '/impressum'])->each(fn (string $url) => $cacher->cachePage(Request::create($url), $url));
+    $cache = fn () => collect(['/ueber-uns', '/kontakt', '/impressum'])->each(function (string $url) use ($cacher): void {
+        $request = Request::create($url);
+        $cacher->cachePage($request, $url);
+        event(new ResponsePrepared($request, new Response($url)));
+    });
     $cache();
     resolve(BatchRepository::class)->save(SearchReplaceFixtures::batch(id: searchReplaceBatchNumber(1)));
 
