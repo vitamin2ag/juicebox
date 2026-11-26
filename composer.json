@@ -24,7 +24,7 @@
         "php": "^8.5",
         "edalzell/laravel-features": "^2.0.1",
         "edalzell/statamic-features": "^2.1.1",
-        "statamic/cms": "^6.0"
+        "statamic/cms": "^6.44"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",
