@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.4.3...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.5.0...HEAD)
+
+## [v0.5.0](https://github.com/vitamin2ag/juicebox/compare/v0.4.3...v0.5.0) - 2026-11-26
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Breaking Changes
+
+* Require Statamic 6.44 and rebuild the control panel assets by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/66
+
+#### Enhancements
+
+* Ignore the published feature assets in the site's .gitignore by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/67
+
+#### Documentation
+
+* Treat foreach loops that build arrays as collection calls by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/59
+
+#### Maintenance
+
+* Exclude PHPStan 2.3.6 by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/57
+* Remove the PHPStan 2.3.6 conflict by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/60
+* Allowlist the unpatched picomatch advisory in the npm audit by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/62
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.4.3...v0.5.0
 
 ## [v0.4.3](https://github.com/vitamin2ag/juicebox/compare/v0.4.2...v0.4.3) - 2026-11-11
 
