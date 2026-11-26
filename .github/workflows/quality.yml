@@ -28,6 +28,10 @@ on:
     paths: *paths
   # Run by hand on main before a release, since dependencies move without a lock file.
   workflow_dispatch:
+  # Weekly on main, to see a Statamic release that changes the control panel build or breaks a page.
+  # Only the browser and asset jobs run: they depend on the Statamic version, coverage and mutation do not.
+  schedule:
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read
@@ -38,6 +42,7 @@ concurrency:
 
 jobs:
   coverage:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     name: Code Coverage
 
@@ -77,6 +82,7 @@ jobs:
         run: composer test:coverage
 
   mutation-paths:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     name: Mutation Paths
     outputs:
