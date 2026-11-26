@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.5.0...HEAD)
+## [Unreleased](https://github.com/vitamin2ag/juicebox/compare/v0.6.0...HEAD)
+
+## [v0.6.0](https://github.com/vitamin2ag/juicebox/compare/v0.5.0...v0.6.0) - 2026-11-26
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Enhancements
+
+* Add Schema.org JSON-LD feature by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/2
+
+#### Maintenance
+
+* Fix the changelog update and add the v0.5.0 entry by @marcorieser in https://github.com/vitamin2ag/juicebox/pull/68
+
+**Full Changelog**: https://github.com/vitamin2ag/juicebox/compare/v0.5.0...v0.6.0
 
 ## [v0.5.0](https://github.com/vitamin2ag/juicebox/compare/v0.4.3...v0.5.0) - 2026-11-26
 
