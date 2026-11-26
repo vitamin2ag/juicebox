@@ -101,3 +101,15 @@ jobs:
 
       - name: Audit dependencies
         run: composer test:audit
+
+  # A scheduled run that fails opens an issue, or adds a comment to the one that is still open.
+  report:
+    needs: [tests, audit]
+    if: failure() && github.event_name == 'schedule'
+    name: Report a failed weekly check
+    permissions:
+      issues: write
+    uses: ./.github/workflows/report-failure.yml
+    with:
+      title: The weekly tests failed
+      body: The tests or the dependency audit failed against the latest dependencies.
