@@ -1,0 +1,35 @@
+name: report-failure
+
+# Opens an issue for a failed scheduled run, or adds a comment to the one that is still open.
+on:
+  workflow_call:
+    inputs:
+      title:
+        required: true
+        type: string
+      body:
+        required: true
+        type: string
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    name: Open or update the issue
+    permissions:
+      issues: write
+
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          number=$(gh issue list --state open --json number,title --jq ".[] | select(.title == env.TITLE) | .number" | head -n 1)
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "Failed again: $RUN_URL"
+            exit 0
+          fi
+          gh issue create --title "$TITLE" --label maintenance --body "$BODY Run: $RUN_URL"

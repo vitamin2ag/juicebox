@@ -228,23 +228,12 @@ jobs:
   report:
     needs: [browser, assets]
     if: failure() && github.event_name == 'schedule'
-    runs-on: ubuntu-latest
     name: Report a failed weekly check
     permissions:
       issues: write
-
-    steps:
-      - name: Open or update the issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          TITLE: The weekly Statamic check failed
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          number=$(gh issue list --state open --json number,title --jq ".[] | select(.title == env.TITLE) | .number" | head -n 1)
-          if [ -n "$number" ]; then
-            gh issue comment "$number" --body "Failed again: $RUN_URL"
-            exit 0
-          fi
-          gh issue create --title "$TITLE" --label maintenance \
-            --body "The browser or asset checks failed against the latest Statamic: $RUN_URL. Rebuild \`dist\` with \`npm run build\` if only the asset check failed; otherwise a Statamic release broke a page."
+    uses: ./.github/workflows/report-failure.yml
+    with:
+      title: The weekly Statamic check failed
+      body: >-
+        The browser or asset checks failed against the latest Statamic. Rebuild `dist` with `npm run build`
+        if only the asset check failed; otherwise a Statamic release broke a page.
