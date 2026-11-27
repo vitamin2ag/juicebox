@@ -1,0 +1,114 @@
+title: 'Unser Team'
+lead: 'Das Team stellt sich vor.'
+body: 'Mehr über das **Team**.'
+content:
+  -
+    type: paragraph
+    content:
+      -
+        type: text
+        text: 'Ein starkes '
+      -
+        type: text
+        marks:
+          -
+            type: bold
+        text: Team
+      -
+        type: text
+        text: ' für '
+      -
+        type: text
+        marks:
+          -
+            type: link
+            attrs:
+              href: 'https://example.com/team'
+              rel: null
+              target: null
+              title: null
+        text: Sie
+  -
+    type: set
+    attrs:
+      id: lx1abc2d
+      values:
+        type: quote
+        text: 'Team first'
+        source: 'https://example.com/team'
+  -
+    type: bulletList
+    content:
+      -
+        type: listItem
+        content:
+          -
+            type: paragraph
+            content:
+              -
+                type: text
+                text: 'Team Bern'
+subtitle:
+  -
+    type: text
+    text: 'Team-Untertitel'
+html: '<p class="team">Team</p>'
+sections:
+  -
+    id: m1a2b3c4
+    type: teaser
+    enabled: true
+    text: 'Das Team'
+  -
+    id: m4c5d6e7
+    type: cards
+    enabled: true
+    cards:
+      -
+        id: n7e8f9a0
+        label: 'Team A'
+  -
+    id: m8f9a0b1
+    type: removed
+    enabled: true
+    text: 'Team alt'
+  -
+    id: m2b3c4d5
+    type: pricing
+    enabled: true
+    rows:
+      -
+        cells:
+          - Team
+          - 'CHF 90'
+facts:
+  -
+    id: f1a2b3c4
+    label: Gründung
+    value: '1999 mit Team'
+    sources:
+      - Team-Chronik
+seo:
+  description: 'Team und Werte'
+  keywords:
+    - Team
+    - Werte
+highlights:
+  - Team-Event
+  - 2024
+prices:
+  -
+    cells:
+      - Leistung
+      - Preis
+  -
+    cells:
+      - Team-Coaching
+      - 'CHF 120'
+anchor: team-anker
+link: 'https://example.com/team'
+related:
+  - team-eintrag
+color: team-farbe
+image: bilder/team.jpg
+notes: 'Team intern'

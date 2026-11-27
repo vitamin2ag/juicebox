@@ -1,0 +1,67 @@
+title: Article
+tabs:
+  main:
+    sections:
+      -
+        fields:
+          -
+            import: teaser
+          -
+            import: teaser
+            prefix: hero_
+          -
+            handle: blocks
+            field:
+              type: replicator
+              display: Blöcke
+              sets:
+                main:
+                  display: Main
+                  sets:
+                    teaser:
+                      display: Teaser
+                      fields:
+                        -
+                          import: teaser
+                        -
+                          import: teaser
+                          prefix: cta_
+          -
+            handle: body
+            field:
+              type: bard
+              display: Inhalt
+              sets:
+                main:
+                  display: Main
+                  sets:
+                    teaser:
+                      display: Teaser
+                      fields:
+                        -
+                          import: teaser
+                        -
+                          import: teaser
+                          prefix: box_
+          -
+            handle: rows
+            field:
+              type: grid
+              display: Zeilen
+              fields:
+                -
+                  import: teaser
+                -
+                  import: teaser
+                  prefix: side_
+          -
+            handle: meta
+            field:
+              type: group
+              display: Meta
+              fields:
+                -
+                  import: teaser
+                -
+                  import: teaser
+                  prefix: og_

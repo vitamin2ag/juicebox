@@ -1,0 +1,166 @@
+title: Page
+tabs:
+  main:
+    sections:
+      -
+        fields:
+          -
+            handle: title
+            field:
+              type: text
+              display: Titel
+          -
+            handle: lead
+            field:
+              type: textarea
+              display: Lead
+          -
+            handle: body
+            field:
+              type: markdown
+              display: Text
+          -
+            handle: content
+            field:
+              type: bard
+              display: Inhalt
+              sets:
+                main:
+                  display: Main
+                  sets:
+                    quote:
+                      display: Zitat
+                      fields:
+                        -
+                          handle: text
+                          field:
+                            type: text
+                            display: Zitat
+                        -
+                          handle: source
+                          field:
+                            type: link
+                            display: Quelle
+          -
+            handle: subtitle
+            field:
+              type: bard
+              display: Untertitel
+              inline: true
+          -
+            handle: html
+            field:
+              type: bard
+              display: HTML
+              save_html: true
+          -
+            handle: sections
+            field:
+              type: replicator
+              display: Abschnitte
+              sets:
+                teaser:
+                  display: Teaser
+                  fields:
+                    -
+                      handle: text
+                      field:
+                        type: textarea
+                        display: Teaser-Text
+                cards:
+                  display: Karten
+                  fields:
+                    -
+                      handle: cards
+                      field:
+                        type: grid
+                        display: Karten
+                        fields:
+                          -
+                            handle: label
+                            field:
+                              type: text
+                              display: Beschriftung
+                pricing:
+                  display: Preise
+                  fields:
+                    -
+                      handle: rows
+                      field:
+                        type: table
+                        display: Tabelle
+          -
+            handle: facts
+            field:
+              type: grid
+              display: Fakten
+              fields:
+                -
+                  handle: label
+                  field:
+                    type: text
+                    display: Bezeichnung
+                -
+                  handle: value
+                  field:
+                    type: text
+                    display: Wert
+                -
+                  handle: sources
+                  field:
+                    type: list
+                    display: Quellen
+          -
+            handle: seo
+            field:
+              type: group
+              display: SEO
+              fields:
+                -
+                  handle: description
+                  field:
+                    type: textarea
+                    display: Beschreibung
+                -
+                  handle: keywords
+                  field:
+                    type: list
+                    display: Stichwörter
+          -
+            handle: highlights
+            field:
+              type: list
+              display: Highlights
+          -
+            handle: prices
+            field:
+              type: table
+              display: Preise
+          -
+            handle: anchor
+            field:
+              type: slug
+              display: Anker
+          -
+            handle: link
+            field:
+              type: link
+              display: Link
+          -
+            handle: related
+            field:
+              type: entries
+              display: Verwandt
+          -
+            handle: color
+            field:
+              type: select
+              display: Farbe
+              options:
+                team-farbe: Team
+          -
+            handle: image
+            field:
+              type: assets
+              display: Bild
+              container: assets

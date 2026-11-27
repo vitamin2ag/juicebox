@@ -1,0 +1,12 @@
+title: Teaser
+fields:
+  -
+    handle: heading
+    field:
+      type: text
+      display: Überschrift
+  -
+    handle: text
+    field:
+      type: textarea
+      display: Text
